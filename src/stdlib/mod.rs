@@ -14,6 +14,41 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
+thread_local! {
+    static KELUARAN_TERTANGKAP: RefCell<Option<Vec<String>>> = const { RefCell::new(None) };
+}
+
+pub(crate) fn mulai_tangkap_keluaran() {
+    KELUARAN_TERTANGKAP.with(|c| *c.borrow_mut() = Some(Vec::new()));
+}
+
+pub(crate) fn ambil_keluaran_tertangkan() -> Vec<String> {
+    KELUARAN_TERTANGKAP.with(|c| c.borrow_mut().take().unwrap_or_default())
+}
+
+pub(crate) fn emit_baris(baris: String) {
+    KELUARAN_TERTANGKAP.with(|c| {
+        let mut b = c.borrow_mut();
+        if let Some(col) = b.as_mut() {
+            col.push(baris);
+        } else {
+            println!("{}", baris);
+        }
+    });
+}
+
+pub(crate) fn emit_teks(teks: String) {
+    KELUARAN_TERTANGKAP.with(|c| {
+        let mut b = c.borrow_mut();
+        if let Some(col) = b.as_mut() {
+            col.push(teks);
+        } else {
+            print!("{}", teks);
+            let _ = io::stdout().flush();
+        }
+    });
+}
+
 pub fn register_stdlib(env: &mut Environment) {
     // I/O
     register_fn(env, "cetak", None, builtin_cetak);
@@ -1765,14 +1800,13 @@ fn register_fn(
 
 pub(crate) fn builtin_cetak(args: &[Value], _span: &Span) -> Result<Value, Galat> {
     let parts: Vec<String> = args.iter().map(|a| a.to_string_repr()).collect();
-    println!("{}", parts.join(" "));
+    emit_baris(parts.join(" "));
     Ok(Value::Nil)
 }
 
 fn builtin_tulis(args: &[Value], _span: &Span) -> Result<Value, Galat> {
     let parts: Vec<String> = args.iter().map(|a| a.to_string_repr()).collect();
-    print!("{}", parts.join(" "));
-    let _ = io::stdout().flush();
+    emit_teks(parts.join(" "));
     Ok(Value::Nil)
 }
 

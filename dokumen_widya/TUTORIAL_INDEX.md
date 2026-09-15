@@ -42,6 +42,12 @@ Selamat datang di **Pusat Dokumentasi & Tutorial Resmi Widya-Lang** — bahasa p
 | 19 | **Networking Mesh (libp2p-style)** | DHT Kademlia, Raft Consensus, GossipSub P2P | [TUTORIAL_19_MESH_NETWORKING.md](./TUTORIAL_19_MESH_NETWORKING.md) |
 | 20 | **9 Layer Universal Stack 100% SIAP** | Demo 168, 810/810 POINT, deploy production | [TUTORIAL_20_SEMUA_LAYER_100PERSEN.md](./TUTORIAL_20_SEMUA_LAYER_100PERSEN.md) |
 
+### 🎨 Widya Studio IDE Level Industri (Sekaligus Area Kerja) | ⭐ 5 menit
+| No | Tutorial | Topik | Link File |
+|----|----------|-------|-----------|
+| 12 | **Widya Studio — IDE Level Industri** | Jalankan `widya studio --port 9000`; 20+ fitur: Multi-tab Monaco, Inline Error Marker, Command Palette 35+ aksi, Kompilasi 6 target UI, Cargo Test panel, Mini Debugger, REPL persisten, Git mini, AI Autocomplete, Snippet, Generate Dokumentasi, Split/Zen, Cari rekursif workspace, Rate Limit 120/menit | [TUTORIAL_11_CLI_LENGKAP.md#12-widya-studio](TUTORIAL_11_CLI_LENGKAP.md) |
+| — | **6 Target Cross Compile** | Tutorial 12 lengkap: Rust/LLVM/Wasm/WGSL/eBPF/Native ELF dari satu kode — bisa dijalankan dari UI studio (dropdown ⚙️ Build) maupun CLI | [TUTORIAL_12_KOMPILASI_6_TARGET.md](./TUTORIAL_12_KOMPILASI_6_TARGET.md) |
+
 ---
 
 ## 🎯 Contoh Kode Siap Pakai (168 File di Folder `contoh/`)
