@@ -1,18 +1,53 @@
+# ===== Build artifacts =====
 /target
-
 *.exe
 *.pdb
 *.dll
 *.so
 *.dylib
+*.wasm
+*.o
+*.obj
+*.a
+*.lib
+*.bc
+*.bin
+*.elf
+Cargo.lock.bak
 
+# ===== Temporary & output files =====
 *.log
+_rv_*.log
 output_*.txt
 test_wdb_core_tmp.json
 widyadb_*_backup.json
+*.tmp
+*.bak
+debug_*.wya
 
+# ===== Media & binary assets yang auto-generated (source ada di dokumentasi) =====
+test_audio.wav
+nada_sintesis_widya.wav
+adegan_widya_3d.html
+test_3d.html
+widya_app.html
+widyac.wya
+
+# ===== File bundle .rs duplicate (sudah ada di src/tools/ atau contoh/) =====
+20_simd_dan_jit_bundle.rs
+21_aplikasi_multiplatform_bundle.rs
+
+# ===== Auto-generate wasm/html runner di contoh/ (hasil compile tutorial) =====
+/contoh/app.html
+/contoh/app.wasm
+
+# ===== OS / editor junk =====
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 *~
+.idea/
+.vscode/*
+!.vscode/language-configuration.json
+!.vscode/widya.tmLanguage.json
