@@ -16,10 +16,15 @@ type HmacSha256 = Hmac<Sha256>;
 
 thread_local! {
     static KELUARAN_TERTANGKAP: RefCell<Option<Vec<String>>> = const { RefCell::new(None) };
+    static SINK_ALIRAN: RefCell<Option<mpsc::Sender<String>>> = const { RefCell::new(None) };
 }
 
 pub(crate) fn mulai_tangkap_keluaran() {
     KELUARAN_TERTANGKAP.with(|c| *c.borrow_mut() = Some(Vec::new()));
+}
+
+pub(crate) fn mulai_sink_aliran(pengirim: mpsc::Sender<String>) {
+    SINK_ALIRAN.with(|c| *c.borrow_mut() = Some(pengirim));
 }
 
 pub(crate) fn ambil_keluaran_tertangkan() -> Vec<String> {
@@ -27,6 +32,14 @@ pub(crate) fn ambil_keluaran_tertangkan() -> Vec<String> {
 }
 
 pub(crate) fn emit_baris(baris: String) {
+    if SINK_ALIRAN.with(|c| c.borrow().is_some()) {
+        SINK_ALIRAN.with(|c| {
+            if let Some(tx) = c.borrow().as_ref() {
+                let _ = tx.send(baris);
+            }
+        });
+        return;
+    }
     KELUARAN_TERTANGKAP.with(|c| {
         let mut b = c.borrow_mut();
         if let Some(col) = b.as_mut() {
@@ -38,6 +51,14 @@ pub(crate) fn emit_baris(baris: String) {
 }
 
 pub(crate) fn emit_teks(teks: String) {
+    if SINK_ALIRAN.with(|c| c.borrow().is_some()) {
+        SINK_ALIRAN.with(|c| {
+            if let Some(tx) = c.borrow().as_ref() {
+                let _ = tx.send(teks);
+            }
+        });
+        return;
+    }
     KELUARAN_TERTANGKAP.with(|c| {
         let mut b = c.borrow_mut();
         if let Some(col) = b.as_mut() {

@@ -3,13 +3,13 @@ use crate::lexer::Lexer;
 use crate::lsp::WidyaLsp;
 use crate::parser::Parser;
 use crate::compiler::NativeCompiler;
-use crate::stdlib::{ambil_keluaran_tertangkan, mulai_tangkap_keluaran};
+use crate::stdlib::{ambil_keluaran_tertangkan, mulai_sink_aliran, mulai_tangkap_keluaran};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::io::{self, Read, Write};
-use std::net::TcpListener;
+use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{mpsc, Mutex, OnceLock};
 use std::time::{Instant, Duration};
 
 static RATE_LIMITER: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
@@ -163,15 +163,21 @@ pub fn jalankan_studio(port: u16) {
         .spawn();
 
     for stream in listener.incoming() {
-        if let Ok(mut stream) = stream {
-            let mut buffer = [0; 262144];
-            if let Ok(bytes_read) = stream.read(&mut buffer) {
+        if let Ok(stream) = stream {
+            std::thread::spawn(move || handle_koneksi(stream));
+        }
+    }
+}
+
+fn handle_koneksi(mut stream: TcpStream) {
+    let mut buffer = [0; 262144];
+    if let Ok(bytes_read) = stream.read(&mut buffer) {
                 let request = String::from_utf8_lossy(&buffer[..bytes_read]);
 
                 let need_rate = !request.starts_with("GET / ") && !request.starts_with("GET /index.html");
                 if need_rate && !check_rate() {
                     let _ = stream.write_all(err_429().as_bytes());
-                    continue;
+                    return;
                 }
 
                 let method = request.lines().next().unwrap_or("").split_whitespace().next().unwrap_or("");
@@ -192,6 +198,10 @@ pub fn jalankan_studio(port: u16) {
                 } else if method == "POST" && path_clean == "/api/run" {
                     let body = extract_body(&request);
                     let _ = stream.write_all(ok_response(&handle_api_run(&body)).as_bytes());
+                    dispatched = true;
+                } else if method == "POST" && path_clean == "/api/run/stream" {
+                    let body = extract_body(&request);
+                    handle_sse_run(&body, &mut stream);
                     dispatched = true;
                 } else if method == "POST" && path_clean == "/api/check" {
                     let body = extract_body(&request);
@@ -367,8 +377,6 @@ pub fn jalankan_studio(port: u16) {
                     let _ = stream.write_all(err_404(&not_found).as_bytes());
                 }
             }
-        }
-    }
 }
 
 pub fn jalankan_lsp() {
@@ -448,6 +456,57 @@ fn handle_api_check(body: &str) -> String {
     let source = v.get("source").and_then(|s| s.as_str()).unwrap_or("");
     let diags = WidyaLsp::get_diagnostics(source);
     serde_json::to_string(&diags).unwrap_or_else(|_| "[]".to_string())
+}
+
+fn handle_sse_run(body: &str, stream: &mut TcpStream) {
+    let source = if let Ok(val) = serde_json::from_str::<serde_json::Value>(body) {
+        val.get("source").and_then(|s| s.as_str()).unwrap_or("").to_string()
+    } else {
+        body.to_string()
+    };
+    let (tx, rx) = mpsc::channel::<String>();
+    let worker_source = source.clone();
+    let worker = std::thread::spawn(move || run_sse_worker(&worker_source, tx));
+    let _ = stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream; charset=utf-8\r\nCache-Control: no-cache\r\nConnection: close\r\nAccess-Control-Allow-Origin: *\r\n\r\n");
+    let _ = stream.flush();
+    while let Ok(msg) = rx.recv() {
+        let _ = stream.write_all(format!("data: {}\n\n", msg).as_bytes());
+        let _ = stream.flush();
+    }
+    let _ = worker.join();
+}
+
+fn run_sse_worker(source: &str, tx: mpsc::Sender<String>) {
+    let kirim = |tx: &mpsc::Sender<String>, frame: serde_json::Value| {
+        let _ = tx.send(frame.to_string());
+    };
+    let source = source.to_string();
+    let mut lexer = Lexer::new(&source);
+    let tokens = match lexer.scan_tokens() {
+        Ok(t) => t,
+        Err(e) => {
+            kirim(&tx, serde_json::json!({"t": "galat", "sukses": false, "galat": format!("{}", e)}));
+            return;
+        }
+    };
+    let mut parser = Parser::new(tokens);
+    let program = match parser.parse() {
+        Ok(p) => p,
+        Err(e) => {
+            kirim(&tx, serde_json::json!({"t": "galat", "sukses": false, "galat": format!("{}", e)}));
+            return;
+        }
+    };
+    mulai_sink_aliran(tx.clone());
+    let mut interpreter = Interpreter::new();
+    match interpreter.interpret(&program) {
+        Ok(val) => {
+            kirim(&tx, serde_json::json!({"t": "hasil", "sukses": true, "hasil": val.to_string_repr()}));
+        }
+        Err(e) => {
+            kirim(&tx, serde_json::json!({"t": "galat", "sukses": false, "galat": format!("{}", e)}));
+        }
+    }
 }
 
 fn handle_api_list_contoh() -> String {
@@ -2400,14 +2459,27 @@ fn render_ide_html() -> String {
             unicodeHighlight: {ambiguousCharacters:false, invisibleCharacters:false}
         });
     }
+    let dragTabId = null;
     function renderTabs(){
         const bar = $("tabs-bar"); bar.innerHTML = "";
         S.tabs.forEach(t => {
             const d = document.createElement("div");
             const cls = (t.id===S.activeTabId)? "tab-active" : "tab-inactive";
+            d.draggable = true;
             d.className = cls + " px-3 h-full flex items-center gap-2 cursor-pointer text-xs rounded-t mr-0.5 border border-b-0 border-[#313244]";
             d.innerHTML = `<i class="fa-solid fa-file-code text-indigo-400"></i><span>${t.name}${t.dirty?' <span class="text-rose-300 ml-1">●</span>':''}</span><i class="fa-solid fa-xmark ml-2 text-gray-500 hover:text-white tab-close" data-id="${t.id}"></i>`;
             d.addEventListener("click", (e)=>{ if(e.target.classList.contains('tab-close')){ closeTab(e.target.dataset.id); } else { activateTab(t.id); }});
+            d.addEventListener("dragstart", ()=>{ dragTabId = t.id; d.style.opacity = "0.4"; });
+            d.addEventListener("dragend", ()=>{ dragTabId = null; d.style.opacity = ""; });
+            d.addEventListener("dragover", (e)=>{ if(dragTabId && dragTabId!==t.id){ e.preventDefault(); }});
+            d.addEventListener("drop", (e)=>{
+                e.preventDefault(); if(!dragTabId) return;
+                const from = S.tabs.findIndex(x=>x.id===dragTabId); if(from<0) return;
+                const [moved] = S.tabs.splice(from,1);
+                const to2 = S.tabs.findIndex(x=>x.id===t.id); if(to2<0){ S.tabs.splice(from,0,moved); return; }
+                S.tabs.splice(to2,0,moved);
+                renderTabs();
+            });
             bar.appendChild(d);
         });
         if(S.tabs.length===0){
@@ -2590,23 +2662,46 @@ fn render_ide_html() -> String {
     }
     function runCode(){
         const ed = getActiveEditor(); const tab = getActiveTab(); if(!ed||!tab){ toast("Pilih tab terlebih dahulu","warn"); return; }
-        const out = $("panel-output"); out.innerHTML = "▶ Menjalankan file: "+tab.name+" ..."; setPanel("output");
+        const out = $("panel-output"); out.innerHTML = "▶ Menjalankan file: "+tab.name+" (streaming output) ..."; setPanel("output");
         $("status-run").textContent = "Menjalankan...";
         const t0 = performance.now();
-        fetch("/api/run", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({source: ed.getValue()})})
-        .then(r=>r.json()).then(d=>{
+        fetch("/api/run/stream", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({source: ed.getValue()})})
+        .then(res => {
+            if(!res.body){ return res.json().then(d=>{ handleRunFrame({t:d.sukses?"hasil":"galat", ...d}, out, t0); }); }
+            const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+            const pump = () => reader.read().then(({done, value}) => {
+                if(done){ return; }
+                buf += dec.decode(value, {stream:true});
+                let idx;
+                while((idx = buf.indexOf("\n\n")) !== -1){
+                    const evt = buf.slice(0, idx); buf = buf.slice(idx+2);
+                    const data = evt.replace(/^data:/, "").trim(); if(!data){ continue; }
+                    handleRunFrame(data, out, t0);
+                }
+                return pump();
+            });
+            return pump();
+        }).catch(e=>{ out.innerHTML += `\n<span class="text-rose-400">Kesalahan jaringan: ${e}</span>`; $("status-run").textContent = "Koneksi Error"; });
+    }
+    function handleRunFrame(raw, out, t0){
+        let f = raw;
+        if(typeof raw === "string"){
+            try { f = JSON.parse(raw); } catch(e){ f = {t:"baris", isi: raw}; }
+        }
+        if(f.t==="baris"){
+            out.innerHTML += `<div class="text-gray-200">${(f.isi||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
+            out.scrollTop = out.scrollHeight;
+        } else if(f.t==="hasil"){
             const dt = (performance.now()-t0).toFixed(0);
-            if(d.sukses){
-                const cap = (d.output||[]).join("\n").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                out.innerHTML = `<span class="text-emerald-300">✅ Eksekusi BERHASIL (${dt} ms)</span>` + (cap?`\n\n<pre class="whitespace-pre-wrap font-mono text-gray-200">${cap}</pre>`:"") + `\n\n<span class="text-emerald-300">Nilai Kembalian:</span>\n\n${d.hasil||'nihil'}`;
-                $("status-run").textContent = `Selesai ${dt} ms · OK`;
-                toast(`🏃 Berjalan ${dt} ms`, "success");
-            } else {
-                out.innerHTML = `<span class="text-rose-300">❌ GALAT Runtime/Sintaks:</span>\n\n${d.galat}`;
-                $("status-run").textContent = `Galat · ${dt} ms`;
-                toast("Ada galat saat menjalankan", "error");
-            }
-        }).catch(e=>{ out.innerHTML = `Kesalahan jaringan: ${e}`; $("status-run").textContent = "Koneksi Error"; });
+            out.innerHTML += `\n<span class="text-emerald-300">✅ Eksekusi BERHASIL (${dt} ms)</span>\n\n<span class="text-emerald-300">Nilai Kembalian:</span>\n\n${f.hasil||'nihil'}`;
+            $("status-run").textContent = `Selesai ${dt} ms · OK`;
+            toast(`🏃 Berjalan ${dt} ms`, "success");
+        } else if(f.t==="galat"){
+            const dt = (performance.now()-t0).toFixed(0);
+            out.innerHTML += `\n<span class="text-rose-300">❌ GALAT Runtime/Sintaks:</span>\n\n${(f.galat||'').replace(/</g,"&lt;").replace(/>/g,"&gt;")}`;
+            $("status-run").textContent = `Galat · ${dt} ms`;
+            toast("Ada galat saat menjalankan", "error");
+        }
     }
     function compileCode(target){
         const ed = getActiveEditor(); const tab = getActiveTab(); if(!ed||!tab){ toast("Pilih tab yang mau dikompilasi","warn"); return; }

@@ -257,6 +257,8 @@
   - Palette action "Project: Generate Dokumentasi HTML" — memakai `/api/doc/generate` yang sebelumnya tanpa UI.
   - `/api/modul` dibuat read-only (tidak menulis stub ke disk) agar file `modul/*.wya` asli tidak tertimpa.
   - `/api/git/log` memakai `git log` asli via CLI (fallback data jika bukan repo).
+  - **SSE streaming output (FR-4)** terpasang: endpoint `POST /api/run/stream` (Content-Type `text/event-stream`), frame per `cetak()` datang real-time; server di-refactor menjadi **thread per koneksi** (sebelumnya seri satu-per-satu) sehingga request lain tidak terblokir saat stream berjalan — socket & rate limiter tetap aman lewat Mutex/thread_local sink.
+  - **Tab drag-reorder (FR-6/AC-U1)**: HTML5 drag & drop di tabs-bar (reorder waktu nyata).
 - **Hasil uji**:
   - `cargo test --all` (langsung & via `/api/cargo/test`): **seluruh suite lulus, 0 failed** — termasuk suite integrasi 33 test (durasi ~121 s) dan 10 test compile/toolchain; skema `sukses` konsisten.
   - `cargo check` 0 warning; `cargo build --release` 0 warning.
@@ -264,5 +266,5 @@
   - Rate limit: 120/menit, request ke-121 → 429.
   - T10: coverage layer diverifikasi level endpoint (L1 LLVM thumbv7, L2 hypervisor+debug, L3 wasm+cgroup, L4 mesh, L5 widyadb, L6 CUDA/SGX/OCL/HSM/FPGA, L7 microservice snippet, L8 compile+cargo test, L9 render_html) — walkthrough klik manual UI tetap direkomendasikan untuk demo live.
 - **Keterbatasan terdokumentasi**:
-  - Tab drag-reorder (FR-6 AC-U1) belum ada — tab hanya next/prev via Ctrl+Tab.
-  - SSE streaming output (FR-4) sengaja ditunda (sync response dulu), konsisten dengan catatan T2.
+  - Koneksi dibuka per-request (HTTP/1.0 style, tanpa keep-alive) — cukup untuk IDE lokal; streaming panjang berjalan di thread sendiri sehingga server tetap responsif.
+  - SSE streaming tersedia untuk `/api/run/stream`; `/api/run` (sync, buffer) tetap dipertahankan demi backward compat.

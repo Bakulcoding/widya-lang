@@ -223,7 +223,7 @@ widya studio --port 9000
 - **Kiri-bawah (Debug)**: panel breakpoint & variabel watch.
 
 ### 12.4 Menjalankan, Menguji, Mengompilasi
-- **F5 Jalankan** → interpreter Widya; hasil di panel **Output** (termasuk capture semua `cetak()`/`tulis()`).
+- **F5 Jalankan** → interpreter Widya; output **distream real-time** (SSE) ke panel **Output** — setiap `cetak()`/`tulis()` muncul saat dihasilkan, termasuk semua output program. (Endpoint sinkron `/api/run` tetap ada untuk kompatibilitas API.)
 - **Cargo Test (`cargo test --all`)**: tombol 🧪 di header → tabel nama test per baris (hijau = lulus) + ringkasan jumlah passed/failed + log lengkap.
 - **Build dropdown (⚙️)**: 6 target kompilasi langsung dari UI —
   - `native` (EXE), `rust` (source), `llvm` (IR), `wasm` (+ HTML runner), `wgsl` (WebGPU shader), `ebpf` (kernel probe).
@@ -252,7 +252,8 @@ widya studio --port 9000
 | Method | Path | Fungsi |
 |---|---|---|
 | GET | `/` | Halaman IDE (HTML+JS+CSS inline) |
-| POST | `/api/run` | Jalankan kode Widya → `{sukses, hasil, output[]}` |
+| POST | `/api/run` | Jalankan kode Widya (sync) → `{sukses, hasil, output[]}` |
+| POST | `/api/run/stream` | Jalankan kode Widya (SSE streaming per-`cetak`, real-time) |
 | POST | `/api/check` | Diagnostik sintaks (LSP inline) → `[{baris, kolom, pesan}]` |
 | GET | `/api/contoh` | Daftar 168+ file contoh |
 | POST | `/api/format` | Format ulang kode |
