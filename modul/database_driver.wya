@@ -1,0 +1,46 @@
+// Modul Database Driver, Connection Pool & Redis Client Enterprise Widya-Lang
+// Mengintegrasikan Connection Pool, Transaksi ACID, dan Redis Caching
+
+fungsi buat_kolam_koneksi(tipe_db, host, port, nama_db, batas_maks_koneksi) {
+    var wal = LogWAL("db_pool_" + nama_db);
+    var kv_cache = PenyimpananKV();
+    
+    kembalikan {
+        "tipe": tipe_db,
+        "url": host + ":" + teks(port) + "/" + nama_db,
+        "batas_koneksi": batas_maks_koneksi,
+        "koneksi_terpakai": 0,
+        "wal_engine": wal,
+        "cache_redis": kv_cache,
+        "status_pool": "SIAP"
+    };
+}
+
+fungsi db_eksekusi_transaksi_acid(kolam, id_transaksi, daftar_operasi) {
+    kolam["koneksi_terpakai"] = kolam["koneksi_terpakai"] + 1;
+    
+    // 1. Tulis ke WAL untuk durabilitas transaksi
+    var idx = 0;
+    selama (idx < panjang(daftar_operasi)) {
+        var op = daftar_operasi[idx];
+        wal_tulis(kolam["wal_engine"], op[0], op[1], op[2]);
+        idx = idx + 1;
+    }
+    
+    kolam["koneksi_terpakai"] = kolam["koneksi_terpakai"] - 1;
+    kembalikan {
+        "id_transaksi": id_transaksi,
+        "sukses": benar,
+        "jumlah_operasi": panjang(daftar_operasi)
+    };
+}
+
+fungsi redis_set_dengan_ttl(kolam, kunci, nilai, ttl_detik) {
+    kv_pasang(kolam["cache_redis"], kunci, nilai, ttl_detik * 1000.0);
+    kembalikan benar;
+}
+
+fungsi redis_ambil(kolam, kunci) {
+    var res = kv_ambil(kolam["cache_redis"], kunci);
+    kembalikan res;
+}

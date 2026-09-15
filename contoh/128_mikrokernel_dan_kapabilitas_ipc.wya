@@ -1,0 +1,47 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 55 - Mikrokernel & Kapabilitas IPC (seL4 Style)
+// Demonstrasi isolasi proses berbasis kapabilitas (CSpace) dan penjadwalan preemptive Task Control Block (TCB).
+
+tulis("=== [WIDYA EDGE OS] PILAR MIKROKERNEL & KAPABILITAS IPC ===");
+
+// 1. Inisialisasi Ruang Kapabilitas (Capability Space)
+var cspace = MikrokernelCapSpace();
+
+// Daftarkan Endpoint IPC dengan izin akses
+cap_buat_endpoint(cspace, "ep_sensor_suhu", "KIRIM_TERIMA");
+cap_buat_endpoint(cspace, "ep_aktuator_motor", "TULIS");
+
+// 2. Simulasi Pertukaran Pesan Sinkron IPC Antar-Thread Terisolasi
+tulis("\n--- SIMULASI IPC SE-L4 STYLE ---");
+cap_kirim_pesan_ipc(cspace, "ep_sensor_suhu", {"suhu_celsius": 42.5, "status": "NORMAL"});
+cap_kirim_pesan_ipc(cspace, "ep_sensor_suhu", {"suhu_celsius": 43.1, "status": "PERINGATAN"});
+
+var pesan1 = cap_terima_pesan_ipc(cspace, "ep_sensor_suhu");
+tulis("Pesan IPC Diterima 1: Suhu = " + pesan1["suhu_celsius"] + " C (" + pesan1["status"] + ")");
+
+var pesan2 = cap_terima_pesan_ipc(cspace, "ep_sensor_suhu");
+tulis("Pesan IPC Diterima 2: Suhu = " + pesan2["suhu_celsius"] + " C (" + pesan2["status"] + ")");
+
+// Uji Pencabutan Hak Akses Kapabilitas (Revocation)
+cap_cabut(cspace, "ep_aktuator_motor");
+tulis("Kapabilitas 'ep_aktuator_motor' berhasil dicabut dari CSpace.");
+
+// 3. Penjadwalan Preemptive Task Control Block (TCB)
+tulis("\n--- PENJADWALAN MIKROKERNEL PREEMPTIVE (TCB) ---");
+var scheduler = PenjadwalMikrokernel(5.0); // Kuantum waktu 5 ms
+
+var tcb_ui = tcb_buat("Thread_GUI", 1, 10.0, "SIAP");
+var tcb_net = tcb_buat("Thread_Network", 2, 15.0, "SIAP");
+var tcb_sensor = tcb_buat("Thread_Sensor", 3, 5.0, "SIAP");
+
+penjadwal_tambah_tcb(scheduler, tcb_ui);
+penjadwal_tambah_tcb(scheduler, tcb_net);
+penjadwal_tambah_tcb(scheduler, tcb_sensor);
+
+tulis("Menjalankan siklus eksekusi CPU Mikrokernel:");
+untuk i dalam 0..6 {
+    var tugas_aktif = penjadwal_ambil_tugas_aktif(scheduler);
+    var tugas_selesai_siklus = penjadwal_langkah_siklus(scheduler);
+    tulis("  Siklus #" + (i + 1) + " -> CPU menjalankan [" + tugas_aktif + "] (Selesai kuantum: " + tugas_selesai_siklus + ")");
+}
+
+tulis("\n[WIDYA EDGE OS] Mikrokernel Capability & TCB Scheduler Berhasil Beroperasi!");

@@ -1,0 +1,67 @@
+// Modul Protokol Transaksi Perbankan ISO 8583 (Core Banking, ATM, EDC, & QRIS Switch)
+
+fungsi buat_pesan_iso8583(mti) {
+    // MTI: Misal "0200" (Financial Request), "0210" (Financial Response), "0800" (Network Mgmt)
+    kembalikan {
+        "mti": mti,
+        "bitmap": {},
+        "fields": {}
+    };
+}
+
+fungsi iso8583_set_field(pesan, field_num, nilai) {
+    var str_val = ke_teks(nilai);
+    pesan["fields"][ke_teks(field_num)] = str_val;
+    pesan["bitmap"][ke_teks(field_num)] = benar;
+    kembalikan pesan;
+}
+
+fungsi iso8583_ambil_field(pesan, field_num) {
+    var key = ke_teks(field_num);
+    jika (ada_kunci(pesan["fields"], key)) {
+        kembalikan Ada(pesan["fields"][key]);
+    }
+    kembalikan Kosong();
+}
+
+fungsi iso8583_pack_payload(pesan) {
+    // Membentuk wire format representasi ISO 8583
+    var header = pesan["mti"];
+    var bit_keys = kunci(pesan["bitmap"]);
+    var body = "";
+    
+    untuk k dalam bit_keys {
+        body = body + "[" + k + ":" + pesan["fields"][k] + "]";
+    }
+    
+    kembalikan {
+        "mti": header,
+        "jumlah_field": panjang(bit_keys),
+        "raw_wire": header + body
+    };
+}
+
+fungsi iso8583_proses_transaksi_pembayaran(pan_kartu, nominal_idr, id_terminal, trace_num) {
+    var req = buat_pesan_iso8583("0200");
+    iso8583_set_field(req, 2, pan_kartu);               // Primary Account Number
+    iso8583_set_field(req, 4, nominal_idr);             // Amount, Transaction
+    iso8583_set_field(req, 11, trace_num);              // System Trace Audit Number (STAN)
+    iso8583_set_field(req, 41, id_terminal);            // Card Acceptor Terminal ID
+    iso8583_set_field(req, 49, "360");                  // Currency Code (IDR = 360)
+    
+    var packed = iso8583_pack_payload(req);
+    
+    // Simulasi respons Switch Bank Pusat (0210 - Approval 00)
+    var resp = buat_pesan_iso8583("0210");
+    iso8583_set_field(resp, 2, pan_kartu);
+    iso8583_set_field(resp, 4, nominal_idr);
+    iso8583_set_field(resp, 11, trace_num);
+    iso8583_set_field(resp, 39, "00");                  // Response Code 00 = Approved
+    iso8583_set_field(resp, 38, "AUTH998123");          // Authorization Code
+    
+    kembalikan {
+        "request_wire": packed,
+        "response": resp,
+        "status_otorisasi": "DISETUJUI_BERHASIL"
+    };
+}

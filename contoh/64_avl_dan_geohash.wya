@@ -1,0 +1,56 @@
+// ==========================================
+// 🌲 Widya-Lang: Pohon Seimbang AVL & Spasial GeoHash
+// ==========================================
+
+cetak("================================================")
+cetak("🌲 WIDYA AVL TREE & GEOHASH SPATIAL ENGINE")
+cetak("================================================")
+
+// 1. Uji Coba WidyaAVL
+cetak("\n--- 1. Self-Balancing AVL Binary Search Tree ---")
+
+var pohon = PohonAVL()
+
+cetak("Menyisipkan data terurut: 10, 20, 30, 40, 50, 25...")
+avl_sisip(pohon, "10", "Data-10")
+avl_sisip(pohon, "20", "Data-20")
+avl_sisip(pohon, "30", "Data-30")
+avl_sisip(pohon, "40", "Data-40")
+avl_sisip(pohon, "50", "Data-50")
+avl_sisip(pohon, "25", "Data-25")
+
+cetak("Tinggi pohon AVL (harus seimbang O(log N)): " + teks(avl_tinggi(pohon)))
+
+cetak("Pencarian kunci '30': " + teks(avl_cari(pohon, "30")))
+cetak("Pencarian kunci '99' (tidak ada): " + teks(avl_cari(pohon, "99")))
+
+var urutan = avl_ke_array(pohon)
+cetak("Inorder traversal daftar terurut (" + teks(panjang(urutan)) + " simpul):")
+var batasUrutan = panjang(urutan) - 1
+untuk i dalam 0..batasUrutan {
+    cetak("  - Kunci: " + urutan[i].kunci + " -> Nilai: " + teks(urutan[i].nilai))
+}
+
+// 2. Uji Coba WidyaGeoHash
+cetak("\n--- 2. Geohash Spatial Encoding & Proximity ---")
+
+// Koordinat Monas Jakarta: -6.175392, 106.827153
+var latMonas = -6.175392
+var lonMonas = 106.827153
+
+var hashMonas = geohash_enkode(latMonas, lonMonas, 8)
+cetak("Geohash Monas Jakarta (presisi 8): " + hashMonas)
+
+var dekode = geohash_dekode(hashMonas)
+cetak("Hasil Dekode Lintang : " + teks(dekode.lintang))
+cetak("Hasil Dekode Bujur   : " + teks(dekode.bujur))
+
+var bbox = geohash_bounding_box(hashMonas)
+cetak("Bounding Box (Min Lat..Max Lat): " + teks(bbox.min_lintang) + " .. " + teks(bbox.max_lintang))
+
+var tetangga = geohash_tetangga(hashMonas)
+cetak("Geohash Tetangga Utara       : " + tetangga.utara)
+cetak("Geohash Tetangga Timur Laut  : " + tetangga.timur_laut)
+cetak("Geohash Tetangga Selatan     : " + tetangga.selatan)
+
+cetak("\n✅ DEMO AVL TREE & GEOHASH BERHASIL!")

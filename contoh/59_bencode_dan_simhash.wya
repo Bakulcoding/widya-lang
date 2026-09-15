@@ -1,0 +1,53 @@
+// Contoh 59: WidyaBencode & WidyaSimHash
+// Pengujian Serialisasi BitTorrent Bencode & Deteksi Near-Duplicate SimHash
+
+fungsi utama() {
+    tulis("=== CONTOH 59: BENCODE & SIMHASH ===");
+
+    // 1. WidyaBencode: BitTorrent Serialization RFC 1077
+    tulis("\n--- 1. WidyaBencode (BitTorrent Serialization) ---");
+
+    var payload = {
+        "nama": "Widya Torrent",
+        "ukuran": 1048576,
+        "berkas": ["modul.wya", "kernel.bin"]
+    };
+
+    tulis("   Objek Asli : " + teks(payload));
+    var bencoded = bencode_enkode(payload);
+    tulis("   Bencoded   : " + bencoded);
+
+    var valid = bencode_validasi(bencoded);
+    tulis("   Apakah format valid? " + teks(valid));
+
+    var decoded = bencode_dekode(bencoded);
+    tulis("   Hasil Dekode Bencode : " + teks(decoded));
+
+    // 2. WidyaSimHash: Locality-Sensitive Hashing & Near-Duplicate Detection
+    tulis("\n--- 2. WidyaSimHash (Near-Duplicate Document Fingerprint) ---");
+
+    var doc1 = "widya bahasa pemrograman mutakhir indonesia untuk komputasi cepat dan aman";
+    var doc2 = "widya bahasa pemrograman mutakhir indonesia untuk komputasi aman dan cepat"; // susunan kata sedikit berbeda
+    var doc3 = "resep membuat masakan rendang padang asli dengan santan kelapa murni"; // topik sama sekali berbeda
+
+    var hash1 = simhash_buat(doc1);
+    var hash2 = simhash_buat(doc2);
+    var hash3 = simhash_buat(doc3);
+
+    tulis("   Doc 1 Fingerprint: " + hash1);
+    tulis("   Doc 2 Fingerprint: " + hash2);
+    tulis("   Doc 3 Fingerprint: " + hash3);
+
+    var dist_1_2 = simhash_jarak_hamming(hash1, hash2);
+    var dist_1_3 = simhash_jarak_hamming(hash1, hash3);
+
+    tulis("   Jarak Hamming (Doc1 vs Doc2 - Mirip)     : " + teks(dist_1_2) + " bit");
+    tulis("   Jarak Hamming (Doc1 vs Doc3 - Beda Total): " + teks(dist_1_3) + " bit");
+
+    tulis("   Apakah Doc1 & Doc2 mirip (Ambang <= 5)? " + teks(simhash_apakah_mirip(doc1, doc2, 5)));
+    tulis("   Apakah Doc1 & Doc3 mirip (Ambang <= 5)? " + teks(simhash_apakah_mirip(doc1, doc3, 5)));
+
+    tulis("\n=== SELESAI CONTOH 59 ===");
+}
+
+utama();

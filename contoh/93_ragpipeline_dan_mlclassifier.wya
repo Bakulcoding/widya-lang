@@ -1,0 +1,92 @@
+// =========================================================================
+// CONTOH 93: WidyaRAGPipeline & WidyaMLClassifier
+// Pilar Aplikasi Berbasis Data & Kecerdasan Buatan Terpadu (Gelombang 37)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("🧠 CONTOH 93: RAG PIPELINE & MACHINE LEARNING (WAVE 37)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaRAGPipeline (Retrieval-Augmented Generation & Prompt Synthesis)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaRAGPipeline (AI Retrieval & Prompt Synthesis) ---")
+
+var rag = RAGPipeline("WidyaKnowledgeBase", 16)
+
+// Indexing Dokumen Pengetahuan Perusahaan
+var dok1 = "Widya-Lang mendukung kompilasi native bare-metal x86_64, WebAssembly, dan LLVM IR. Sintaksnya dirancang berbasis Bahasa Indonesia yang ekspresif."
+var dok2 = "Fitur keamanan memori Widya-Lang menggunakan sistem Borrow Checker statis tanpa memerlukan Garbage Collector (GC)."
+var dok3 = "Untuk skala backend ultra-scale, Widya-Lang menyediakan modul bawaan LoadBalancer, APIGatewayRouter, dan DistributedLock."
+
+rag_tambah_dokumen(rag, "DOK_ARSITEKTUR", dok1)
+rag_tambah_dokumen(rag, "DOK_KEAMANAN", dok2)
+rag_tambah_dokumen(rag, "DOK_BACKEND", dok3)
+
+// Pencarian Konteks Semantik
+var pertanyaan = "Bagaimana arsitektur kompilasi dan backend pada Widya-Lang?"
+cetak(">> Kueri Pertanyaan: \"" + pertanyaan + "\"")
+var hasil_konteks = rag_kueri_konteks(rag, pertanyaan, 2)
+
+var k = 0
+selama k < panjang(hasil_konteks) {
+    var item = hasil_konteks[k]
+    cetak("   [Top " + (k + 1) + " Match] " + item["doc_id"] + " (Skor: " + item["skor_kemiripan"] + "):")
+    cetak("   \"" + item["teks"] + "\"")
+    k = k + 1
+}
+
+// Sintesis Prompt Teraugmentasi Konteks untuk LLM
+cetak("\n>> Prompt Augmented yang Dihasilkan untuk LLM:")
+var prompt_llm = rag_sintesis_prompt(rag, pertanyaan, 2)
+cetak("-----------------------------------------------------------------")
+cetak(prompt_llm)
+cetak("-----------------------------------------------------------------")
+
+// -------------------------------------------------------------------------
+// 2. WidyaMLClassifier (Pohon Keputusan & K-Means Clustering)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaMLClassifier (Decision Tree & K-Means) ---")
+
+// Latih Pohon Keputusan (Decision Tree) untuk Deteksi Risiko Transaksi
+// Fitur: [Jumlah Nominal Juta, Jam Transaksi, Skor Lokasi Asing (0/1)]
+var x_train = [
+    [0.5, 14, 0], // Nominal kecil, siang, lokal -> "Aman"
+    [1.2, 10, 0], // Nominal sedang, pagi, lokal -> "Aman"
+    [85.0, 2, 1], // Nominal sangat besar, dini hari, luar negeri -> "Bahaya"
+    [45.0, 3, 1], // Nominal besar, malam, luar negeri -> "Bahaya"
+    [2.0, 20, 0]  // Nominal sedang, malam, lokal -> "Aman"
+]
+var y_train = ["Aman", "Aman", "Bahaya", "Bahaya", "Aman"]
+
+var tree = PohonKeputusan(4)
+ml_latih_pohon(tree, x_train, y_train)
+
+// Uji Prediksi Transaksi Baru
+var uji1 = [0.8, 12, 0]  // Transaksi 800rb di siang hari
+var uji2 = [90.0, 1, 1]  // Transaksi 90jt jam 1 malam luar negeri
+
+var pred1 = ml_prediksi_pohon(tree, uji1)
+var pred2 = ml_prediksi_pohon(tree, uji2)
+
+cetak(">> Hasil Klasifikasi Pohon Keputusan:")
+cetak("   Transaksi A [Rp 800rb, Siang] -> Status: " + pred1)
+cetak("   Transaksi B [Rp 90jt, Dini Hari, Luar Negeri] -> Status: " + pred2)
+
+// K-Means Clustering (Segmentasi Pelanggan Otomatis)
+// Data: [Frekuensi Belanja per Bulan, Total Belanja Juta]
+var data_pelanggan = [
+    [1, 0.2],
+    [2, 0.5],
+    [15, 12.0],
+    [18, 15.5],
+    [20, 18.0]
+]
+var hasil_klaster = ml_kmeans_klaster(data_pelanggan, 2, 50)
+cetak("\n>> K-Means Clustering 2 Segmen Pelanggan:")
+cetak("   Centroid Klaster: " + hasil_klaster["centroid"])
+cetak("   Label Klaster Pelanggan: " + hasil_klaster["klaster"])
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaRAGPipeline & MLClassifier Beroperasi 100%!")
+cetak("=================================================================")

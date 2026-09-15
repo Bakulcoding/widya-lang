@@ -1,0 +1,35 @@
+// =========================================================================
+// Contoh 100: Pilar IoT & Sistem Tertanam (GPIO, PWM, I2C, SPI)
+// WidyaEmbeddedGPIO & WidyaBusI2C / WidyaBusSPI
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR IOT & EMBEDDED: GPIO, PWM, I2C, SPI ===");
+
+    // 1. Kontrol Digital Pin GPIO & PWM Motor/LED
+    var led = PinGPIO(13, "Output");
+    gpio_tulis(led, 1);
+    cetak("Status Pin LED (GPIO 13): " + ke_teks(gpio_baca(led)));
+
+    gpio_set_pwm(led, 1000.0, 75.0); // 1 kHz PWM pada duty cycle 75%
+    cetak("Konfigurasi PWM: Frekuensi=" + ke_teks(led.pwm_frekuensi_hz) + " Hz, Duty=" + ke_teks(led.pwm_duty_cycle) + "%");
+
+    // 2. Transaksi Register Sensor Bus I2C (Alamat Sensor 0x68 misal MPU6050)
+    var i2c = BusI2C(1, 0x68);
+    // Tulis konfigurasi daya register 0x6B (PWR_MGMT_1 -> 0x00 wake up)
+    var bytes_tulis = i2c_tulis_register(i2c, 0x6B, [0x00]);
+    cetak("I2C Write Register 0x6B Berhasil: " + ke_teks(bytes_tulis) + " byte");
+
+    var baca_sensor = i2c_baca_register(i2c, 0x6B, 1);
+    cetak("I2C Read Register 0x6B Response: " + ke_teks(baca_sensor[0]));
+
+    // 3. Komunikasi Duplex Bus SPI Berkecepatan Tinggi (10 MHz)
+    var spi = BusSPI(10, 0, 10000000);
+    var buffer_kirim = [0x9F, 0x00, 0x00]; // JEDEC ID Command
+    var buffer_terima = spi_transfer(spi, buffer_kirim);
+    cetak("SPI Transfer Duplex Selesai: Jumlah RX=" + ke_teks(panjang(buffer_terima)) + " bytes");
+
+    cetak("=== UJI GPIO, I2C, SPI HARDWARE BUS SUKSES ===");
+}
+
+utama();

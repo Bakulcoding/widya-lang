@@ -1,0 +1,51 @@
+// ===================================================================
+// CONTOH 82: PAXOS CONSENSUS PROTOCOL & T-DIGEST STREAMING QUANTILES
+// Widya-Lang Distributed Fault Tolerance & Statistical Big Data Sketches
+// ===================================================================
+
+cetak("=== DEMO WIDYA PAXOS DISTRIBUTED CONSENSUS ===")
+var klaster = KlasterPaxos(["acceptor-1", "acceptor-2", "acceptor-3", "acceptor-4", "acceptor-5"])
+
+// Fasa 1: Proposer mengajukan nomor proposal (n = 101)
+var janji = paxos_siapkan(klaster, 101, "proposer-asia-1")
+cetak("Status Quorum Fasa 1 (Prepare) : " + teks(janji.ok))
+cetak("Jumlah Acceptor memberi janji : " + teks(janji.promises) + " (Quorum: " + teks(janji.quorum) + ")")
+pastikan(janji.ok, "Fasa 1 Paxos harus mencapai kuorum mayoritas")
+
+// Fasa 2: Proposer mengirim nilai konsensus yang diusulkan
+var transaksi_blok = "BLOCK_HASH_GENESIS_STATE_0x99AABB"
+var terima = paxos_usulkan(klaster, 101, transaksi_blok, "proposer-asia-1")
+cetak("Status Quorum Fasa 2 (Accept)  : " + teks(terima.ok))
+cetak("Jumlah Acceptor menerima nilai : " + teks(terima.accepts))
+pastikan(terima.ok, "Fasa 2 Paxos harus berhasil diterima")
+
+// Fasa 3: Putuskan nilai final (Commit / Learn)
+paxos_putuskan(klaster, terima.value)
+var nilai_final = paxos_nilai_terpilih(klaster)
+cetak("Nilai konsensus mutlak tercapai: " + nilai_final)
+
+cetak("")
+cetak("=== DEMO WIDYA T-DIGEST (STREAMING PERCENTILES & CDF) ===")
+var sketch = TDigest(100)
+
+// Simulasi streaming latensi jaringan (1000 titik pengukuran acak)
+var i = 1
+selama (i <= 500) {
+    // Latensi dasar 10ms - 50ms, dengan lonjakan tail latency 100ms - 500ms
+    var latensi = (i * 0.5) + (i % 7) * 2.0
+    tdigest_tambah(sketch, latensi)
+    i = i + 1
+}
+
+var p50 = tdigest_persentil(sketch, 0.50)
+var p90 = tdigest_persentil(sketch, 0.90)
+var p99 = tdigest_persentil(sketch, 0.99)
+var cdf_100 = tdigest_cdf(sketch, 100.0)
+
+cetak("Estimasi Latensi Median (p50)   : " + teks(bulat(p50)) + " ms")
+cetak("Estimasi Latensi SLA 90% (p90)  : " + teks(bulat(p90)) + " ms")
+cetak("Estimasi Tail Latency (p99)     : " + teks(bulat(p99)) + " ms")
+cetak("Probabilitas latensi <= 100ms   : " + teks(bulat(cdf_100 * 100)) + "%")
+
+cetak("")
+cetak("✔ Seluruh pengujian Paxos Consensus & T-Digest Sketches sukses dieksekusi!")

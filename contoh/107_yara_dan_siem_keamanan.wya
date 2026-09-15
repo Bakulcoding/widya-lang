@@ -1,0 +1,39 @@
+// =========================================================================
+// Contoh 107: Pilar Keamanan Siber (Aturan YARA & SIEM Anomaly Detection)
+// WidyaYARAMatcher & WidyaLogAnalyzer
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR KEAMANAN SIBER: ATURAN YARA & SIEM LOG ANALYSIS ===");
+
+    // 1. Pencocokan Signature Malware Berbasis Aturan YARA
+    var aturan_webshell = AturanYARA("Deteksi_Webshell_PHP", ["eval(base64_decode", "system($_GET", "passthru("]);
+    
+    var file_mencurigakan = "<?php if(isset($_GET['c'])) { system($_GET['c']); } ?>";
+    var hasil_pindai = yara_pindai_target(aturan_webshell, file_mencurigakan);
+    cetak("YARA Scanner: Status Cocok = " + ke_teks(hasil_pindai.cocok) + " [Pola Ditemukan: " + ke_teks(hasil_pindai.pola_ditemukan) + "]");
+
+    // 2. Analisis SIEM Log & Deteksi Serangan Anomali
+    var siem = PenganalisisLogSIEM();
+
+    var daftar_log = [
+        { "ip": "192.168.1.100", "uri": "/index.html", "status": 200 },
+        { "ip": "10.0.0.88", "uri": "/login.php?user=admin' OR '1'='1", "status": 200 },
+        { "ip": "10.0.0.88", "uri": "/files/../../etc/passwd", "status": 403 },
+        { "ip": "185.220.101.5", "uri": "/api/auth/login", "status": 401 },
+        { "ip": "185.220.101.5", "uri": "/api/auth/login", "status": 401 },
+        { "ip": "185.220.101.5", "uri": "/api/auth/login", "status": 401 }
+    ];
+
+    // Deteksi Pola Serangan Web Exploit (SQL Injection / Path Traversal)
+    var serangan_terdeteksi = siem_deteksi_pola_serangan(siem, daftar_log);
+    cetak("Insiden Serangan Web Terdeteksi: " + ke_teks(panjang(serangan_terdeteksi)));
+
+    // Deteksi Anomali Frekuensi IP (Brute Force / DoS Threshold = 3)
+    var anomali_ip = siem_deteksi_anomali_ip(siem, daftar_log, 3);
+    cetak("Anomali IP Brute Force Terdeteksi: " + ke_teks(panjang(anomali_ip)));
+
+    cetak("=== UJI YARA & SIEM SECURITY SUKSES ===");
+}
+
+utama();

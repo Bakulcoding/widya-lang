@@ -1,0 +1,59 @@
+// =================================================================
+// Contoh 09: Aplikasi Antarmuka Deklaratif Bergaya Flutter (WidyaUI)
+// =================================================================
+
+// Membuat pohon widget aplikasi deklaratif
+misal app = Aplikasi({
+    "judul": "WidyaPay - Dompet Digital",
+    "tema": "indigo",
+    "badan": Halaman({
+        "badan": Kolom([
+            // Kartu Saldo
+            Kartu({
+                "anak": Kolom([
+                    TeksWidget("SALDO TERSEDIA", {"warna": "abu", "ukuran": 12}),
+                    Pemisah(4),
+                    TeksWidget("Rp 1.450.000", {"tebal": benar, "ukuran": 28}),
+                    Pemisah(8),
+                    Baris([
+                        TeksWidget("🔹 Alamat: 0x71C...89A4", {"warna": "cyan", "ukuran": 12})
+                    ])
+                ])
+            }),
+
+            Pemisah(16),
+
+            // Bagian Aksi Cepat
+            TeksWidget("Aksi Cepat", {"tebal": benar, "ukuran": 16}),
+            Pemisah(8),
+            Baris([
+                Tombol("Kirim WIDYA", fungsi() {
+                    cetak("Navigasi ke halaman Kirim");
+                }),
+                Tombol("Terima", fungsi() {
+                    cetak("Tampilkan QR Code");
+                })
+            ]),
+
+            Pemisah(16),
+
+            // Form Transfer
+            Kartu({
+                "anak": Kolom([
+                    TeksWidget("Kirim Saldo Baru", {"tebal": benar, "ukuran": 14}),
+                    Pemisah(8),
+                    BidangTeks({"petunjuk": "Alamat Penerima (0x...)"}),
+                    Pemisah(8),
+                    BidangTeks({"petunjuk": "Nominal Transfer"}),
+                    Pemisah(12),
+                    Tombol("Konfirmasi Transaksi", fungsi() {
+                        cetak("Memproses transaksi...");
+                    })
+                ])
+            })
+        ])
+    })
+});
+
+// Menghasilkan keluaran widget tree untuk dirender
+kembalikan app;

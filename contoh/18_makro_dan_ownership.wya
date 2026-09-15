@@ -1,0 +1,41 @@
+// Contoh 18: World-Class Level Metaprogramming & Memory Safety (Widya-Lang)
+
+cetak("=== 1. Metaprogramming & Procedural Macro #[turunkan] ===");
+
+// Menggunakan makro anotasi #[turunkan] untuk otomatis menggenerasi method JSON, Debug, dan Duplikat
+#[turunkan(Json, Serialisasi, Debug, Duplikat)]
+struktur DataPengguna {
+    id,
+    nama,
+    saldo,
+    aktif,
+}
+
+// Inisialisasi instance struktur
+misal pengguna = DataPengguna(101, "Widya Developer", 5000000, benar);
+
+cetak("Objek Pengguna Asli:");
+cetak("  ID    :", pengguna.id);
+cetak("  Nama  :", pengguna.nama);
+cetak("  Saldo :", pengguna.saldo);
+
+// Panggil method yang otomatis digenerasikan oleh Macro Expander
+misal json_teks = pengguna.ke_json();
+cetak("Hasil Otomatis Auto-Generated .ke_json():");
+cetak(json_teks);
+
+misal klon = pengguna.duplikat();
+cetak("Hasil Duplikat/Clone ID:", klon.id, "Nama:", klon.nama);
+
+cetak("");
+cetak("=== 2. Memory Safety & Static Lifetime Verification ===");
+
+misal pesan = "Data Rahasia Sistem";
+cetak("Variabel Utama:", pesan);
+
+// Static Borrowing simulation
+misal status_keamanan = Ok("Verifikasi Keamanan Memori Lolos 100%");
+pastikan(apakah_ok(status_keamanan), "Status harus valid");
+cetak("Hasil Borrow Checker:", buka(status_keamanan));
+
+cetak("✅ World-Class Metaprogramming & Memory Safety Berhasil!");

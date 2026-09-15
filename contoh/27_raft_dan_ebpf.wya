@@ -1,0 +1,32 @@
+// Contoh 27: Distributed Raft Consensus & Linux eBPF Tracing (Widya-Lang)
+
+cetak("=== 🏛️ 1. Distributed Raft Consensus Engine (WidyaRaft) ===");
+
+// Inisialisasi Node Raft dalam cluster terdistribusi
+misal node1 = NodeRaft("node_alpha", ["node_beta", "node_gamma"]);
+cetak("Status Awal: Node ID = " + node1.id + ", Peran = " + node1.peran);
+
+// Mengadakan pemilihan pemimpin (Leader Election)
+misal peran_baru = pilih_pemimpin(node1);
+cetak("Hasil Pemilihan Pemimpin: " + peran_baru);
+
+// Mengusulkan entri log transaksi baru untuk replikasi konsensus
+usulkan_log(node1, "TRANSAKSI_001: TRANSFER 5000 WIDYA KE ALICE");
+usulkan_log(node1, "TRANSAKSI_002: TRANSFER 2500 WIDYA KE BOB");
+
+misal status_node = status_konsensus(node1);
+cetak("Status Konsensus Klaster: Peran = " + status_node.peran + ", Jumlah Log = " + string(status_node.jumlah_log));
+
+cetak("=== 🛡️ 2. Linux Kernel eBPF Probing & Telemetry (WidyaEBPF) ===");
+
+misal prog_ebpf = ProgramEBPF("kprobe", "sys_enter_connect");
+cetak("Program eBPF: Tipe = " + prog_ebpf.tipe + ", Status = " + prog_ebpf.status);
+
+// Memasang probe pelacak paket dan koneksi
+pasang_probe_ebpf(prog_ebpf, "tcp_v4_connect");
+
+// Membaca kernel map performa latensi
+misal telemetri = baca_peta_ebpf(prog_ebpf, "packet_counter_map");
+cetak("Telemetri Kernel eBPF: Total Paket = " + string(telemetri.total_paket_terfilter) + ", Latensi = " + string(telemetri.latensi_rata_rata_ns) + " ns");
+
+cetak("=== 🚀 Selesai Menjalankan Raft & eBPF Demo ===");

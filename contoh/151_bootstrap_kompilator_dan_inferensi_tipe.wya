@@ -1,0 +1,59 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 66 - Bootstrap Kompilator & Inferensi Tipe Hindley-Milner
+// Demonstrasi siklus kompilator mandiri (Self-Hosting Stage 0/1) dan inferensi tipe statis otomatis Hindley-Milner.
+
+tulis("=== [WIDYA METAPROGRAMMING] BOOTSTRAP & INFERENSI TIPE ===");
+
+// 1. Self-Hosting Compiler Bootstrap (Tombstone T-Diagram Verification)
+tulis("--- SIKLUS BOOTSTRAP KOMPILATOR MANDIRI (SELF-HOSTING) ---");
+var boot = PengendaliBootstrapKompilator("WidyaNativeCompiler");
+
+// Inisialisasi Tahap Stage 0 (Host Rust -> Target C99) dan Stage 1 (Widya -> Target C99)
+bootstrap_inisialisasi_tahap(boot, "Stage_0", "Rust", "C99");
+bootstrap_inisialisasi_tahap(boot, "Stage_1", "Widya", "C99");
+
+// Kompilasi Kode Kompilator Menggunakan Stage 0
+var emisi_stage0 = bootstrap_kompilasi_sumber_ke_target(
+    boot,
+    "Stage_0",
+    "fungsi utama() { tulis('Bootstrap Stage 0'); }",
+    "C99"
+);
+tulis("Tahap Kompilasi     : " + emisi_stage0["tahap"]);
+tulis("Backend Target      : " + emisi_stage0["backend_target"]);
+tulis("Hash Output Biner 0 : " + emisi_stage0["hash_biner"]);
+
+// Kompilasi Ulang Kode Kompilator Menggunakan Stage 1 (Self-Hosting Recompilation)
+var emisi_stage1 = bootstrap_kompilasi_sumber_ke_target(
+    boot,
+    "Stage_1",
+    "fungsi utama() { tulis('Bootstrap Stage 0'); }",
+    "C99"
+);
+tulis("Hash Output Biner 1 : " + emisi_stage1["hash_biner"]);
+
+// Verifikasi Kesetaraan Biner (Bit-Identical Stage 0 vs Stage 1 Check)
+var verifikasi = bootstrap_verifikasi_kesetaraan_biner(boot, "Stage_0", "Stage_1");
+tulis("Kesetaraan Biner    : " + verifikasi["kesetaraan_biner"]);
+tulis("Status Self-Hosting : " + verifikasi["status_self_hosting"]);
+
+// 2. Hindley-Milner Static Type Inference (Algorithm W & Unification)
+tulis("\n--- INFERENSI TIPE STATIS HINDLEY-MILNER (ALGORITHM W) ---");
+var checker = PemeriksaTipeInferensi();
+
+// Daftarkan Skema Tipe Primitif & Fungsi Polimorfik
+tipe_daftarkan_skema_tipe(checker, "tambah", "Number -> Number -> Number");
+tipe_daftarkan_skema_tipe(checker, "identitas", "forall a. a -> a");
+
+// Lakukan Unifikasi Persamaan Tipe (Unification MGU)
+var unifikasi = tipe_unifikasi_persamaan(checker, "Number", "Number");
+tulis("Unifikasi Persamaan : " + unifikasi["unifikasi_sukses"]);
+tulis("Most General Unifier: " + unifikasi["most_general_unifier"]);
+
+// Inferensi Tipe Ekspresi AST Otomatis Tanpa Anotasi
+var inferensi = tipe_inferensi_ekspresi_ast(checker, "100.5 + 42.0");
+tulis("\nEkspresi Sumber     : " + inferensi["ekspresi"]);
+tulis("Tipe Terinferensi   : " + inferensi["tipe_terinferensi"]);
+tulis("Sistem Logika Tipe  : " + inferensi["sistem_tipe"]);
+tulis("Validasi Tipe       : " + inferensi["status"]);
+
+tulis("\n[WIDYA METAPROGRAMMING] Bootstrap & Inferensi Tipe Berhasil Diverifikasi!");

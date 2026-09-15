@@ -1,0 +1,39 @@
+// =========================================================================
+// Contoh 113: Pilar Bioinformatika (Penjajaran Sekuens & Spektra K-mer)
+// WidyaSequenceAlignment & WidyaKmerCounter / WidyaMotifFinder
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR BIOINFORMATIKA: PENJAJARAN SEKUENS & SPEKTRA K-MER ===");
+
+    // 1. Inisialisasi Penjajar Sekuens (Match=+2, Mismatch=-1, Gap=-2)
+    var aligner = PenjajarSekuens(2.0, -1.0, -2.0);
+
+    var seq_a = "GATTACA";
+    var seq_b = "GCATGCU";
+
+    // Needleman-Wunsch Global Alignment (Homologi Genom Menyeluruh)
+    var global_res = penjajaran_global(aligner, seq_a, seq_b);
+    cetak("Needleman-Wunsch Global Alignment Score: " + ke_teks(global_res.skor_keselarasan));
+
+    // Smith-Waterman Local Alignment (Pencocokan Substring / Domain Motif)
+    var seq_c = "AAAGATTACATTT";
+    var seq_d = "CCCGATTACAGGG";
+    var local_res = penjajaran_lokal(aligner, seq_c, seq_d);
+    cetak("Smith-Waterman Local Alignment Score: " + ke_teks(local_res.skor_keselarasan));
+
+    // 2. Analisis Spektra K-Mer (Frekuensi Sub-sekuens Panjang k=3)
+    var sekuens_gen = "ATGCGATCGATCGATCGAT";
+    var kmer_counts = kmer_hitung_frekuensi(sekuens_gen, 3);
+    cetak("Spektra Frekuensi 3-Mer pada Sekuens: " + ke_teks(kmer_counts));
+
+    // 3. Jarak Hamming (Deteksi Jumlah Mutasi SNP Genetik)
+    var mutan_1 = "GAGCCTACTAACGGGAT";
+    var mutan_2 = "CATCGTAATGACGGCCT";
+    var jml_mutasi = genom_jarak_hamming(mutan_1, mutan_2);
+    cetak("Jarak Hamming (Jumlah Mutasi Point SNP): " + ke_teks(jml_mutasi) + " basa");
+
+    cetak("=== UJI PENJAJARAN SEKUENS & K-MER SUKSES ===");
+}
+
+utama();

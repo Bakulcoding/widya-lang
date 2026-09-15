@@ -1,0 +1,282 @@
+fungsi kosinus_kemiripan(v1, v2) {
+    misal titik = 0
+    misal norm1 = 0
+    misal norm2 = 0
+    misal n = panjang(v1)
+    var i = 0
+    selama (i < n) {
+        titik += v1[i] * v2[i]
+        norm1 += v1[i] * v1[i]
+        norm2 += v2[i] * v2[i]
+        i += 1
+    }
+    jika norm1 == 0 atau norm2 == 0 {
+        kembalikan 0
+    }
+    kembalikan titik / (akar(norm1) * akar(norm2))
+}
+
+fungsi buat_basis_data_vektor(dim) {
+    kembalikan {
+        "_tipe": "BasisDataVektor",
+        "dimensi": dim,
+        "entri": []
+    }
+}
+
+fungsi vektor_sisip(db, id, vek, meta) {
+    tambah(db.entri, {
+        "id": id,
+        "vektor": vek,
+        "metadata": meta
+    })
+    kembalikan benar
+}
+
+fungsi vektor_hitung(db) {
+    kembalikan panjang(db.entri)
+}
+
+fungsi vektor_dapatkan_vektor(db, id) {
+    misal n = panjang(db.entri)
+    var i = 0
+    selama (i < n) {
+        jika db.entri[i].id == id {
+            kembalikan db.entri[i].vektor
+        }
+        i += 1
+    }
+    kembalikan nil
+}
+
+fungsi vektor_dapatkan_metadata(db, id) {
+    misal n = panjang(db.entri)
+    var i = 0
+    selama (i < n) {
+        jika db.entri[i].id == id {
+            kembalikan db.entri[i].metadata
+        }
+        i += 1
+    }
+    kembalikan nil
+}
+
+fungsi sort_hasil_kemiripan(daftar) {
+    misal n = panjang(daftar)
+    var i = 0
+    selama (i < n) {
+        var j = i + 1
+        selama (j < n) {
+            jika daftar[j].kemiripan > daftar[i].kemiripan {
+                misal tmp = daftar[i]
+                daftar[i] = daftar[j]
+                daftar[j] = tmp
+            }
+            j += 1
+        }
+        i += 1
+    }
+    kembalikan daftar
+}
+
+fungsi vektor_kueri_knn(db, qvek, top_k) {
+    misal skor = []
+    untuk_setiap(db.entri, fungsi(e) {
+        misal sim = kosinus_kemiripan(qvek, e.vektor)
+        tambah(skor, {
+            "id": e.id,
+            "vektor": e.vektor,
+            "metadata": e.metadata,
+            "kemiripan": sim
+        })
+    })
+    sort_hasil_kemiripan(skor)
+    misal hasil = []
+    var k = top_k
+    jika k > panjang(skor) {
+        k = panjang(skor)
+    }
+    var idx = 0
+    selama (idx < k) {
+        tambah(hasil, skor[idx])
+        idx += 1
+    }
+    kembalikan hasil
+}
+
+fungsi lsh_init(D, num_tables, num_bits) {
+    jika num_tables == nil {
+        num_tables = 4
+    }
+    jika num_bits == nil {
+        num_bits = 6
+    }
+    misal random_vecs_per_table = []
+    var t = 0
+    selama (t < num_tables) {
+        misal table_vecs = []
+        var b = 0
+        selama (b < num_bits) {
+            misal rand_vec = []
+            var d = 0
+            selama (d < D) {
+                tambah(rand_vec, acak(-1, 1))
+                d += 1
+            }
+            tambah(table_vecs, rand_vec)
+            b += 1
+        }
+        tambah(random_vecs_per_table, table_vecs)
+        t += 1
+    }
+    misal bucket_per_table = []
+    var t2 = 0
+    selama (t2 < num_tables) {
+        tambah(bucket_per_table, {})
+        t2 += 1
+    }
+    kembalikan {
+        "_tipe": "VektorLSHIndex",
+        "D": D,
+        "num_tables": num_tables,
+        "num_bits": num_bits,
+        "random_vecs_per_table": random_vecs_per_table,
+        "bucket_per_table": bucket_per_table
+    }
+}
+
+fungsi lsh_hitung_signature(lsh, table_idx, vek) {
+    misal sig = ""
+    misal table_vecs = lsh.random_vecs_per_table[table_idx]
+    var b = 0
+    selama (b < lsh.num_bits) {
+        misal rv = table_vecs[b]
+        misal dot = 0
+        var d = 0
+        selama (d < lsh.D) {
+            dot += vek[d] * rv[d]
+            d += 1
+        }
+        jika dot >= 0 {
+            sig += "1"
+        } lainnya {
+            sig += "0"
+        }
+        b += 1
+    }
+    kembalikan sig
+}
+
+fungsi lsh_sisip(lsh, id, vek) {
+    var t = 0
+    selama (t < lsh.num_tables) {
+        misal sig = lsh_hitung_signature(lsh, t, vek)
+        misal bucket = lsh.bucket_per_table[t]
+        jika bucket[sig] == nil {
+            bucket[sig] = []
+        }
+        tambah(bucket[sig], id)
+        t += 1
+    }
+    kembalikan benar
+}
+
+fungsi lsh_kueri_knn(lsh, vektor_db, qvek, top_k) {
+    misal kandidat_map = {}
+    var t = 0
+    selama (t < lsh.num_tables) {
+        misal sig = lsh_hitung_signature(lsh, t, qvek)
+        misal bucket = lsh.bucket_per_table[t]
+        misal ids = bucket[sig]
+        jika ids != nil {
+            untuk_setiap(ids, fungsi(id) {
+                kandidat_map[id] = benar
+            })
+        }
+        t += 1
+    }
+    misal kandidat_ids = kunci(kandidat_map)
+    misal skor = []
+    untuk_setiap(kandidat_ids, fungsi(id) {
+        misal ev = vektor_dapatkan_vektor(vektor_db, id)
+        jika ev != nil {
+            misal sim = kosinus_kemiripan(qvek, ev)
+            misal meta = vektor_dapatkan_metadata(vektor_db, id)
+            tambah(skor, {
+                "id": id,
+                "vektor": ev,
+                "metadata": meta,
+                "kemiripan": sim
+            })
+        }
+    })
+    sort_hasil_kemiripan(skor)
+    misal hasil = []
+    var k = top_k
+    jika k > panjang(skor) {
+        k = panjang(skor)
+    }
+    var idx = 0
+    selama (idx < k) {
+        tambah(hasil, skor[idx])
+        idx += 1
+    }
+    misal info_jumlah_kandidat = panjang(kandidat_ids)
+    kembalikan {
+        "hasil": hasil,
+        "jumlah_kandidat": info_jumlah_kandidat
+    }
+}
+
+fungsi vektor_kueri_knn_approx(vektor_db, lsh, qvek, top_k) {
+    misal res = lsh_kueri_knn(lsh, vektor_db, qvek, top_k)
+    kembalikan res.hasil
+}
+
+fungsi uji_sendiri_vektor_lsh() {
+    misal D = 8
+    misal db = buat_basis_data_vektor(D)
+    misal lsh = lsh_init(D, 10, 4)
+    var idx = 0
+    selama (idx < 500) {
+        misal vek = []
+        var d = 0
+        selama (d < D) {
+            tambah(vek, acak(-1, 1))
+            d += 1
+        }
+        misal id = "v_" + ke_teks(idx)
+        misal meta = { "nomor": idx }
+        vektor_sisip(db, id, vek, meta)
+        lsh_sisip(lsh, id, vek)
+        idx += 1
+    }
+    var recall_benar = 0
+    var total_kandidat = 0
+    var q = 0
+    selama (q < 10) {
+        misal qvek = []
+        var d2 = 0
+        selama (d2 < D) {
+            tambah(qvek, acak(-1, 1))
+            d2 += 1
+        }
+        misal brute = vektor_kueri_knn(db, qvek, 1)
+        misal approx_res = lsh_kueri_knn(lsh, db, qvek, 1)
+        total_kandidat += approx_res.jumlah_kandidat
+        jika panjang(brute) > 0 dan panjang(approx_res.hasil) > 0 {
+            jika brute[0].id == approx_res.hasil[0].id {
+                recall_benar += 1
+            }
+        }
+        q += 1
+    }
+    misal rata_kandidat = total_kandidat / 10
+    cetak("[OK] Vector LSH Approx NN self-test: recall " + ke_teks(recall_benar) + "/10, rata-rata kandidat " + ke_teks(bulat(rata_kandidat)))
+    jika recall_benar >= 6 {
+        kembalikan benar
+    }
+    kembalikan salah
+}
+
+uji_sendiri_vektor_lsh()

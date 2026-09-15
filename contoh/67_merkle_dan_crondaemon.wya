@@ -1,0 +1,58 @@
+// ==========================================
+// 🌳 Widya-Lang: Merkle Tree & Daemon Cron
+// ==========================================
+
+cetak("================================================")
+cetak("🌳 WIDYA MERKLE TREE & CRON DAEMON ORCHESTRATOR")
+cetak("================================================")
+
+// 1. Uji Coba WidyaMerkleTree
+cetak("\n--- 1. Cryptographic Merkle Tree & Audit Proof ---")
+
+var blokTransaksi = [
+    "tx_001_transfer_alice_bob_50",
+    "tx_002_transfer_bob_charlie_20",
+    "tx_003_smartcontract_mint_token",
+    "tx_004_transfer_charlie_dave_10"
+]
+
+var pohonMerkle = PohonMerkle(blokTransaksi)
+var rootHash = merkle_root(pohonMerkle)
+cetak("Merkle Root Hash Transaksi: " + rootHash)
+
+// Membuat bukti audit untuk transaksi indeks 2 ("tx_003_smartcontract_mint_token")
+var indexTarget = 2
+var txTarget = blokTransaksi[indexTarget]
+var buktiPath = merkle_buat_bukti(pohonMerkle, indexTarget)
+cetak("Bukti Audit untuk tx #" + teks(indexTarget) + " ('" + txTarget + "') dibuat dengan " + teks(panjang(buktiPath)) + " langkah.")
+
+// Verifikasi bukti audit
+var valid = merkle_verifikasi_bukti(rootHash, txTarget, buktiPath)
+cetak("Apakah bukti audit valid terhadap Merkle Root? " + teks(valid))
+
+var palsu = merkle_verifikasi_bukti(rootHash, "tx_palsu_rekayasa", buktiPath)
+cetak("Apakah bukti data rekayasa/palsu ditolak? " + teks(palsu == salah))
+
+// 2. Uji Coba WidyaCronDaemon
+cetak("\n--- 2. Advanced Cron Daemon Task Orchestrator ---")
+
+var daemon = DaemonCron()
+
+// Mendaftarkan tugas
+daemon_cron_daftar(daemon, "backup_db", "*/5 * * * *", fungsi(nama, waktu) {
+    cetak("  [EKSEKUSI TUGAS] " + nama + " dijalankan pada timestamp: " + teks(waktu))
+})
+
+daemon_cron_daftar(daemon, "audit_keamanan", "* * * * *", fungsi(nama, waktu) {
+    cetak("  [EKSEKUSI TUGAS] " + nama + " memindai log integritas...")
+})
+
+cetak("Menjalankan simulasi 1 detak daemon (waktu epoch = 300 detik -> menit ke-5):")
+var tugasJalan = daemon_cron_detak(daemon, 300)
+cetak("Tugas yang berhasil dieksekusi: " + teks(tugasJalan))
+
+cetak("\nStatus Tugas di Daemon:")
+var status = daemon_cron_status(daemon)
+cetak("Tugas 'backup_db' total eksekusi: " + teks(status.backup_db.eksekusi_total))
+
+cetak("\n✅ DEMO MERKLE TREE & CRON DAEMON BERHASIL!")

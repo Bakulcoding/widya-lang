@@ -1,0 +1,15 @@
+[package]
+name = "widya"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+colored = "2.1"
+rustyline = "14.0"
+rand = "0.8"
+serde_json = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+hmac = "0.12"
+regex = "1.10"

@@ -1,0 +1,48 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 62 - ISO 14721 OAIS Reference Model & IETF RFC 8493 BagIt
+// Demonstrasi siklus paket arsip OAIS (SIP -> AIP -> DIP), pencatatan PREMIS Provenance, dan kemasan BagIt dengan manifest checksum.
+
+tulis("=== [WIDYA PRESERVASI DIGITAL] MODEL OAIS & KEMASAN BAGIT ===");
+
+// 1. Model Referensi ISO 14721 OAIS (Open Archival Information System)
+tulis("--- SIKLUS PAKET INFORMASI OAIS & PREMIS PROVENANCE ---");
+var arsip_oais = PaketArsipOAIS("AIP_NASIONAL_2026_001", "Arsip Manuskrip Sejarah Nusantara");
+
+// Tambah Konten Submission Information Package (SIP)
+oais_tambah_konten_sip(arsip_oais, "manuskrip_nagarakretagama.tiff", "image/tiff", 45892010.0, "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890");
+oais_tambah_konten_sip(arsip_oais, "transkripsi_teks.xml", "application/xml", 125840.0, "f0e1d2c3b4a59687f0e1d2c3b4a59687f0e1d2c3b4a59687f0e1d2c3b4a59687");
+
+// Tambah Metadata Provenansi PREMIS (Preservation Metadata: Implementation Strategies)
+oais_tambah_metadata_premis(arsip_oais, "EVT_001", "INGEST_VALIDATION", "Widya_Ingest_Microservice");
+oais_tambah_metadata_premis(arsip_oais, "EVT_002", "VIRUS_SCAN_CLEAN", "ClamAV_Scanner_Agent");
+
+// Transformasi SIP ke Archival Information Package (AIP) dengan retensi 100 tahun
+oais_transformasi_ke_aip(arsip_oais, 100.0);
+tulis("Fase Arsip OAIS : " + arsip_oais["fase_oais"]);
+tulis("Status Kunci    : " + arsip_oais["status_kunci_arsip"] + " (Retensi: " + arsip_oais["retensi_tahun"] + " Tahun)");
+
+// Hasilkan Dissemination Information Package (DIP) untuk publikasi
+var paket_dip = oais_hasilkan_paket_dip(arsip_oais, "AKSES_PUBLIK_OPEN_DATA");
+tulis("Paket Diseminasi: " + paket_dip["id_dip"] + " (" + paket_dip["izin_akses"] + ")");
+
+// 2. Format Kemasan Arsip Standar IETF RFC 8493 BagIt
+tulis("\n--- KEMASAN ARSIP BAGIT (RFC 8493 MANIFEST) ---");
+var bag = PaketBagIt("koleksi_manuskrip_bag");
+
+// Masukkan Berkas Payload ke dalam direktori data/
+bagit_tambah_berkas_payload(bag, "dokumen.txt", "Teks asli naskah kuno nusantara yang dilindungi undang-undang preservasi.");
+bagit_tambah_berkas_payload(bag, "metadata.json", "{\"kategori\": \"arsip_negara\", \"klasifikasi\": \"terbuka\"}");
+
+// Set Metadata Info
+bagit_set_metadata_info(bag, "Kurator Perpustakaan Nasional", "Paket Arsip Digital Budaya", "Perpustakaan Nasional RI");
+
+// Hasilkan Manifest Checksum
+var hasil_manifest = bagit_hasilkan_manifest(bag);
+tulis("Isi bagit.txt:\n" + hasil_manifest["bagit_txt"]);
+tulis("Isi manifest-sha256.txt:\n" + hasil_manifest["manifest_sha256_txt"]);
+
+// Verifikasi Integritas BagIt
+var cek_bagit = bagit_verifikasi_integritas(bag);
+tulis("\nStatus Verifikasi BagIt : " + cek_bagit["status_verifikasi"]);
+tulis("Valid & Lengkap         : " + cek_bagit["valid_and_complete"] + " (Total Payload: " + cek_bagit["jumlah_payload"] + " berkas)");
+
+tulis("\n[WIDYA PRESERVASI DIGITAL] OAIS & BagIt Berhasil Diverifikasi!");

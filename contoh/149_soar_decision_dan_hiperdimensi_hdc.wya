@@ -1,0 +1,50 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 65 - SOAR Decision Impasse & Hyperdimensional Computing (HDC)
+// Demonstrasi siklus penalaran SOAR dan aljabar simbolik-vektorik ruang hiperdimensi (VSA / HDC).
+
+tulis("=== [WIDYA AGI RUNTIMES] SOAR DECISION & HIPERDIMENSI HDC ===");
+
+// 1. Laird SOAR Cognitive Architecture (Decision Cycles & Impasse Resolution)
+tulis("--- SIKLUS KEPUTUSAN SOAR & RESOLUSI KEBUNTUAN (IMPASSE) ---");
+var soar = ArsitekturKognitifSOAR("Misi_Penjelajahan_Otonom");
+
+// Usulkan Operator Tindakan
+soar_usulkan_operator(soar, "Op_Navigasi_Kawah", 4.2, "Menyeberangi kawah terjal");
+soar_usulkan_operator(soar, "Op_Putar_Arah_Aman", 8.9, "Memutar arah mengambil jalur datar");
+
+// Evaluasi dan Pilih Operator Terbaik
+var keputusan = soar_evaluasi_dan_pilih_operator(soar);
+tulis("Operator Terpilih     : " + keputusan["operator_terpilih"]);
+tulis("Skor Preferensi       : " + keputusan["skor_preferensi"]);
+tulis("Fase Keputusan        : " + keputusan["fase_keputusan"]);
+
+// Tangani Kondisi Kebuntuan (Tie/No-Change Impasse) dengan Pembentukan Sub-Goal
+var impasse = soar_tangani_kebuntuan_impasse(soar, "TIE_IMPASSE");
+tulis("\nPenanganan Kebuntuan  : " + impasse["jenis_kebuntuan"]);
+tulis("Sub-Goal Terbentuk    : " + impasse["subgoal_terbentuk"]);
+tulis("Mekanisme Pembelajaran: " + impasse["mekanisme_belajar"]);
+
+// 2. Hyperdimensional Computing (HDC / Vector Symbolic Architecture - VSA)
+tulis("\n--- ALAJABAR RUANG HIPERDIMENSI (HDC 10.000-DIM) ---");
+var hdc = RuangHiperdimensiHDC(10000);
+
+// Buat Hipervektor Simbolik Ortogonal
+var vec_negara = hdc_buat_hipervektor(hdc, "Indonesia");
+var vec_ibukota = hdc_buat_hipervektor(hdc, "Nusantara");
+var vec_asing = hdc_buat_hipervektor(hdc, "PlanetMars");
+
+// Operasi Pengikatan Pasangan Variabel-Nilai (Binding: Negara * Ibukota)
+var relasi_terikat = hdc_ikat_konsep_bind(hdc, vec_negara, vec_ibukota);
+
+// Operasi Superposisi Penggabungan Konsep (Bundling)
+var konsep_gabung = hdc_gabung_vektor_bundle(hdc, vec_negara, relasi_terikat);
+
+// Pengukuran Kesamaan Simbolik (Cosine Similarity)
+var kemiripan_identik = hdc_ukur_kesamaan_simbolik(hdc, vec_negara, vec_negara);
+var kemiripan_ortogonal = hdc_ukur_kesamaan_simbolik(hdc, vec_negara, vec_asing);
+var kemiripan_bundle = hdc_ukur_kesamaan_simbolik(hdc, konsep_gabung, vec_negara);
+
+tulis("Kemiripan Diri Sendiri (Identik)   : " + kemiripan_identik);
+tulis("Kemiripan Konsep Asing (Ortogonal) : " + kemiripan_ortogonal);
+tulis("Kemiripan Konsep Bundled           : " + kemiripan_bundle);
+
+tulis("\n[WIDYA AGI RUNTIMES] SOAR & Hiperdimensi HDC Berhasil Diverifikasi!");

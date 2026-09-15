@@ -1,0 +1,60 @@
+// ========================================================================
+// 🌲 & 📦 CONTOH 39: WIDYATRIE & WIDYATAR
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaTrie (Prefix Tree) & WidyaTar (Archival Engine)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYATRIE: POHON AWALAN & AUTOCOMPLETE CEPAT
+// ------------------------------------------------------------------------
+cetak("");
+cetak("🌲 [1] Pencarian Kamus Prefix Tree & Autocomplete (WidyaTrie)...");
+
+tetap trie = PohonTrie();
+
+// Sisipkan kata-kata beserta bobot frekuensi pencarian
+trie_sisip(trie, "widya", 100.0);
+trie_sisip(trie, "widya-lang", 90.0);
+trie_sisip(trie, "web", 50.0);
+trie_sisip(trie, "website", 70.0);
+trie_sisip(trie, "wawan", 30.0);
+
+cetak("  * Apakah kata 'widya' ada di Trie?     ->", trie_apakah_ada(trie, "widya"));
+cetak("  * Apakah kata 'indonesia' ada di Trie? ->", trie_apakah_ada(trie, "indonesia"));
+
+// Rekomendasi autocomplete untuk awalan "w"
+tetap saran_w = trie_saran_awalan(trie, "w", 4);
+cetak("  * Rekomendasi Autocomplete untuk Awalan 'w':", saran_w);
+
+// ------------------------------------------------------------------------
+// [2] WIDYATAR: PENGEMASAN ARSIP TARBALL & EKSTRAKSI IN-MEMORY
+// ------------------------------------------------------------------------
+cetak("");
+cetak("📦 [2] Pengemasan Arsip Tarball & Ekstraksi In-Memory (WidyaTar)...");
+
+tetap arsip = buat_arsip_tar();
+
+// Tambahkan berkas ke dalam arsip
+tar_tambah_berkas(arsip, "dokumen/halo.txt", "Halo dari dalam arsip Tarball Widya!");
+tar_tambah_berkas(arsip, "konfigurasi.json", "{\"versi\": \"1.0\", \"status\": \"aktif\"}");
+
+// Ekspor ke format array byte tar
+tetap byte_tar = tar_ekspor_biner(arsip);
+cetak("  * Ukuran Arsip Tarball Terbuat :", panjang(byte_tar), "byte");
+
+// Baca dan ekstrak entri dari array byte tar
+tetap entri_terekstrak = tar_baca_entri(byte_tar);
+cetak("  * Total Entri Berkas Terekstrak:", panjang(entri_terekstrak));
+untuk i dalam 0..panjang(entri_terekstrak) - 1 {
+    tetap e = entri_terekstrak[i];
+    cetak("    [" + ke_teks(i + 1) + "] Jalur : " + e["jalur"]);
+    cetak("        Ukuran: " + ke_teks(e["ukuran"]) + " byte");
+    cetak("        Isi   : " + e["konten"]);
+}
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaTrie & WidyaTar!");
+cetak("========================================================================");

@@ -1,0 +1,40 @@
+// =========================================================================
+// Contoh 111: Pilar Finansial & HFT (Black-Scholes Greeks & FIX Protocol)
+// WidyaBlackScholes, WidyaGreeks & WidyaFIXProtocol
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR FINANSIAL & HFT: BLACK-SCHOLES GREEKS & FIX PROTOCOL ===");
+
+    // 1. Model Valuasi Derivatif Opsi Eropa Black-Scholes-Merton
+    // Spot=$100, Strike=$105, Waktu=0.5 Tahun (6 Bulan), Suku Bunga=5%, Volatilitas=25%
+    var opsi_call = OpsiEropa("CALL", 100.0, 105.0, 0.5, 0.05, 0.25);
+    var harga_wajar_call = opsi_hitung_harga(opsi_call);
+    cetak("Harga Wajar Opsi Call: $" + ke_teks(harga_wajar_call));
+
+    var greeks_call = opsi_hitung_greeks(opsi_call);
+    cetak("Sensitivitas Risiko Greeks: Delta=" + ke_teks(greeks_call.delta) + ", Gamma=" + ke_teks(greeks_call.gamma) + ", Vega=" + ke_teks(greeks_call.vega));
+
+    var opsi_put = OpsiEropa("PUT", 100.0, 105.0, 0.5, 0.05, 0.25);
+    var harga_wajar_put = opsi_hitung_harga(opsi_put);
+    cetak("Harga Wajar Opsi Put: $" + ke_teks(harga_wajar_put));
+
+    // 2. Financial Information eXchange (FIX Protocol 4.4) Message Engine
+    var fix_msg = PesanFIX("D", 101, "BROKER_CLIENT_A", "NASDAQ_MATCH");
+    fix_tambah_tag(fix_msg, "11", "CLORD_991244"); // ClOrdID
+    fix_tambah_tag(fix_msg, "55", "AAPL");         // Symbol
+    fix_tambah_tag(fix_msg, "54", "1");            // Side: 1=Buy
+    fix_tambah_tag(fix_msg, "38", "1000");         // OrderQty
+    fix_tambah_tag(fix_msg, "44", "185.50");       // Price
+    fix_tambah_tag(fix_msg, "40", "2");            // OrdType: 2=Limit
+
+    var raw_fix_string = fix_enkode(fix_msg);
+    cetak("Pesan FIX 4.4 Terenkode (Raw String):\n" + raw_fix_string);
+
+    var fix_decoded = fix_dekode(raw_fix_string);
+    cetak("FIX Message Decoded: Symbol=" + fix_decoded.tags["55"] + ", Side=" + fix_decoded.tags["54"] + ", Qty=" + fix_decoded.tags["38"] + ", Price=" + fix_decoded.tags["44"]);
+
+    cetak("=== UJI BLACK-SCHOLES GREEKS & PROTOKOL FIX SUKSES ===");
+}
+
+utama();

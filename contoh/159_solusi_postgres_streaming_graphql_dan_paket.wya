@@ -1,0 +1,76 @@
+// Contoh 159: Protokol Wire PostgreSQL, Event Commit Log Streaming, Protobuf/GraphQL Codec, dan Package Manager Resolver
+impor "modul/protokol_postgres.wya";
+impor "modul/event_streaming_bus.wya";
+impor "modul/codec_protobuf_graphql.wya";
+impor "modul/paket_manajer_resolver.wya";
+
+cetak("================================================================");
+cetak(" WIDYA-LANG ADVANCED ENTERPRISE INFRASTRUCTURE & WIRE PROTOCOLS ");
+cetak("================================================================");
+
+// 1. PostgreSQL Wire Protocol v3.0 Frame Serialization & Mock Pipeline
+cetak("\n[1] PostgreSQL Wire Protocol Pipeline:");
+var mock_table = [
+    { "id": 1, "nama": "Widya Enterprise", "saldo": 50000000 },
+    { "id": 2, "nama": "Cloud AI Node", "saldo": 75000000 }
+];
+var pg_pipeline = eksekusi_pg_mock_pipeline("SELECT id, nama, saldo FROM akun_perusahaan", mock_table);
+cetak("  - Query Packet : Tipe=" + pg_pipeline["query_sent"]["tipe"] + ", Len=" + ke_teks(pg_pipeline["query_sent"]["panjang"]));
+cetak("  - Backend Frames Received: " + ke_teks(panjang(pg_pipeline["backend_frames"])) + " frames");
+untuk frame dalam pg_pipeline["backend_frames"] {
+    cetak("    > Frame: " + frame["status"]);
+}
+
+// 2. Event Streaming Bus (Partitioned Commit Log & Consumer Group)
+cetak("\n[2] Partitioned Event Streaming Commit Log:");
+var topic_sensor = buat_streaming_topic("telemetri_iot", 2);
+publish_event(topic_sensor, "sensor_a", "suhu: 28.5C");
+publish_event(topic_sensor, "sensor_b", "tekanan: 101.3kPa");
+publish_event(topic_sensor, "sensor_a", "suhu: 29.1C");
+
+cetak("  - Total Event di Topik: " + ke_teks(topic_sensor["total_pesan"]));
+var c_group = buat_consumer_group("cg_analitik", "telemetri_iot");
+var event_batch = poll_events(c_group, topic_sensor, 10);
+cetak("  - Polled " + ke_teks(panjang(event_batch)) + " event dari consumer group:");
+untuk ev dalam event_batch {
+    cetak("    > [Partisi " + ke_teks(ev["partisi"]) + " | Offset " + ke_teks(ev["offset"]) + "] " + ev["key"] + " -> " + ev["payload"]);
+}
+
+// 3. Codec Protobuf Varint & GraphQL Execution
+cetak("\n[3] Protobuf Binary Encoding & GraphQL Resolver:");
+var proto_tag = protobuf_encode_string(1, "Widya Engine");
+cetak("  - Protobuf Field 1 (String): wire_type=" + ke_teks(proto_tag["wire_type"]) + ", data=" + proto_tag["data"]);
+
+var entitas_data = {
+    "id": 101,
+    "nama": "Layanan AI Terdistribusi",
+    "status": "AKTIF",
+    "versi": "2.1.0",
+    "rahasia_internal": "token_super_secret"
+};
+var gql_res = graphql_resolve_query("query { id nama status }", entitas_data);
+cetak("  - GraphQL Query Result:");
+cetak("    > " + ke_json(gql_res["data"]));
+
+// 4. SemVer Dependency Resolver & Integrity Lockfile
+cetak("\n[4] Semantic Versioning Package Resolver & Lockfile:");
+var manifest = {
+    "widya-zkp": "^1.2.0",
+    "widya-mesh": ">=2.0.0"
+};
+var registry = {
+    "widya-zkp": [
+        { "versi": "1.1.0", "sha256": "hash_lama" },
+        { "versi": "1.2.4", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" }
+    ],
+    "widya-mesh": [
+        { "versi": "2.1.0", "sha256": "ca978112ca1bbdcafac231b39a23dc4da786081496140901e92d837611ef4fcf" }
+    ]
+};
+
+var res_tree = resolve_dependency_tree(manifest, registry);
+cetak("  - Status Resolusi: " + ke_teks(res_tree["sukses"]));
+cetak("  - Lockfile Generated:");
+cetak("    > " + ke_json(res_tree["lockfile"]));
+
+cetak("\n=== SEMUA MASALAH TINGKAT LANJUT TERATASI DENGAN SUKSES ===");

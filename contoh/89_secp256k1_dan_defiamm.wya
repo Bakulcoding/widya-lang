@@ -1,0 +1,79 @@
+// ==============================================================================
+// CONTOH 89: WIDYA-LANG - SECP256K1 CRYPTOGRAPHY & DEFI AMM LIQUIDITY POOL
+// Gelombang 35: Blockchain Wallet ECDSA & Constant-Product AMM x*y=k
+// ==============================================================================
+
+cetak("================================================================")
+cetak("🖋️ CONTOH 89: WIDYA SECP256K1 WALLET & DEFI AMM POOL")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: SECP256K1 ELLIPTIC CURVE CRYPTOGRAPHY (Wallet & ECDSA Signing)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: SECP256K1 WALLET & TRANSAKSI TEROTENTIKASI ---")
+
+// 1. Generate Dompet Baru
+var dompet = secp256k1_buat_dompet()
+cetak("1. Pembuatan Dompet Kripto Kuantum-Aman:")
+cetak("   Alamat Dompet: " + dompet["alamat"])
+cetak("   Kunci Publik : " + dompet["kunci_publik"])
+cetak("   Kunci Privat : " + dompet["kunci_privat"])
+
+// 2. Tandatangani Transaksi (Sign Message Hash)
+var tx_hash = "0x4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+var tanda_tangan = secp256k1_tanda_tangani(tx_hash, dompet["kunci_privat"])
+
+cetak("\n2. Penandatanganan Transaksi ECDSA:")
+cetak("   Tx Hash : " + tx_hash)
+cetak("   Tanda Tangan (r,s,v): " + tanda_tangan["tanda_tangan_lengkap"])
+
+// 3. Verifikasi Tanda Tangan & Pulihkan Alamat
+var verifikasi_sah = secp256k1_verifikasi(tx_hash, tanda_tangan, dompet["kunci_publik"])
+var alamat_terpulihkan = secp256k1_pulihkan_alamat(tx_hash, tanda_tangan)
+
+cetak("\n3. Verifikasi & Pemulihan Alamat (ecrecover):")
+cetak("   Apakah Valid       : " + teks(verifikasi_sah))
+cetak("   Alamat Terpulihkan : " + alamat_terpulihkan)
+cetak("   Kesesuaian Alamat  : " + teks(panjang(alamat_terpulihkan) == 42))
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: DEFI AUTOMATED MARKET MAKER (AMM Constant-Product x*y=k)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: DEFI AMM LIQUIDITY POOL (x * y = k) ---")
+
+// Inisialisasi Pool Likuiditas WIDYA / USDT
+// Cadangan Awal: 10,000 WIDYA dan 20,000 USDT (Harga awal 1 WIDYA = 2.0 USDT)
+var pool = PoolLikuiditas("WIDYA", "USDT", 10000.0, 20000.0)
+
+cetak("1. Inisialisasi Pool Likuiditas:")
+cetak("   Cadangan WIDYA : " + teks(pool["reserve_a"]))
+cetak("   Cadangan USDT  : " + teks(pool["reserve_b"]))
+cetak("   Total LP Token : " + teks(pool["total_lp_shares"]))
+cetak("   Harga 1 WIDYA  : " + teks(amm_hitung_harga(pool, "WIDYA")) + " USDT")
+
+// 2. Eksekusi Token Swap (Tukar 500 USDT untuk mendapatkan WIDYA)
+cetak("\n2. Eksekusi Swap Token: Tukar 500 USDT ke WIDYA...")
+var hasil_swap = amm_tukar_token(pool, "USDT", 500.0)
+
+cetak("   Token Diterima : " + hasil_swap["token_keluar"])
+cetak("   Jumlah Didapat : " + teks(hasil_swap["jumlah_keluar"]) + " WIDYA")
+cetak("   Cadangan Baru  : " + teks(hasil_swap["cadangan_a"]) + " WIDYA | " + teks(hasil_swap["cadangan_b"]) + " USDT")
+cetak("   Harga Terkini  : " + teks(amm_hitung_harga(pool, "WIDYA")) + " USDT")
+
+// 3. Tambah Likuiditas ke Pool
+cetak("\n3. Tambah Likuiditas: 1,000 WIDYA & 2,100 USDT...")
+var hasil_tambah_lp = amm_tambah_likuiditas(pool, 1000.0, 2100.0)
+cetak("   LP Token Dicetak : " + teks(hasil_tambah_lp["lp_dicetak"]))
+cetak("   Total LP Pool    : " + teks(hasil_tambah_lp["total_lp"]))
+
+// 4. Tarik Likuiditas Sebagian
+cetak("\n4. Tarik Sebagian Likuiditas (500 LP Token)...")
+var hasil_tarik_lp = amm_tarik_likuiditas(pool, 500.0)
+cetak("   WIDYA Dikembalikan : " + teks(hasil_tarik_lp["token_a_kembali"]))
+cetak("   USDT Dikembalikan  : " + teks(hasil_tarik_lp["token_b_kembali"]))
+cetak("   Sisa LP Kepemilikan: " + teks(hasil_tarik_lp["sisa_lp"]))
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI SECP256K1 & DEFI AMM POOL BERHASIL 100%!")
+cetak("================================================================")

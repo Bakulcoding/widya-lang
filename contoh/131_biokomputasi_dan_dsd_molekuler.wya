@@ -1,0 +1,40 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 56 - Biokomputasi, Kinetika DNA Strand Displacement (DSD) & Gerbang Logika Molekuler
+// Demonstrasi simulasi pelepasan untai DNA toehold-mediated dan sirkuit logika biokimia.
+
+tulis("=== [WIDYA BIOKOMPUTASI] KINETIKA DSD & GERBANG LOGIKA MOLEKULER ===");
+
+// 1. Inisialisasi Simulator Sirkuit DNA Strand Displacement (DSD)
+var sirkuit = SirkuitDSD(37.0); // Suhu fisiologis tubuh manusia 37 C
+
+// Daftarkan Untai DNA (Untai Input, Kompleks Gerbang Gate-Duplex, Untai Output)
+dsd_tambah_untai(sirkuit, "Untai_Input_A", "t1", 100.0);       // 100 nM
+dsd_tambah_untai(sirkuit, "Kompleks_Gerbang", "t1*", 100.0);   // 100 nM
+dsd_tambah_untai(sirkuit, "Untai_Output", "t2", 0.0);          // 0 nM awal
+dsd_tambah_untai(sirkuit, "Produk_Limbah", "none", 0.0);
+
+// Daftarkan Reaksi Penggantian Untai (Strand Displacement Reaction)
+// Input + Gate -> Output + Waste
+dsd_tambah_reaksi(sirkuit, "Untai_Input_A", "Kompleks_Gerbang", "Untai_Output", "Produk_Limbah", 0.08);
+
+// Jalankan Simulasi Kinetika Reaksi selama 10 Detik
+var kinetika = dsd_simulasi_kinetika(sirkuit, 1.0, 10.0);
+tulis("--- HASIL KINETIKA KONSENTRASI MOLEKUL (t = 10s) ---");
+tulis("Konsentrasi Untai Input A   : " + kinetika["Untai_Input_A"] + " nM");
+tulis("Konsentrasi Kompleks Gerbang: " + kinetika["Kompleks_Gerbang"] + " nM");
+tulis("Konsentrasi Untai Output    : " + kinetika["Untai_Output"] + " nM (Terlepas)");
+tulis("Konsentrasi Produk Limbah   : " + kinetika["Produk_Limbah"] + " nM");
+
+// 2. Evaluasi Gerbang Logika Biokimia Molekuler (AND & XOR Gates)
+tulis("\n--- GERBANG LOGIKA DNA MOLEKULER ---");
+var gerbang_and = GerbangLogikaMolekuler("AND", 20.0); // Ambang batas 20 nM
+var gerbang_xor = GerbangLogikaMolekuler("XOR", 20.0);
+
+// Kasus Input A=50nM (High), Input B=40nM (High)
+var res_and = gerbang_bio_evaluasi(gerbang_and, 50.0, 40.0);
+tulis("Gerbang Bio-AND [A=50nM, B=40nM]: Output Logika = " + res_and["output_logika"] + ", Fluoresensi = " + res_and["fluoresensi_aktif"]);
+
+// Kasus XOR Input A=50nM (High), Input B=5nM (Low)
+var res_xor = gerbang_bio_evaluasi(gerbang_xor, 50.0, 5.0);
+tulis("Gerbang Bio-XOR [A=50nM, B=5nM] : Output Logika = " + res_xor["output_logika"] + ", Fluoresensi = " + res_xor["fluoresensi_aktif"]);
+
+tulis("\n[WIDYA BIOKOMPUTASI] Kinetika DSD & Gerbang Logika Biokimia Berhasil Diverifikasi!");

@@ -1,0 +1,75 @@
+// ==============================================================================
+// CONTOH 88: WIDYA-LANG - GAS ENGINE & ETHEREUM ABI ENCODER/DECODER
+// Gelombang 35: Deterministic Smart Contract Gas Metering & EVM Data Bridge
+// ==============================================================================
+
+cetak("================================================================")
+cetak("⛽ CONTOH 88: WIDYA GAS ENGINE & EVM ABI BRIDGE")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: WIDYA GAS ENGINE (Deterministic Smart Contract Execution Metering)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: MESIN GAS SMART CONTRACT (DETERMINISTIC METERING) ---")
+
+// Buat mesin gas dengan batas 500,000 unit gas dan harga 1.5 Gwei
+var mesin = MesinGas(500000, 1.5)
+
+cetak("1. Inisialisasi Gas Limit:")
+cetak("   Gas Tersedia Awal: " + teks(gas_sisa(mesin)))
+cetak("   Apakah Gas Habis : " + teks(gas_apakah_habis(mesin)))
+
+// Konsumsi gas untuk operasi-operasi smart contract
+gas_konsumsi(mesin, 21000, "OP_TRANSAKSI_DASAR")
+gas_konsumsi(mesin, 5000, "OP_BACA_STORAGE")
+gas_konsumsi(mesin, 20000, "OP_TULIS_STORAGE_SSTORE")
+gas_konsumsi(mesin, 1500, "OP_HASH_KECCAK256")
+
+cetak("\n2. Pelacakan Konsumsi Gas:")
+cetak("   Gas Sisa           : " + teks(gas_sisa(mesin)))
+cetak("   Total Gas Terpakai : " + teks(gas_total_terpakai(mesin)))
+
+// Uji Out of Gas Protection
+cetak("\n3. Uji Proteksi Kehabisan Gas (Out-of-Gas Guard):")
+var mesin_terbatas = MesinGas(10000)
+coba {
+    gas_konsumsi(mesin_terbatas, 5000, "OP_STEP_1")
+    gas_konsumsi(mesin_terbatas, 8000, "OP_STEP_2_EXCESS") // Melebihi sisa 5000
+} tangkap e {
+    cetak("   🛡️ Transaksi Berhasil Di-Revert:", e)
+    cetak("   Status Gas Habis:", gas_apakah_habis(mesin_terbatas))
+}
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: WIDYA EVM ABI BRIDGE (Encoding & Decoding Data Transaksi)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: ETHEREUM ABI ENCODER & DECODER ---")
+
+// 1. Hitung Function Selector (4-Byte Method ID)
+var fungsi_transfer = "transfer(address,uint256)"
+var selector_transfer = abi_hitung_selector(fungsi_transfer)
+cetak("1. Method ID / Function Selector:")
+cetak("   Fungsi   : " + fungsi_transfer)
+cetak("   Selector : " + selector_transfer)
+
+// 2. Encoding Argumen Panggilan Kontrak
+var tipe_argumen = ["address", "uint256"]
+var nilai_argumen = ["0x71C841832049987C62260E21017BA541aA74B1f2", 1500000]
+var payload_abi = abi_enkode(tipe_argumen, nilai_argumen)
+
+cetak("\n2. ABI Encoding Calldata:")
+cetak("   Tipe Data : " + teks(tipe_argumen))
+cetak("   Nilai Asli: " + teks(nilai_argumen))
+cetak("   Hex Encoded: " + payload_abi)
+
+// 3. Decoding Calldata Kembali ke Data Asli
+var hasil_dekode = abi_dekode(tipe_argumen, payload_abi)
+cetak("\n3. ABI Decoding Calldata:")
+cetak("   Alamat Terdekode : " + hasil_dekode[0])
+cetak("   Nominal Terdekode: " + teks(hasil_dekode[1]))
+cetak("   Integritas Data  : " + teks(hasil_dekode[1] == 1500000))
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI GAS ENGINE & EVM ABI BERHASIL 100%!")
+cetak("================================================================")

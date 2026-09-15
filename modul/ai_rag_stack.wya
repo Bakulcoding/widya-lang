@@ -1,0 +1,27 @@
+// Modul AI RAG & Klasifikasi Cerdas Widya-Lang
+// Mengintegrasikan RAG Pipeline, Context Augmentation, dan Machine Learning
+
+fungsi buat_mesin_rag_cerdas(nama_kb, dim_embedding) {
+    var rag = RAGPipeline(nama_kb, dim_embedding);
+    
+    kembalikan {
+        "rag_pipeline": rag,
+        "total_dokumen": 0
+    };
+}
+
+fungsi rag_indeks_dokumen(rag_obj, id_dok, teks_dok) {
+    rag_tambah_dokumen(rag_obj["rag_pipeline"], id_dok, teks_dok);
+    rag_obj["total_dokumen"] = rag_obj["total_dokumen"] + 1;
+    kembalikan benar;
+}
+
+fungsi rag_kueri_konteks_terkait(rag_obj, pertanyaan_str, top_k) {
+    var hasil_konteks = rag_kueri_konteks(rag_obj["rag_pipeline"], pertanyaan_str, top_k);
+    kembalikan hasil_konteks;
+}
+
+fungsi jalankan_sintesis_rag(rag_obj, pertanyaan_str, top_k) {
+    var prompt_augmented = rag_sintesis_prompt(rag_obj["rag_pipeline"], pertanyaan_str, top_k);
+    kembalikan prompt_augmented;
+}

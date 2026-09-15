@@ -1,0 +1,15 @@
+// Modul Logistik Rantai Pasok GS1 EPCIS & Barcode DataMatrix
+
+fungsi gs1_buat_epcis_object_event(epc_urn, action, biz_step, read_point_glan) {
+    kembalikan {
+        "event_type": "ObjectEvent",
+        "action": action, // OBSERVE, ADD, DELETE
+        "bizStep": "urn:epcglobal:cbv:bizstep:" + biz_step, // misal "shipping", "receiving"
+        "epcList": [epc_urn],
+        "readPoint": {
+            "id": "urn:epc:id:sgln:" + read_point_glan
+        },
+        "eventTime": ke_teks(waktu()),
+        "status_provenance": "TERCATAT_RANTAI_PASOK"
+    };
+}

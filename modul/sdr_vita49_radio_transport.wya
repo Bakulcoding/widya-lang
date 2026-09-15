@@ -1,0 +1,25 @@
+// Modul Radio Astronomi & Software-Defined Radio (SDR) VITA 49 (VRT)
+
+fungsi vita49_buat_iq_data_packet(stream_id, packet_count, frekuensi_tengah_hz, sample_rate_sps, i_samples, q_samples) {
+    // ANSI/VITA 49.2 VRT Data Packet Header
+    var n = panjang(i_samples);
+    var daya_total = 0.0;
+    var i = 0;
+    selama (i < n) {
+        var iv = i_samples[i];
+        var qv = q_samples[i];
+        daya_total = daya_total + ((iv * iv) + (qv * qv));
+        i = i + 1;
+    }
+    
+    kembalikan {
+        "vrt_type": "IF_DATA_PACKET",
+        "stream_id": stream_id,
+        "packet_count": packet_count,
+        "center_freq_hz": frekuensi_tengah_hz,
+        "sample_rate": sample_rate_sps,
+        "jumlah_sampel_iq": n,
+        "daya_rata_rata": daya_total / n,
+        "timestamp_vrt": waktu()
+    };
+}

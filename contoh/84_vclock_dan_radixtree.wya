@@ -1,0 +1,105 @@
+// ==============================================================================
+// CONTOH 84: WIDYA-LANG - VECTOR CLOCKS & COMPACT PATRICIA RADIX TREE (LPM)
+// Gelombang 33: Distributed Event Causality & Network Subnet Routing
+// ==============================================================================
+
+cetak("================================================================")
+cetak("⚡ CONTOH 84: VECTOR CLOCK & COMPACT PATRICIA RADIX TREE (LPM)")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: WIDYA VECTOR CLOCK (Distributed Causal Ordering & Concurrency)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: JAM VEKTOR (VECTOR CLOCKS) ---")
+
+var daftar_node = ["node_A", "node_B", "node_C"]
+
+var jam_a = JamVektor("node_A", daftar_node)
+var jam_b = JamVektor("node_B", daftar_node)
+var jam_c = JamVektor("node_C", daftar_node)
+
+cetak("1. Inisialisasi Jam Vektor:")
+cetak("   Jam A: " + teks(vclock_ke_kamus(jam_a)))
+cetak("   Jam B: " + teks(vclock_ke_kamus(jam_b)))
+cetak("   Jam C: " + teks(vclock_ke_kamus(jam_c)))
+
+// Simpul A melakukan 2 event lokal
+jam_a = vclock_detak(jam_a)
+jam_a = vclock_detak(jam_a)
+cetak("\n2. Node A melakukan 2 event lokal:")
+cetak("   Jam A terkini: " + teks(vclock_ke_kamus(jam_a)))
+
+// Simpul B menerima pesan dari Simpul A dan berdetak
+jam_b = vclock_gabung(jam_b, jam_a)
+jam_b = vclock_detak(jam_b)
+cetak("\n3. Node B menerima pesan dari Node A dan berdetak (Merge & Tick):")
+cetak("   Jam B terkini: " + teks(vclock_ke_kamus(jam_b)))
+
+// Cek hubungan sebab-akibat (Causality: A happened before B)
+var urutan_ab = vclock_bandingkan(jam_a, jam_b)
+cetak("   Hubungan A terhadap B: " + urutan_ab + " (A happened-before B: " + teks(urutan_ab == "SEBELUM") + ")")
+
+// Simpul C melakukan event independen tanpa komunikasi dari A atau B
+jam_c = vclock_detak(jam_c)
+cetak("\n4. Node C melakukan event independen:")
+cetak("   Jam C terkini: " + teks(vclock_ke_kamus(jam_c)))
+
+// Deteksi Konkurensi / Konflik antara B dan C
+var apakah_konflik_bc = vclock_apakah_konflik(jam_b, jam_c)
+var urutan_bc = vclock_bandingkan(jam_b, jam_c)
+cetak("   Hubungan B terhadap C: " + urutan_bc + " | Apakah Konflik/Konkuren: " + teks(apakah_konflik_bc))
+
+// Resolusi konkurensi dengan sinkronisasi gabungan (Join Lattice Supremum)
+var jam_tergabung = vclock_gabung(jam_b, jam_c)
+jam_tergabung = vclock_detak(jam_tergabung)
+cetak("\n5. Sinkronisasi Global Jam Vektor Tergabung (Supremum):")
+cetak("   Jam Tergabung: " + teks(vclock_ke_kamus(jam_tergabung)))
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: COMPACT PATRICIA RADIX TREE (Longest Prefix Match / Subnet Routing)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: POHON RADIX (COMPACT PATRICIA RADIX TREE) ---")
+
+var pohon_ip = PohonRadix()
+
+// Sisipkan rute-rute jaringan CIDR / IP prefixes ke dalam Pohon Radix
+radix_sisip(pohon_ip, "192.168.", "LAN Default Gateway (192.168.0.0/16)")
+radix_sisip(pohon_ip, "192.168.1.", "Subnet Kantor Utama (192.168.1.0/24)")
+radix_sisip(pohon_ip, "192.168.1.100", "Server Database Utama")
+radix_sisip(pohon_ip, "10.0.", "VPC Jaringan Cloud Internal (10.0.0.0/16)")
+radix_sisip(pohon_ip, "10.0.10.", "Klaster Kubernetes Worker (10.0.10.0/24)")
+radix_sisip(pohon_ip, "0.0.0.0/0", "Default Internet WAN Gateway")
+
+cetak("1. Daftar Rute Tersimpan dalam Pohon Radix:")
+var semua_rute = radix_ke_array(pohon_ip)
+untuk rute dalam semua_rute {
+    cetak("   [Prefix] " + rute["kunci"] + " => " + teks(rute["nilai"]))
+}
+
+// Pencarian Longest Prefix Match (LPM) untuk IP paket masuk
+cetak("\n2. Simulasi Longest Prefix Match (LPM Packet Routing):")
+
+var kueri_1 = "192.168.1.100"
+var hasil_1 = radix_cari_awalan_terpanjang(pohon_ip, kueri_1)
+cetak("   Paket ke IP '" + kueri_1 + "':")
+cetak("   -> Terpilih Awalan: " + hasil_1["awalan"] + " | Rute: " + teks(hasil_1["nilai"]))
+
+var kueri_2 = "192.168.1.45"
+var hasil_2 = radix_cari_awalan_terpanjang(pohon_ip, kueri_2)
+cetak("\n   Paket ke IP '" + kueri_2 + "':")
+cetak("   -> Terpilih Awalan: " + hasil_2["awalan"] + " | Rute: " + teks(hasil_2["nilai"]))
+
+var kueri_3 = "10.0.10.88"
+var hasil_3 = radix_cari_awalan_terpanjang(pohon_ip, kueri_3)
+cetak("\n   Paket ke IP '" + kueri_3 + "':")
+cetak("   -> Terpilih Awalan: " + hasil_3["awalan"] + " | Rute: " + teks(hasil_3["nilai"]))
+
+// Pencarian Eksak
+cetak("\n3. Pencarian Eksak Rute:")
+cetak("   Cari '192.168.1.100': " + teks(radix_cari(pohon_ip, "192.168.1.100")))
+cetak("   Cari '172.16.0.1' (Tidak ada): " + teks(radix_cari(pohon_ip, "172.16.0.1")))
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI VECTOR CLOCK & RADIX TREE BERHASIL 100%!")
+cetak("================================================================")

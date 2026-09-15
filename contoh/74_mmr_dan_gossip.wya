@@ -1,0 +1,59 @@
+// Contoh 74: WidyaMerkleMountainRange & WidyaGossip
+// Append-Only MMR Accumulator & Decentralized P2P Gossip Protocol
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 28: MMR & Gossip Protocol")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaMerkleMountainRange: Akumulator Kriptografis
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaMerkleMountainRange (MMR) ---")
+
+let mmr = MerkleMountainRange()
+
+// Menambahkan transaksi / block headers berurutan
+mmr_tambah(mmr, "tx:alice_transfer_bob_500")
+mmr_tambah(mmr, "tx:bob_transfer_charlie_200")
+mmr_tambah(mmr, "tx:charlie_transfer_dave_100")
+mmr_tambah(mmr, "tx:dave_transfer_eve_50")
+mmr_tambah(mmr, "tx:eve_staking_reward_10")
+
+cetak("Total Daun (Transaksi) Tersimpan:", mmr_panjang(mmr))
+
+// Bagging Peaks untuk mendapatkan Single Root Hash Komitmen
+let mmr_root = mmr_bag_peaks(mmr)
+cetak("MMR Bagged Peaks Root Hash:", mmr_root)
+
+// Membuat bukti audit keikutsertaan daun (Audit Proof)
+let bukti = mmr_buat_bukti(mmr, 2)
+cetak("Bukti Audit Daun Indeks ke-2:")
+cetak("  Leaf Index  :", bukti.leaf_index)
+cetak("  Total Daun  :", bukti.total_leaves)
+cetak("  Bukti Valid :", bukti.valid)
+
+// ----------------------------------------------------
+// 2. WidyaGossip: Protokol Desentralisasi Epidemi P2P
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaGossip: Protokol P2P Epidemi ---")
+
+let cluster = KlasterGossip(["node_asia", "node_eropa", "node_amerika", "node_afrika"])
+cetak("Klaster P2P Gossip Diinisialisasi dengan 4 Node")
+
+// Node Asia menyiarkan kabar transaksi baru
+gossip_siarkan(cluster, "node_asia", { "tipe": "BLOCK_BARU", "tinggi": 1042, "hash": "0xabc123" })
+gossip_siarkan(cluster, "node_eropa", { "tipe": "PEER_DISCOVERY", "ip": "192.168.1.50" })
+
+// Menjalankan detak gossip (penyebaran ke seluruh node tetangga)
+cetak("\nMenjalankan Detak Pertukaran Gossip (Anti-Entropy Sync)...")
+let terkirim = gossip_detak(cluster)
+cetak("Total Pesan Gossip Terdiseminasi:", terkirim)
+
+// Memeriksa keadaan pada node Amerika & Afrika
+let state_amerika = gossip_keadaan_node(cluster, "node_amerika")
+cetak("\nKeadaan Node Amerika:")
+cetak("  Heartbeat     :", state_amerika.heartbeat)
+cetak("  Status        :", state_amerika.status)
+cetak("  Jumlah Pesan  :", panjang(state_amerika.pesan_diterima))
+
+cetak("\n[SUKSES] Seluruh fitur MMR & Gossip Protocol beroperasi sempurna!")

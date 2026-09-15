@@ -1,0 +1,47 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 61 - Agent-Based Modeling (ABM) & Dinamika Sistem (System Dynamics)
+// Demonstrasi segregasi spasial agen Thomas Schelling dan pemodelan stok & aliran Meadows/Forrester.
+
+tulis("=== [WIDYA SISTEM KOMPLEKS] AGENT-BASED MODEL & DINAMIKA SISTEM ===");
+
+// 1. Agent-Based Model (ABM) Model Segregasi Schelling (Grid 20x20, Toleransi 40%)
+tulis("--- MODEL BERBASIS AGEN (ABM) SCHELLING SEGREGATION ---");
+var abm = ModelBerbasisAgenABM(20, 20, 0.40);
+
+// Daftarkan agen dari dua kelompok sosial yang berbeda (Grup 1 & Grup 2)
+abm_tambah_agen(abm, "Agen_A1", 1, 2, 2);
+abm_tambah_agen(abm, "Agen_A2", 1, 2, 3);
+abm_tambah_agen(abm, "Agen_A3", 1, 3, 2);
+abm_tambah_agen(abm, "Agen_B1", 2, 3, 3);
+abm_tambah_agen(abm, "Agen_B2", 2, 4, 3);
+abm_tambah_agen(abm, "Agen_B3", 2, 4, 4);
+
+tulis("Menjalankan 3 langkah iterasi pergerakan spasial agen:");
+untuk i dalam 0..3 {
+    var dipindah = abm_langkah_simulasi(abm);
+    var metrik = abm_hitung_indeks_segregasi(abm);
+    tulis("  Langkah #" + (i + 1) + " -> Agen Direlokasi: " + dipindah + ", Indeks Kepuasan: " + metrik["indeks_kepuasan_segregasi"]);
+}
+
+var hasil_akhir_abm = abm_hitung_indeks_segregasi(abm);
+tulis("Status Komunitas Akhir: " + hasil_akhir_abm["status_keseimbangan"] + " (Puas: " + hasil_akhir_abm["agen_puas"] + "/" + hasil_akhir_abm["total_agen"] + ")");
+
+// 2. Dinamika Sistem Makro (System Dynamics - Model Penipisan Sumber Daya)
+tulis("\n--- DINAMIKA SISTEM (STOCKS & FLOWS / MEADOWS) ---");
+var sd = DinamikaSistemStokAlir();
+
+// Inisialisasi Stok Akumulasi
+sd_tambah_stok(sd, "Cadangan_Minyak_Bumi", 10000.0); // 10,000 barrel
+sd_tambah_stok(sd, "Produksi_Energi_Terpakai", 0.0);
+
+// Tambah Laju Aliran (Flows: Konsumsi = 5% per unit waktu)
+sd_tambah_aliran_flow(sd, "Laju_Eksploitasi_Konsumsi", "Cadangan_Minyak_Bumi", "Produksi_Energi_Terpakai", 0.05);
+
+tulis("Simulasi integrasi numerik stok & aliran (5 langkah waktu RK4, dt = 1.0):");
+untuk t dalam 0..5 {
+    sd_langkah_waktu_rk4(sd, 1.0);
+    var sisa_minyak = sd_ambil_nilai_stok(sd, "Cadangan_Minyak_Bumi");
+    var total_energi = sd_ambil_nilai_stok(sd, "Produksi_Energi_Terpakai");
+    tulis("  Waktu t=" + (t + 1) + " -> Sisa Cadangan: " + sisa_minyak + ", Total Energi: " + total_energi);
+}
+
+tulis("\n[WIDYA SISTEM KOMPLEKS] ABM & System Dynamics Berhasil Diverifikasi!");

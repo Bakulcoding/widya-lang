@@ -1,0 +1,47 @@
+// Contoh 57: WidyaSoundex & WidyaIPCIDR
+// Pengujian Pencocokan Fonetik Soundex & Kalkulasi Subnet Mask IP / CIDR
+
+fungsi utama() {
+    tulis("=== CONTOH 57: SOUNDEX & IP CIDR CALCULATOR ===");
+
+    // 1. WidyaSoundex: Fonetik & Pencarian Nama Serupa
+    tulis("\n--- 1. WidyaSoundex (Phonetic Name Matching) ---");
+
+    var nama1 = "Smith";
+    var nama2 = "Smythe";
+    var nama3 = "Johnson";
+
+    tulis("   Kode Soundex '" + nama1 + "': " + soundex_kode(nama1));
+    tulis("   Kode Soundex '" + nama2 + "': " + soundex_kode(nama2));
+    tulis("   Kode Soundex '" + nama3 + "': " + soundex_kode(nama3));
+
+    tulis("   Apakah '" + nama1 + "' dan '" + nama2 + "' bunyinya mirip? " + teks(soundex_mirip(nama1, nama2)));
+    tulis("   Apakah '" + nama1 + "' dan '" + nama3 + "' bunyinya mirip? " + teks(soundex_mirip(nama1, nama3)));
+
+    tulis("   Metaphone Code '" + nama1 + "': " + metaphone_kode(nama1));
+    tulis("   Metaphone Code 'Widya': " + metaphone_kode("Widya"));
+
+    // 2. WidyaIPCIDR: Kalkulasi Subnet CIDR
+    tulis("\n--- 2. WidyaIPCIDR (IP Network & Subnetting) ---");
+
+    var subnet_str = "192.168.1.50/24";
+    var net = IPJaringan(subnet_str);
+
+    tulis("   CIDR Subnet       : " + subnet_str);
+    tulis("   Network Address   : " + ip_network_address(net));
+    tulis("   Broadcast Address : " + ip_broadcast_address(net));
+    tulis("   Jumlah Host Alokasi: " + teks(ip_jumlah_host(net)));
+    tulis("   IP Representasi Biner: " + ip_ke_biner("192.168.1.50"));
+
+    // Pengecekan IP dalam rentang subnet
+    var ip_uji1 = "192.168.1.200";
+    var ip_uji2 = "192.168.2.10";
+
+    tulis("\n   Pengecekan Keberadaan dalam Subnet " + subnet_str + ":");
+    tulis("   - Apakah " + ip_uji1 + " dalam subnet? " + teks(ip_apakah_dalam_rentang(ip_uji1, net)));
+    tulis("   - Apakah " + ip_uji2 + " dalam subnet? " + teks(ip_apakah_dalam_rentang(ip_uji2, net)));
+
+    tulis("\n=== SELESAI CONTOH 57 ===");
+}
+
+utama();

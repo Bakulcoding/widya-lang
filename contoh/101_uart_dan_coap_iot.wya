@@ -1,0 +1,35 @@
+// =========================================================================
+// Contoh 101: Pilar IoT & Sistem Tertanam (UART Serial & CoAP RFC 7252)
+// WidyaBusUART & WidyaCoAPProtocol
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR IOT & EMBEDDED: UART SERIAL & PROTOKOL COAP ===");
+
+    // 1. Komunikasi Serial UART / TTL / RS-485
+    var uart = PortSerialUART("COM3", 115200);
+    uart_kirim_teks(uart, "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47\r\n");
+    cetak("Total Byte Terkirim UART: " + ke_teks(uart.total_terkirim));
+
+    var data_terima = uart_baca_tersedia(uart);
+    cetak("UART Data Diterima (Loopback): " + data_terima);
+
+    // 2. Modbus CRC-16 Checksum
+    var paket_modbus = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0A]; // Read Holding Registers
+    var crc = uart_hitung_crc16(paket_modbus);
+    cetak("Modbus RTU Frame CRC16: " + ke_teks(crc));
+
+    // 3. Protokol IoT Ringan CoAP RFC 7252 (Constrained Application Protocol)
+    var coap_req = PesanCoAP("CON", "GET", 2005, "widya_tok", "/telemetri/suhu");
+    cetak("Pesan CoAP Dibuat: [" + coap_req.tipe_pesan + " " + coap_req.kode_metode + "] URI=" + coap_req.uri_path);
+
+    var bytes_coap = coap_enkode(coap_req);
+    cetak("CoAP Binary Packet Length: " + ke_teks(panjang(bytes_coap)) + " bytes");
+
+    var coap_dec = coap_dekode(bytes_coap);
+    cetak("CoAP Dekode: Tipe=" + coap_dec.tipe_pesan + ", Metode=" + coap_dec.kode_metode + ", ID=" + ke_teks(coap_dec.id_pesan) + ", Token=" + coap_dec.token);
+
+    cetak("=== UJI UART SERIAL & COAP IOT SUKSES ===");
+}
+
+utama();

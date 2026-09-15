@@ -1,0 +1,34 @@
+// Contoh 23: Low-Level Performance - Zero-Copy Shared Memory IPC & Regex Engine (Widya-Lang)
+
+cetak("=== ⚡ 1. Zero-Copy Shared Memory IPC (WidyaShm) ===");
+
+// Membuka blok memori bersama (RAM Buffer 4096 bytes)
+misal shm = buka_memori_bersama("widya_ipc_shared_buffer", 4096);
+cetak("Blok Shared Memory Dibuat: " + shm.nama + " (Kapasitas: " + string(shm.ukuran) + " bytes)");
+
+// Menulis data dari proses produsen
+misal byte_tertulis = tulis_memori_bersama(shm, "PESAN_SINKRONISASI_REALTIME_LATENSI_RENDAH");
+cetak("Ukuran payload tertulis: " + string(byte_tertulis) + " bytes");
+
+// Membaca data langsung dari memori proses konsumen (Zero-Copy)
+misal data_dibaca = baca_memori_bersama(shm);
+cetak("Data terbaca dari Shared Memory: " + data_dibaca);
+
+cetak("=== 🔍 2. High-Speed Regular Expression Engine (WidyaRegex) ===");
+
+misal teks = "Hubungi kami di support@widya-lang.org atau dev@widya.id untuk info v2.5.0";
+misal pola_email = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+
+misal cocok = regex_cocok(pola_email, teks);
+cetak("Apakah mengandung email valid: " + string(cocok));
+
+misal info_match = regex_temukan(pola_email, teks);
+cetak("Email pertama ditemukan: " + info_match.hasil + " pada indeks [" + string(info_match.mulai) + ":" + string(info_match.selesai) + "]");
+
+misal daftar_email = regex_tangkap(pola_email, teks);
+cetak("Semua email yang ditangkap: " + string(daftar_email));
+
+misal teks_sensor = regex_ganti(pola_email, "[EMAIL_DISEMBUNYIKAN]", teks);
+cetak("Hasil Masking/Ganti Regex: " + teks_sensor);
+
+cetak("=== 🚀 Selesai Menjalankan Shared Memory & Regex Demo ===");

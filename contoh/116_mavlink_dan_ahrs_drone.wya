@@ -1,0 +1,38 @@
+// =========================================================================
+// Contoh 116: Pilar Sistem Otonom & Dirgantara (Telemetri Drone MAVLink & AHRS)
+// WidyaMAVLinkProtocol & WidyaAHRSQuaternion
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR OTONOM & DIRGANTARA: MAVLINK & AHRS DRONE ===");
+
+    // 1. Inisialisasi Paket Telemetri MAVLink v2
+    var msg_heartbeat = PesanMAVLink(1, 1, 0); // SysID=1, CompID=1, MsgID=0 (Heartbeat)
+    var frame_hb = mavlink_enkode_heartbeat(msg_heartbeat, "QUADROTOR", "ACTIVE", 128);
+    cetak("Frame Paket MAVLink Heartbeat Terenkode: " + ke_teks(panjang(frame_hb)) + " bytes");
+
+    var msg_attitude = PesanMAVLink(1, 1, 30); // MsgID=30 (Attitude)
+    var frame_att = mavlink_enkode_attitude(msg_attitude, 5.2, -2.1, 178.5);
+    cetak("Frame Paket MAVLink Attitude Terenkode: " + ke_teks(panjang(frame_att)) + " bytes");
+
+    // Dekode Frame Telemetri MAVLink
+    var decoded = mavlink_dekode(frame_hb);
+    cetak("Hasil Dekode Telemetri MAVLink: Versi = " + decoded.versi_mavlink + " (SysID=" + ke_teks(decoded.system_id) + ", CRC Valid=" + ke_teks(decoded.crc_valid) + ")");
+
+    // 2. Fusi Sensor Inersia 6-DOF AHRS Kuaternion (Bebas Gimbal Lock)
+    var q = KuaternionOrientasi(1.0, 0.0, 0.0, 0.0); // Orientasi awal unit quaternion
+    var gyro_rate = [0.05, 0.02, -0.01];             // Laju sudut gyro [rad/s]
+    var accel_g = [0.0, 0.0, 9.81];                  // Akselerometer gravitasi
+
+    // Eksekusi langkah filter fusi Madgwick (dt = 10ms)
+    q = ahrs_fusi_madgwick_step(q, gyro_rate, accel_g, 0.01, 0.04);
+    cetak("Kuaternion Orientasi Ternormalisasi: w=" + ke_teks(q.w) + ", x=" + ke_teks(q.x) + ", y=" + ke_teks(q.y) + ", z=" + ke_teks(q.z));
+
+    // Konversi Kuaternion ke Sudut Euler (Roll, Pitch, Yaw dalam derajat)
+    var euler = ahrs_ke_sudut_euler(q);
+    cetak("Sudut Sikap Drone (Euler Angles): Roll=" + ke_teks(euler.roll_deg) + "°, Pitch=" + ke_teks(euler.pitch_deg) + "°, Yaw=" + ke_teks(euler.yaw_deg) + "°");
+
+    cetak("=== UJI MAVLINK & AHRS DRONE SUKSES ===");
+}
+
+utama();

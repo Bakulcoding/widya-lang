@@ -1,0 +1,32 @@
+// Modul Smart Grid Gardu Induk IEC 61850 GOOSE & Sampled Values
+
+fungsi iec61850_buat_goose_control_block(gocb_ref, app_id, dataset_name) {
+    kembalikan {
+        "gocbRef": gocb_ref,
+        "appId": app_id,
+        "datSet": dataset_name,
+        "sqNum": 1,
+        "stNum": 1,
+        "timeAllowedToLive": 1000, // 1 detik
+        "timestamp": waktu()
+    };
+}
+
+fungsi iec61850_kirim_sinyal_trip_proteksi(gocb, id_pemutus_sirkuit, status_trip) {
+    gocb["stNum"] = gocb["stNum"] + 1;
+    gocb["timestamp"] = waktu();
+    
+    var goose_pdu = {
+        "header": gocb,
+        "breaker_id": id_pemutus_sirkuit,
+        "trip_command": status_trip,
+        "kualitas": "GOOD",
+        "waktu_eksekusi_ms": 2.5 // Waktu transfer sangat cepat < 4ms standar IEC 61850
+    };
+    
+    kembalikan {
+        "pdu": goose_pdu,
+        "status_jaringan": "GOOSE_MULTICAST_TRANSMITTED",
+        "keamanan_gardu": "PROTEKSI_AKTIF"
+    };
+}

@@ -1,0 +1,71 @@
+// =========================================================================
+// CONTOH 91: WidyaDistributedLock & WidyaOpenTelemetry
+// Pilar Cloud-Native & Ultra-Scale Backend Architecture (Gelombang 36)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("⏱️ CONTOH 91: DISTRIBUTED LOCK & OPENTELEMETRY (WAVE 36)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaDistributedLock (Distributed Mutual Exclusion with Lease TTL)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaDistributedLock (Multi-Node Mutex & Lease Engine) ---")
+
+var dlock = KunciTerdistribusi(5000) // Waktu awal: 5000 ms
+
+var sumber_daya = "db:akun:1001:saldo"
+
+cetak(">> Node A mencoba mengakuisisi lock untuk: " + sumber_daya)
+var sukses_a = distlock_akuisisi(dlock, sumber_daya, "node_worker_A", 3000)
+cetak("   Akuisisi Node A: " + sukses_a + " (Terkunci: " + distlock_apakah_terkunci(dlock, sumber_daya) + ")")
+
+cetak(">> Node B mencoba merebut lock yang sama:")
+var sukses_b = distlock_akuisisi(dlock, sumber_daya, "node_worker_B", 3000)
+cetak("   Akuisisi Node B (Ditolak): " + sukses_b)
+
+cetak(">> Node A memperpanjang masa berlaku lock (+2000 ms):")
+var perpanjang_a = distlock_perpanjang(dlock, sumber_daya, "node_worker_A", 2000)
+cetak("   Perpanjang Node A: " + perpanjang_a)
+
+cetak(">> Node A selesai memproses dan melepas lock:")
+var lepas_a = distlock_lepas(dlock, sumber_daya, "node_worker_A")
+cetak("   Pelepasan Node A: " + lepas_a + " (Terkunci: " + distlock_apakah_terkunci(dlock, sumber_daya) + ")")
+
+cetak(">> Node B mencoba mengakuisisi kembali setelah lock dilepas:")
+var sukses_b2 = distlock_akuisisi(dlock, sumber_daya, "node_worker_B", 3000)
+cetak("   Akuisisi Node B (Diterima): " + sukses_b2)
+
+// -------------------------------------------------------------------------
+// 2. WidyaOpenTelemetry (Distributed Tracing, Span Hierarchy & Metrics)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaOpenTelemetry (Distributed Tracing & APM Telemetry) ---")
+
+var tracer = TracerTelemetry("widya-pembayaran-service", "trace-trx-882910")
+
+// Span Utama (Root Span)
+var span_root = trace_mulai_span(tracer, "HTTP POST /api/checkout")
+trace_tambah_tag(tracer, span_root, "http.status_code", "200")
+trace_tambah_tag(tracer, span_root, "user.id", "usr_vip_771")
+
+// Span Anak 1: Validasi Saldo & Anti-Fraud
+var span_fraud = trace_mulai_span(tracer, "VerifikasiAntiFraud", span_root)
+trace_tambah_tag(tracer, span_fraud, "fraud.score", "0.02")
+trace_akhiri_span(tracer, span_fraud)
+
+// Span Anak 2: Gateway Bank / Payment Gateway
+var span_bank = trace_mulai_span(tracer, "KueriBankGateway", span_root)
+trace_tambah_tag(tracer, span_bank, "bank.provider", "BankBCA")
+trace_tambah_tag(tracer, span_bank, "payment.amount_idr", "500000")
+trace_akhiri_span(tracer, span_bank)
+
+// Akhiri Span Utama
+trace_akhiri_span(tracer, span_root)
+
+cetak(">> Ekspor Hasil Jejak Telemetri OpenTelemetry (JSON):")
+var json_trace = trace_ekspor_json(tracer)
+cetak(json_trace)
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaDistributedLock & OpenTelemetry Beroperasi 100%!")
+cetak("=================================================================")

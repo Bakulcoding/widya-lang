@@ -1,0 +1,93 @@
+// Modul Protokol Biner PostgreSQL (pgwire Frontend/Backend Engine)
+
+fungsi buat_pg_startup_packet(pengguna, basis_data) {
+    // Format startup message v3.0: [panjang i32][protokol 0x00030000][user\0...][database\0...]\0
+    var proto = "user\0" + pengguna + "\0database\0" + basis_data + "\0\0";
+    var panjang_p = 4 + 4 + panjang(proto);
+    kembalikan {
+        "panjang": panjang_p,
+        "versi": "3.0",
+        "pengguna": pengguna,
+        "basis_data": basis_data,
+        "payload_raw": proto
+    };
+}
+
+fungsi buat_pg_query_packet(sql) {
+    // Format Simple Query 'Q': ['Q'][panjang i32][sql string\0]
+    var sql_z = sql + "\0";
+    var panjang_q = 4 + panjang(sql_z);
+    kembalikan {
+        "tipe": "Q",
+        "panjang": panjang_q,
+        "query": sql
+    };
+}
+
+fungsi parse_pg_backend_frame(tipe_pesan, payload) {
+    // Tipe pesan Postgres backend:
+    // 'R': AuthenticationOk
+    // 'T': RowDescription (nama kolom & tipe data)
+    // 'D': DataRow (baris data)
+    // 'C': CommandComplete (misal SELECT 3 / INSERT 0 1)
+    // 'Z': ReadyForQuery (I = idle, T = in transaction, E = error)
+    // 'E': ErrorResponse
+    
+    jika (tipe_pesan == "R") {
+        kembalikan { "status": "AUTH_OK", "payload": payload };
+    }
+    jika (tipe_pesan == "T") {
+        var kolom_list = [];
+        var raw_parts = pisah(payload, ";");
+        untuk item dalam raw_parts {
+            jika (panjang(item) > 0) {
+                var c_info = pisah(item, ":");
+                kolom_list = tambah(kolom_list, { "nama": c_info[0], "tipe_oid": c_info[1] });
+            }
+        }
+        kembalikan { "status": "ROW_DESCRIPTION", "kolom": kolom_list };
+    }
+    jika (tipe_pesan == "D") {
+        var nilai_list = pisah(payload, "|");
+        kembalikan { "status": "DATA_ROW", "nilai": nilai_list };
+    }
+    jika (tipe_pesan == "C") {
+        kembalikan { "status": "COMMAND_COMPLETE", "tag": payload };
+    }
+    jika (tipe_pesan == "Z") {
+        kembalikan { "status": "READY_FOR_QUERY", "state": payload };
+    }
+    jika (tipe_pesan == "E") {
+        kembalikan { "status": "ERROR", "pesan": payload };
+    }
+    
+    kembalikan { "status": "UNKNOWN", "tipe": tipe_pesan, "payload": payload };
+}
+
+fungsi eksekusi_pg_mock_pipeline(sql, mock_db_state) {
+    // Mensimulasikan round-trip wire protocol pgwire
+    var paket_q = buat_pg_query_packet(sql);
+    var responses = [];
+    
+    jika (regex_cocok(".*SELECT.*", sql)) {
+        // Simulasi kirim RowDescription, DataRows, CommandComplete, ReadyForQuery
+        responses = tambah(responses, parse_pg_backend_frame("T", "id:23;nama:1043;saldo:1700"));
+        
+        untuk baris dalam mock_db_state {
+            var row_str = ke_teks(baris["id"]) + "|" + baris["nama"] + "|" + ke_teks(baris["saldo"]);
+            responses = tambah(responses, parse_pg_backend_frame("D", row_str));
+        }
+        
+        var total_rows = ke_teks(panjang(mock_db_state));
+        responses = tambah(responses, parse_pg_backend_frame("C", "SELECT " + total_rows));
+        responses = tambah(responses, parse_pg_backend_frame("Z", "I"));
+    } lainnya {
+        responses = tambah(responses, parse_pg_backend_frame("C", "OK"));
+        responses = tambah(responses, parse_pg_backend_frame("Z", "I"));
+    }
+    
+    kembalikan {
+        "query_sent": paket_q,
+        "backend_frames": responses
+    };
+}

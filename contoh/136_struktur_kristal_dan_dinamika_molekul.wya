@@ -1,0 +1,43 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 59 - Struktur Kristal 3D, Ekspor CIF & Dinamika Molekul (MD)
+// Demonstrasi pembuatan sel satuan kisi kristal perovskit, kalkulasi densitas teoritis, dan integrasi Velocity-Verlet partikel Lennard-Jones.
+
+tulis("=== [WIDYA MATERIAL INFORMATICS] STRUKTUR KRISTAL & DINAMIKA MOLEKUL ===");
+
+// 1. Inisialisasi Sel Satuan Kristal SrTiO3 (Stronsium Titanat Perovskit)
+var kristal = KisiKristal3D("SrTiO3_Perovskite");
+kristal_set_parameter_sel(kristal, 3.905, 3.905, 3.905, 90.0, 90.0, 90.0); // Kubik a=b=c=3.905 Angstrom
+
+// Daftarkan posisi atomik fraksional basis unit cell
+kristal_tambah_atom_fraksional(kristal, "Sr", 0.0, 0.0, 0.0, 87.62); // Sudut kubus
+kristal_tambah_atom_fraksional(kristal, "Ti", 0.5, 0.5, 0.5, 47.867); // Pusat kubus
+kristal_tambah_atom_fraksional(kristal, "O",  0.5, 0.5, 0.0, 15.999); // Pusat muka (Face-centered)
+kristal_tambah_atom_fraksional(kristal, "O",  0.5, 0.0, 0.5, 15.999);
+kristal_tambah_atom_fraksional(kristal, "O",  0.0, 0.5, 0.5, 15.999);
+
+var info_densitas = kristal_hitung_densitas_teoritis(kristal);
+tulis("--- PROPERTI SEL SATUAN KRISTAL ---");
+tulis("Volume Sel Satuan (Angstrom^3) : " + info_densitas["volume_angstrom3"]);
+tulis("Total Massa Unit Cell (amu)    : " + info_densitas["total_massa_amu"]);
+tulis("Densitas Teoritis Kristal      : " + info_densitas["densitas_g_cm3"] + " g/cm^3");
+
+var dokumen_cif = kristal_ekspor_cif(kristal);
+tulis("\n--- BERKAS STANDAR CIF (Crystallographic Information File) ---");
+tulis(dokumen_cif);
+
+// 2. Simulasi Dinamika Molekul (MD) Partikel Gas Argon Interaksi Lennard-Jones
+tulis("--- SIMULASI DINAMIKA MOLEKUL LENNARD-JONES (VELOCITY-VERLET) ---");
+var md = SimulatorMolekulerMD(0.0103, 3.4, 39.948); // Parameter Argon
+
+// Tambah partikel dengan posisi (Angstrom) dan kecepatan awal (m/s)
+md_tambah_partikel(md, 0.0, 0.0, 0.0, 150.0, 0.0, 0.0);
+md_tambah_partikel(md, 3.8, 0.0, 0.0, -150.0, 0.0, 0.0);
+md_tambah_partikel(md, 1.9, 3.5, 0.0, 0.0, 50.0, 0.0);
+
+tulis("Menjalankan 5 langkah integrasi Velocity-Verlet (dt = 2.0 fs):");
+untuk i dalam 0..5 {
+    md_langkah_integrasi_verlet(md, 2.0);
+    var energi = md_hitung_energi_sistem(md);
+    tulis("  Langkah #" + (i + 1) + " -> Energi Total: " + energi["energi_total_ev"] + " eV, Temp: " + energi["temperatur_kelvin"] + " K");
+}
+
+tulis("\n[WIDYA MATERIAL INFORMATICS] Kristalografi & MD Berhasil Diverifikasi!");

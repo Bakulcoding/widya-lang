@@ -1,0 +1,40 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 57 - Logika Hoare & Pembukti Teorema Orde Pertama (FOL)
+// Demonstrasi verifikasi formal program imperatif dengan Weakest Precondition dan pembuktian refutasi resolusi.
+
+tulis("=== [WIDYA VERIFIKASI FORMAL] LOGIKA HOARE & PEMBUKTI TEOREMA FOL ===");
+
+// 1. Verifikasi Formal Program Imperatif (Hoare Triples {P} C {Q})
+tulis("--- VERIFIKASI HOARE TRIPLE {P} C {Q} ---");
+var verifikator = PemeriksaHoare();
+
+// Hitung Weakest Precondition wp(x := x + 1, x > 1) = (x + 1) > 1
+var wp_kalkulasi = hoare_hitung_weakest_precondition(verifikator, "x", "x + 1", "x > 1");
+tulis("Weakest Precondition wp(x := x + 1, x > 1): " + wp_kalkulasi);
+
+// Verifikasi Hoare Triple: {x > 0} x = x + 1 {x > 1}
+var hasil_hoare = hoare_verifikasi_kondisi(verifikator, "x > 0", "x = x + 1", "x > 1");
+tulis("Prakondisi P       : " + hasil_hoare["prakondisi"]);
+tulis("Pernyataan C       : " + hasil_hoare["pernyataan"]);
+tulis("Postkondisi Q      : " + hasil_hoare["postkondisi"]);
+tulis("Hoare Triple Valid : " + hasil_hoare["hoare_triple_valid"]);
+tulis("Status Verifikasi  : " + hasil_hoare["status"]);
+
+// 2. Pembuktian Teorema Logika Orde Pertama (First-Order Logic Resolution)
+tulis("\n--- PEMBUKT автомATIS TEOREMA LOGIKA ORDE PERTAMA (FOL) ---");
+var pembukti = PembuktiTeoremaFOL();
+
+// Aksioma / Premis Pengetahuan:
+// Manusia(Socrates)
+fol_tambah_aksioma(pembukti, "Manusia", "Socrates");
+// Fana(Socrates) [Implikasi Manusia(X) -> Fana(X)]
+fol_tambah_aksioma(pembukti, "Fana", "Socrates");
+
+// Tujuan Hipotesis: Buktikan apakah Socrates Fana?
+fol_tambah_tujuan(pembukti, "Fana", "Socrates");
+
+var hasil_resolusi = fol_buktikan_kontradiksi_resolusi(pembukti);
+tulis("Teorema Terbukti   : " + hasil_resolusi["teorema_terbukti"]);
+tulis("Metode Pembuktian  : " + hasil_resolusi["metode"]);
+tulis("Status Resolusi    : " + hasil_resolusi["status"]);
+
+tulis("\n[WIDYA VERIFIKASI FORMAL] Logika Hoare & Pembukti Teorema FOL Berhasil!");

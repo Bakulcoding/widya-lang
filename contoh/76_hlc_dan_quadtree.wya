@@ -1,0 +1,49 @@
+// ===================================================================
+// CONTOH 76: HYBRID LOGICAL CLOCK (HLC) & 2D SPATIAL QUADTREE
+// Widya-Lang Modern Distributed Systems & Spatial Computing
+// ===================================================================
+
+cetak("=== DEMO WIDYA HLC (HYBRID LOGICAL CLOCK) ===")
+var nodeA = JamHLC("node-asia-1")
+var nodeB = JamHLC("node-eropa-1")
+
+var tsA1 = hlc_detak(nodeA)
+cetak("Detak lokal Node A : " + hlc_format(tsA1))
+
+// Simulasi komunikasi jaringan: Node B menerima pesan ber-timestamp dari Node A
+var tsB1 = hlc_perbarui(nodeB, tsA1)
+cetak("Node B setelah terima pesan dari Node A : " + hlc_format(tsB1))
+
+var tsA2 = hlc_detak(nodeA)
+cetak("Detak lanjutan Node A : " + hlc_format(tsA2))
+
+var sebelum = hlc_apakah_sebelum(tsA1, tsB1)
+cetak("Apakah tsA1 terjadi secara kausal sebelum tsB1? " + teks(sebelum))
+pastikan(sebelum, "tsA1 harus terjadi sebelum tsB1")
+
+cetak("")
+cetak("=== DEMO WIDYA QUADTREE (2D SPATIAL INDEXING) ===")
+// Kotak koordinat 0..100 x 0..100 dengan kapasitas 2 titik per node
+var qt = PohonQuad(0, 0, 100, 100, 2)
+
+quad_sisip(qt, 15, 20, "Drone-Alpha")
+quad_sisip(qt, 18, 22, "Drone-Beta")
+quad_sisip(qt, 75, 80, "Stasiun-Pusat")
+quad_sisip(qt, 12, 19, "Drone-Gamma")
+quad_sisip(qt, 95, 95, "Satelit-Relay")
+
+cetak("Total entitas spasial tersimpan: " + teks(quad_hitung(qt)))
+
+// Kueri titik tepat
+var titik_gamma = quad_kueri_titik(qt, 12, 19)
+cetak("Entitas di (12, 19): " + titik_gamma[0].data)
+
+// Kueri radius radar deteksi (lingkaran di pusat 15, 20 dengan radius 10.0)
+var sekitar_alpha = quad_kueri_lingkaran(qt, 15, 20, 10.0)
+cetak("Entitas dalam radius 10.0 dari (15, 20):")
+untuk_setiap(sekitar_alpha, fungsi(e) {
+    cetak(" - " + e.data + " pada (" + teks(e.x) + ", " + teks(e.y) + ")")
+})
+
+cetak("")
+cetak("✔ Seluruh pengujian HLC dan QuadTree sukses dieksekusi!")

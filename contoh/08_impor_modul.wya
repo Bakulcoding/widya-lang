@@ -1,0 +1,12 @@
+// ==========================================
+// Contoh 08: Modularisasi Kode dengan Impor
+// ==========================================
+
+impor "contoh/modul_mtk.wya" sebagai mtk;
+
+cetak("--- Menggunakan Modul Matematika ---");
+misal r = 7;
+cetak("Jari-jari:", r);
+cetak("Luas Lingkaran:", bulat(mtk.luas_lingkaran(r)));
+cetak("Keliling Lingkaran:", bulat(mtk.keliling_lingkaran(r)));
+cetak("Faktorial(5):", mtk.faktorial(5));

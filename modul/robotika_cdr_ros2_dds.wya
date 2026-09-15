@@ -1,0 +1,41 @@
+// Modul Robotika Industri ROS2 DDS CDR Wire Serialization
+
+fungsi ros2_encode_cdr_header() {
+    // OMG CDR Header (4 bytes): Encapsulation ID (0x0000 = CDR_LE, 0x0001 = CDR_BE) + Options (2B)
+    kembalikan {
+        "encapsulation": "CDR_LITTLE_ENDIAN",
+        "format_code": 0,
+        "options": 0
+    };
+}
+
+fungsi ros2_serialize_twist_message(linear_x, linear_y, linear_z, angular_x, angular_y, angular_z) {
+    // geometry_msgs/msg/Twist
+    var header = ros2_encode_cdr_header();
+    kembalikan {
+        "topic_type": "geometry_msgs/msg/Twist",
+        "header": header,
+        "linear": {
+            "x": linear_x,
+            "y": linear_y,
+            "z": linear_z
+        },
+        "angular": {
+            "x": angular_x,
+            "y": angular_y,
+            "z": angular_z
+        },
+        "panjang_payload_byte": 4 + 48 // 4 bytes header + 6x f64 (8B)
+    };
+}
+
+fungsi ros2_dispatch_cmd_vel(publisher_node, twist_msg) {
+    kembalikan {
+        "node_pengirim": publisher_node,
+        "topic": "/cmd_vel",
+        "tipe": twist_msg["topic_type"],
+        "linear_speed": twist_msg["linear"]["x"],
+        "angular_turn": twist_msg["angular"]["z"],
+        "status": "DDS_RTPS_PUBLISHED"
+    };
+}

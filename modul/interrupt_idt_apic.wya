@@ -1,0 +1,103 @@
+struktur IDTBuilder {
+    daftar_isr,
+    pic_mask,
+    apic_eoi_terakhir
+}
+
+struktur ISRHandler {
+    vector,
+    nama,
+    dipanggil_flag,
+    data_terakhir
+}
+
+fungsi idt_buat() {
+    misal idt = IDTBuilder();
+    idt.daftar_isr = {};
+    idt.pic_mask = [salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah, salah];
+    idt.apic_eoi_terakhir = nihil;
+    kembalikan idt;
+}
+
+fungsi idt_tambah_isr(idt, vector, nama_handler, handler_func) {
+    misal isr = ISRHandler();
+    isr.vector = vector;
+    isr.nama = nama_handler;
+    isr.dipanggil_flag = salah;
+    isr.data_terakhir = nihil;
+    idt.daftar_isr[vector] = { "handler": isr, "func": handler_func };
+    kembalikan isr;
+}
+
+fungsi idt_dispatch_interrupt(idt, vector, data_args) {
+    misal entri = idt.daftar_isr[vector];
+    jika entri == nihil {
+        kembalikan "GALAT_VECTOR_TIDAK_TERDAFTAR";
+    }
+    entri.handler.dipanggil_flag = benar;
+    entri.handler.data_terakhir = data_args;
+    misal hasil = entri.func(data_args);
+    kembalikan hasil;
+}
+
+fungsi pic_set_mask(idt, irq_num, is_masked) {
+    jika irq_num >= 0 dan irq_num < 16 {
+        idt.pic_mask[irq_num] = is_masked;
+    }
+    kembalikan idt.pic_mask[irq_num];
+}
+
+fungsi apic_simpan_eoi(idt, vector) {
+    idt.apic_eoi_terakhir = vector;
+    kembalikan vector;
+}
+
+fungsi handler_timer(args) {
+    kembalikan "TIMER_ISR_DIPANGGIL";
+}
+
+fungsi handler_keyboard(args) {
+    kembalikan "KEYBOARD_ISR_DIPANGGIL";
+}
+
+fungsi handler_serial(args) {
+    kembalikan "SERIAL_RX";
+}
+
+fungsi handler_pagefault(args) {
+    kembalikan "PAGE_FAULT_HANDLED";
+}
+
+fungsi handler_gpfault(args) {
+    kembalikan "GP_FAULT";
+}
+
+fungsi handler_syscall_0x80(args) {
+    kembalikan "SYSCALL_0X80_OK";
+}
+
+misal idt = idt_buat();
+
+idt_tambah_isr(idt, 32, "timer", handler_timer);
+idt_tambah_isr(idt, 33, "keyboard", handler_keyboard);
+idt_tambah_isr(idt, 36, "serial", handler_serial);
+idt_tambah_isr(idt, 14, "pagefault", handler_pagefault);
+idt_tambah_isr(idt, 13, "gpfault", handler_gpfault);
+idt_tambah_isr(idt, 128, "syscall", handler_syscall_0x80);
+
+misal hasil_keyboard = idt_dispatch_interrupt(idt, 33, {});
+pastikan(hasil_keyboard == "KEYBOARD_ISR_DIPANGGIL");
+
+misal hasil_syscall = idt_dispatch_interrupt(idt, 128, {});
+pastikan(hasil_syscall == "SYSCALL_0X80_OK");
+
+misal count_vectors = 0;
+untuk kunci dalam idt.daftar_isr {
+    count_vectors = count_vectors + 1;
+}
+pastikan(count_vectors == 6);
+
+apic_simpan_eoi(idt, 33);
+pastikan(idt.apic_eoi_terakhir == 33);
+
+cetak("[OK] IDT_6_VECTOR_DISPATCH_SELF_TEST_PASS");

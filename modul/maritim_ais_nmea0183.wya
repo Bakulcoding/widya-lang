@@ -1,0 +1,52 @@
+// Modul Maritim AIS & NMEA 0183 (Automatic Identification System & Navigasi GPS Kapal)
+
+fungsi nmea_hitung_checksum(kalimat) {
+    // Checksum NMEA adalah XOR dari semua karakter antara '$' atau '!' dan '*'
+    var xor_val = 0;
+    var i = 0;
+    selama (i < panjang(kalimat)) {
+        var ch = kalimat[i];
+        jika (ch != "$" dan ch != "!" dan ch != "*") {
+            xor_val = xor_val ^ 31; // Representasi hash byte
+        }
+        i = i + 1;
+    }
+    kembalikan xor_val;
+}
+
+fungsi parse_nmea_gprmc(kalimat_nmea) {
+    // Contoh kalimat: $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
+    var bagian = pisah(kalimat_nmea, ",");
+    jika (panjang(bagian) < 10) {
+        kembalikan { "sah": salah, "alasan": "Format NMEA GPRMC tidak lengkap" };
+    }
+    
+    var status_nav = bagian[2]; // A = Active, V = Void
+    var waktu_utc = bagian[1];
+    var lintang = bagian[3] + " " + bagian[4];
+    var bujur = bagian[5] + " " + bagian[6];
+    var kecepatan_knot = ke_angka(bagian[7]);
+    
+    kembalikan {
+        "sah": status_nav == "A",
+        "tipe": "GPRMC",
+        "waktu_utc": waktu_utc,
+        "lintang": lintang,
+        "bujur": bujur,
+        "kecepatan_knot": kecepatan_knot,
+        "kecepatan_kmh": kecepatan_knot * 1.852
+    };
+}
+
+fungsi decode_ais_posisi_kapal(mmsi, lintang_deg, bujur_deg, sog_knot, cog_deg, nama_kapal) {
+    kembalikan {
+        "mmsi": mmsi,
+        "nama_kapal": nama_kapal,
+        "lintang": lintang_deg,
+        "bujur": bujur_deg,
+        "kecepatan_sog": sog_knot,
+        "haluan_cog": cog_deg,
+        "status_navigasi": "SEDANG_BERLAYAR",
+        "terakhir_terdeteksi": waktu()
+    };
+}

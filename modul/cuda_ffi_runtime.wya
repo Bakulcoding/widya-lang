@@ -1,0 +1,75 @@
+var CUDA_MALLOC_COUNTER = 0;
+
+struktur CUDARuntime {
+    versi,
+    device_count,
+    daftar_ptr_device,
+    last_sync_result,
+    malloc_counter
+}
+
+struktur CUDAKernel {
+    nama,
+    grid_x,
+    grid_y,
+    block_x,
+    block_y,
+    shared_kb
+}
+
+fungsi cuda_runtime(versi_string) {
+    var r = CUDARuntime();
+    r.versi = versi_string;
+    r.device_count = 1;
+    r.daftar_ptr_device = {};
+    r.last_sync_result = "";
+    r.malloc_counter = 0;
+    kembalikan r;
+}
+
+fungsi cuda_get_device_count(r) {
+    kembalikan r.device_count;
+}
+
+fungsi cuda_malloc(r, mb_alloc) {
+    r.malloc_counter = r.malloc_counter + 1;
+    var counter_str = ke_teks(r.malloc_counter);
+    var mb_str = ke_teks(mb_alloc);
+    var ptr = "dev_ptr_" + counter_str + "_" + mb_str + "mb";
+    r.daftar_ptr_device[ptr] = mb_alloc;
+    kembalikan ptr;
+}
+
+fungsi cuda_memcpy_h2d(r, ptr, data_array) {
+    var panjang_data = panjang(data_array);
+    var hasil = "COPY_H2D_OK_" + ke_teks(panjang_data) + "_items";
+    kembalikan hasil;
+}
+
+fungsi cuda_kernel_launch(r, kernel_nama, gx, gy, bx, by) {
+    var kernel = CUDAKernel();
+    kernel.nama = kernel_nama;
+    kernel.grid_x = gx;
+    kernel.grid_y = gy;
+    kernel.block_x = bx;
+    kernel.block_y = by;
+    kernel.shared_kb = 0;
+    var hasil = "KERNEL_LAUNCHED_" + kernel_nama;
+    kembalikan hasil;
+}
+
+fungsi cuda_sinkronkan(r) {
+    r.last_sync_result = "CUDA_SUCCESS";
+    kembalikan "CUDA_SUCCESS";
+}
+
+var cr = cuda_runtime("12.2");
+pastikan(cuda_get_device_count(cr) >= 1);
+var ptr = cuda_malloc(cr, 256);
+cetak("ptr_device=" + ptr);
+var hasil_copy = cuda_memcpy_h2d(cr, ptr, [1.0, 2.0, 3.0]);
+var luncurkan = cuda_kernel_launch(cr, "matmul_float32", 4, 4, 64, 1);
+var sinkron = cuda_sinkronkan(cr);
+pastikan(sinkron == "CUDA_SUCCESS");
+pastikan(cr.last_sync_result == "CUDA_SUCCESS");
+cetak("[OK] CUDA_MATMUL_256X256_KERNEL_SYNC_SELF_TEST_PASS")

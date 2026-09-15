@@ -1,0 +1,42 @@
+// =========================================================================
+// Contoh 106: Pilar Keamanan Siber (Analisis Forensik PCAP & Entropi Biner)
+// WidyaPCAPParser & WidyaFileForensics / WidyaEntropy
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR KEAMANAN SIBER: PCAP NETWORK & ENTROPI FORENSIK ===");
+
+    // 1. Parsing Berkas Tangkapan Jaringan PCAP
+    var pcap = ParserPCAP("traffic_capture.pcap");
+    cetak("Total Paket Jaringan Terurai: " + ke_teks(pcap.total_paket));
+
+    // Saring paket berdasarkan protokol
+    var paket_tls = pcap_saring_protokol(pcap, "TLS");
+    cetak("Jumlah Paket Protokol TLS Terfilter: " + ke_teks(panjang(paket_tls)));
+
+    var paket_http = pcap_saring_protokol(pcap, "HTTP");
+    cetak("Jumlah Paket Protokol HTTP Terfilter: " + ke_teks(panjang(paket_http)));
+
+    // 2. Identifikasi Magic Byte Header Biner Berkas
+    var elf_header = [0x7F, 0x45, 0x4C, 0x46, 0x02, 0x01, 0x01, 0x00]; // Magic ELF
+    var tipe_berkas = forensik_deteksi_magic_byte(elf_header);
+    cetak("Hasil Deteksi Magic Byte: " + tipe_berkas.tipe + " (" + tipe_berkas.deskripsi + ")");
+
+    var png_header = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]; // Magic PNG
+    var tipe_png = forensik_deteksi_magic_byte(png_header);
+    cetak("Hasil Deteksi Magic Byte: " + tipe_png.tipe + " (" + tipe_png.deskripsi + ")");
+
+    // 3. Kalkulasi Shannon Entropy (Deteksi Obfuscation / Packed Malware)
+    var teks_biasa = "widya_language_standard_unencrypted_source_code_text";
+    var entropi_rendah = forensik_hitung_entropi(teks_biasa);
+    cetak("Shannon Entropy Plaintext: " + ke_teks(entropi_rendah) + " (Normal: < 5.0)");
+
+    // 4. Ekstraksi String Biner (Carving Strings)
+    var biner_campuran = [0x00, 0x00, 0x41, 0x44, 0x4D, 0x49, 0x4E, 0x00, 0xFF, 0x50, 0x41, 0x53, 0x53, 0x00];
+    var list_string = forensik_ekstrak_string(biner_campuran, 4);
+    cetak("String Terekstraksi dari Memori Dump: " + ke_teks(list_string));
+
+    cetak("=== UJI PCAP & ENTROPI FORENSIK SUKSES ===");
+}
+
+utama();

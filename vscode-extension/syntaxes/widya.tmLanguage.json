@@ -1,0 +1,123 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Widya",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#strings" },
+        { "include": "#numbers" },
+        { "include": "#keywords" },
+        { "include": "#types_and_traits" },
+        { "include": "#builtins" },
+        { "include": "#functions" },
+        { "include": "#operators" },
+        { "include": "#constants" }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.widya",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.widya",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.widya",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.widya",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.widya",
+                    "match": "\\b\\d+(\\.\\d+)?\\b"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.widya",
+                    "match": "\\b(jika|kalau|lainnya|selama|untuk|dalam|ulang|loop|kembalikan|berhenti|lanjut|coba|tangkap|lempar|cocokkan|match)\\b"
+                },
+                {
+                    "name": "keyword.declaration.widya",
+                    "match": "\\b(misal|tetap|fungsi|fn|struktur|struct|sifat|trait|terapkan|impl|enum|varian|impor|muat|sebagai)\\b"
+                },
+                {
+                    "name": "keyword.operator.logical.widya",
+                    "match": "\\b(dan|atau|bukan)\\b"
+                },
+                {
+                    "name": "variable.language.this.widya",
+                    "match": "\\b(ini|diri)\\b"
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.language.boolean.widya",
+                    "match": "\\b(benar|salah|true|false)\\b"
+                },
+                {
+                    "name": "constant.language.nil.widya",
+                    "match": "\\b(nihil|kosong_nil|nil|null|none)\\b"
+                },
+                {
+                    "name": "constant.language.math.widya",
+                    "match": "\\b(PI|E)\\b"
+                }
+            ]
+        },
+        "types_and_traits": {
+            "patterns": [
+                {
+                    "name": "entity.name.type.widya",
+                    "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+                }
+            ]
+        },
+        "builtins": {
+            "patterns": [
+                {
+                    "name": "support.function.widya",
+                    "match": "\\b(cetak|tulis|baca|tipe|ke_angka|ke_teks|ke_boolean|Ok|Err|Ada|Kosong|buka|buka_atau|apakah_ok|apakah_err|pastikan|ke_json|dari_json|petakan|saring|lipat|untuk_setiap|temukan|gabungkan|ambil|lewati|apakah_ada|semua|buat_utas|gabung_utas|saluran|saluran_kirim|saluran_terima|panjang|tambah|hapus|sisip|gabung|pisah|huruf_besar|huruf_kecil|potong|kunci|nilai|ada_kunci|urutkan|balik|akar|pangkat|sin|cos|tan|mutlak|bulat|lantai|atap|acak|maks|min|waktu|tunggu|baca_berkas|tulis_berkas|eksekusi|tulis_biner|baca_biner|sha256|hmac_sha256|buat_kunci|tanda_tangani|verifikasi_ttd|hitung_merkle|tambang_pow|Aplikasi|Halaman|Kolom|Baris|TeksWidget|Tombol|BidangTeks|Kontainer|Kartu|Pemisah|Gambar|DaftarGulir|render_html)\\b"
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
+                    "captures": {
+                        "1": { "name": "entity.name.function.widya" }
+                    }
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.widya",
+                    "match": "(\\+|\\-|\\*|\\/|\\%|\\^|\\=\\=|\\!\\=|\\<\\=|\\>\\=|\\<|\\>|\\=|\\+\\=|\\-\\=|\\*\\=|\\/\\=|\\?|\\=\\>|\\:\\:)"
+                }
+            ]
+        }
+    }
+}

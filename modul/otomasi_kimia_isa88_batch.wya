@@ -1,0 +1,41 @@
+// Modul Otomasi Industri Kimia & Farmasi ISA-88 Batch Control (IEC 61512)
+
+fungsi isa88_buat_resep_batch(id_resep, nama_produk, volume_target_liter) {
+    kembalikan {
+        "id_resep": id_resep,
+        "nama_produk": nama_produk,
+        "volume_liter": volume_target_liter,
+        "tahapan_prosedur": [],
+        "status_batch": "SIAP_DIJALANKAN"
+    };
+}
+
+fungsi isa88_tambah_tahap_prosedur(resep_obj, nama_tahap, unit_reaktor, durasi_menit, setpoint_suhu_c) {
+    var tahap = {
+        "nama": nama_tahap,
+        "reaktor": unit_reaktor,
+        "durasi_menit": durasi_menit,
+        "suhu_target_c": setpoint_suhu_c,
+        "status": "TERDAFTAR"
+    };
+    resep_obj["tahapan_prosedur"] = tambah(resep_obj["tahapan_prosedur"], tahap);
+    kembalikan resep_obj;
+}
+
+fungsi isa88_eksekusi_batch_pipeline(resep_obj) {
+    var n = panjang(resep_obj["tahapan_prosedur"]);
+    var total_waktu = 0.0;
+    var i = 0;
+    selama (i < n) {
+        total_waktu = total_waktu + resep_obj["tahapan_prosedur"][i]["durasi_menit"];
+        i = i + 1;
+    }
+    
+    resep_obj["status_batch"] = "PRODUKSI_SELESAI_GMP";
+    kembalikan {
+        "resep": resep_obj["nama_produk"],
+        "total_tahap": n,
+        "total_durasi_menit": total_waktu,
+        "status": resep_obj["status_batch"]
+    };
+}

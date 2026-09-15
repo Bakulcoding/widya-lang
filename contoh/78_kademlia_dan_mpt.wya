@@ -1,0 +1,50 @@
+// ===================================================================
+// CONTOH 78: KADEMLIA P2P DHT & MERKLE PATRICIA STATE TRIE (MPT)
+// Widya-Lang Decentralized Routing & Ethereum-Style Cryptographic State
+// ===================================================================
+
+cetak("=== DEMO WIDYA KADEMLIA (K-BUCKET & XOR DISTANCE ROUTING) ===")
+var dht = TabelKademlia("node-boot-asia-01", 20)
+
+kademlia_tambah_node(dht, "node-singapore-02", "10.0.1.2")
+kademlia_tambah_node(dht, "node-tokyo-03", "10.0.2.3")
+kademlia_tambah_node(dht, "node-jakarta-04", "10.0.3.4")
+kademlia_tambah_node(dht, "node-sydney-05", "10.0.4.5")
+
+var cid = "QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco"
+kademlia_simpan(dht, cid, "BLOB_KONTEN_DESENTRALISASI_WIDYA_2026")
+
+var data_pulih = kademlia_ambil(dht, cid)
+cetak("Data tersimpan pada DHT: " + data_pulih)
+pastikan(data_pulih == "BLOB_KONTEN_DESENTRALISASI_WIDYA_2026", "Data DHT harus cocok")
+
+var terdekat = kademlia_node_terdekat(dht, cid, 3)
+cetak("3 Node terdekat secara metrik XOR:")
+untuk_setiap(terdekat, fungsi(node) {
+    cetak(" - Node ID : " + node.id + " (" + node.address + ")")
+})
+
+cetak("")
+cetak("=== DEMO WIDYA MERKLE PATRICIA TRIE (MPT STATE ROOT) ===")
+var mpt = MerklePatriciaTrie()
+
+mpt_pasang(mpt, "akun:0xAlice", {"saldo": 1500000, "nonce": 12})
+mpt_pasang(mpt, "akun:0xBob", {"saldo": 850000, "nonce": 4})
+mpt_pasang(mpt, "akun:0xCharlie", {"saldo": 3200000, "nonce": 21})
+
+var root1 = mpt_root_hash(mpt)
+cetak("State Root Hash Awal (MPT) : " + root1)
+
+var alice = mpt_ambil(mpt, "akun:0xAlice")
+cetak("Saldo 0xAlice dari Trie     : " + teks(alice.saldo) + " (nonce: " + teks(alice.nonce) + ")")
+
+// Mutasi state trie (Hapus Charlie, Ubah saldo Bob)
+mpt_hapus(mpt, "akun:0xCharlie")
+mpt_pasang(mpt, "akun:0xBob", {"saldo": 1200000, "nonce": 5})
+
+var root2 = mpt_root_hash(mpt)
+cetak("State Root Hash Pasca-Mutasi: " + root2)
+pastikan(root1 != root2, "Root hash MPT harus berubah secara deterministik saat state termutasi")
+
+cetak("")
+cetak("✔ Seluruh pengujian Kademlia P2P DHT dan Merkle Patricia Trie sukses dieksekusi!")

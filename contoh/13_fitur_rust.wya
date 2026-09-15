@@ -1,0 +1,223 @@
+// ==============================================================================
+// CONTOH 13: FITUR RUST DI WIDYA-LANG (RUST-LIKE PARADIGM DEMO)
+// ==============================================================================
+
+cetak("===============================================================");
+cetak("🦀 DEMO FITUR-FITUR SEPERTI BAHASA RUST DI WIDYA-LANG");
+cetak("===============================================================\n");
+
+// -----------------------------------------------------------------
+// 1. Pola Result<T, E> (Ok & Err) untuk Error Handling Tanpa Exception
+// -----------------------------------------------------------------
+fungsi hitung_bagi(pembilang, penyebut) {
+    jika penyebut == 0 {
+        kembalikan Err("Gagal: Terjadi pembagian dengan nol!");
+    }
+    kembalikan Ok(pembilang / penyebut);
+}
+
+misal hasil_ok = hitung_bagi(100, 4);
+misal hasil_err = hitung_bagi(50, 0);
+
+cetak("1. Pola Result<T, E>:");
+cetak("   - Status hasil_ok:", apakah_ok(hasil_ok), "-> Nilai:", buka(hasil_ok));
+cetak("   - Status hasil_err:", apakah_err(hasil_err), "-> Fallback:", buka_atau(hasil_err, -1));
+cetak("");
+
+// -----------------------------------------------------------------
+// 2. Pola Option<T> (Ada & Kosong / Some & None)
+// -----------------------------------------------------------------
+fungsi cari_pengguna(id) {
+    jika id == 1 {
+        kembalikan Ada({"id": 1, "nama": "Widya", "peran": "Admin"});
+    }
+    kembalikan Kosong();
+}
+
+misal user1 = cari_pengguna(1);
+misal user2 = cari_pengguna(99);
+
+cetak("2. Pola Option<T> (Ada / Kosong):");
+cetak("   - User 1 ditemukan:", apakah_ok(user1), "-> Data:", buka(user1)["nama"]);
+cetak("   - User 2 ditemukan:", apakah_ok(user2), "-> Fallback:", buka_atau(user2, "Tamu"));
+cetak("");
+
+// -----------------------------------------------------------------
+// 3. Native Algebraic Data Types (enum) & Pattern Matching (cocokkan / match)
+// -----------------------------------------------------------------
+enum StatusPengiriman {
+    Diproses,
+    Dikirim(kurir, nomor_resi),
+    Terkirim,
+    Gagal(alasan)
+}
+
+fungsi lacak_paket(status) {
+    kembalikan cocokkan status {
+        StatusPengiriman::Diproses => "📦 Paket sedang disiapkan di gudang.",
+        StatusPengiriman::Dikirim(kurir, resi) => "🚚 Dalam perjalanan via " + kurir + " [Resi: " + resi + "]",
+        StatusPengiriman::Terkirim => "✅ Paket telah sampai ke penerima.",
+        StatusPengiriman::Gagal(alasan) => "❌ Pengiriman gagal: " + alasan,
+        _ => "Status tidak dikenali."
+    };
+}
+
+misal p1 = StatusPengiriman::Diproses;
+misal p2 = StatusPengiriman::Dikirim("JNE Express", "WIDYA-889911");
+misal p3 = StatusPengiriman::Gagal("Alamat tidak ditemukan");
+
+cetak("3. Native Enum & Pattern Matching (cocokkan / match):");
+cetak("   - Paket 1:", lacak_paket(p1));
+cetak("   - Paket 2:", lacak_paket(p2));
+cetak("   - Paket 3:", lacak_paket(p3));
+cetak("");
+
+// -----------------------------------------------------------------
+// 4. If Let Pattern (jika misal) - Pencocokan Cepat
+// -----------------------------------------------------------------
+cetak("4. If Let (jika misal):");
+jika misal StatusPengiriman::Dikirim(kurir, resi) = p2 {
+    cetak("   ✨ [if let sukses] Ditemukan pengiriman via", kurir, "dengan nomor resi:", resi);
+} lainnya {
+    cetak("   Paket belum dalam status dikirim.");
+}
+cetak("");
+
+// -----------------------------------------------------------------
+// 5. Rust-like Error Try Operator (?) - Propagasi Galat Cepat
+// -----------------------------------------------------------------
+fungsi kalkulasi_kompleks(a, b) {
+    misal hasil_bagi = hitung_bagi(a, b)?; // Otomatis return Err jika bagi nol
+    kembalikan Ok(hasil_bagi * 100);
+}
+
+misal sukses_try = kalkulasi_kompleks(50, 2);
+misal gagal_try = kalkulasi_kompleks(50, 0);
+
+cetak("5. Operator Propagasi Galat (?):");
+cetak("   - kalkulasi_kompleks(50, 2):", buka(sukses_try));
+cetak("   - kalkulasi_kompleks(50, 0):", apakah_err(gagal_try), "-> Tangkap:", gagal_try["galat"]);
+cetak("");
+
+// -----------------------------------------------------------------
+// 6. Traits / Sifat & Impl / Terapkan (Ad-hoc Polymorphism)
+// -----------------------------------------------------------------
+sifat DapatDiringkas {
+    fungsi ringkas();
+}
+
+struktur RekeningDompet {
+    pemilik,
+    saldo,
+    fungsi inisialisasi(nama, uang) {
+        ini.pemilik = nama;
+        ini.saldo = uang;
+    }
+}
+
+terapkan DapatDiringkas untuk RekeningDompet {
+    fungsi ringkas() {
+        kembalikan "Pemilik: " + ini.pemilik + " | Saldo: Rp " + ke_teks(ini.saldo);
+    }
+}
+
+misal dompet_widya = RekeningDompet("Siti Widya", 5000000);
+cetak("6. Traits & Impl (sifat & terapkan):");
+cetak("   - Ringkasan:", dompet_widya.ringkas());
+cetak("");
+
+// -----------------------------------------------------------------
+// 7. Functional Collection Iterators (.map(), .filter(), .fold())
+// -----------------------------------------------------------------
+misal angka_daftar = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+misal bilangan_genap = saring(angka_daftar, fungsi(n) { kembalikan n % 2 == 0; });
+misal dikali_sepuluh = petakan(bilangan_genap, fungsi(n) { kembalikan n * 10; });
+misal total_penjumlahan = lipat(dikali_sepuluh, 0, fungsi(acc, n) { kembalikan acc + n; });
+
+cetak("7. Functional Iterators (saring, petakan, lipat):");
+cetak("   - Asli:", angka_daftar);
+cetak("   - Genap (saring):", bilangan_genap);
+cetak("   - Kali 10 (petakan):", dikali_sepuluh);
+cetak("   - Total (lipat):", total_penjumlahan);
+cetak("");
+
+// -----------------------------------------------------------------
+// 8. Immutability by Default & Constant Enforcement (let vs const)
+// -----------------------------------------------------------------
+tetap MAKS_KONEKSI = 1000;
+misal mut_penghitung = 0;
+mut_penghitung += 5;
+
+cetak("8. Immutability & Konstanta:");
+cetak("   - Tetap (const):", MAKS_KONEKSI);
+cetak("   - Misal termutasi (let mut):", mut_penghitung);
+cetak("");
+
+// -----------------------------------------------------------------
+// 10. Dekonstruksi Pola (Pattern Destructuring)
+// -----------------------------------------------------------------
+misal [lat, lon, elevasi] = [-6.2088, 106.8456, 15];
+cetak("10. Dekonstruksi Pola (Pattern Destructuring):");
+cetak("    - Latitude:", lat);
+cetak("    - Longitude:", lon);
+cetak("    - Elevasi:", elevasi);
+cetak("");
+
+// -----------------------------------------------------------------
+// 11. Perulangan Tak Hingga (Infinite Loop - ulang / loop)
+// -----------------------------------------------------------------
+misal tik = 0;
+ulang {
+    tik += 1;
+    jika tik == 3 {
+        berhenti;
+    }
+}
+cetak("11. Infinite Loop ('ulang' dengan 'berhenti'):");
+cetak("    - Berhenti pada iterasi ke-", tik);
+cetak("");
+
+// -----------------------------------------------------------------
+// 12. Advanced Functional Iterators (gabungkan, ambil, lewati, apakah_ada, semua)
+// -----------------------------------------------------------------
+misal nama_siswa = ["Budi", "Siti", "Agus", "Dewi"];
+misal nilai_siswa = [85, 92, 78, 95];
+misal data_gabung = gabungkan(nama_siswa, nilai_siswa);
+misal top_dua = ambil(nama_siswa, 2);
+misal sisa_siswa = lewati(nama_siswa, 2);
+misal ada_sempurna = apakah_ada(nilai_siswa, fungsi(n) { kembalikan n >= 90; });
+misal semua_lulus = semua(nilai_siswa, fungsi(n) { kembalikan n >= 70; });
+
+cetak("12. Advanced Iterators (Zip, Take, Skip, Any, All):");
+cetak("    - Gabungkan (Zip):", data_gabung);
+cetak("    - Ambil 2 Pertama:", top_dua);
+cetak("    - Lewati 2 Pertama:", sisa_siswa);
+cetak("    - Apakah ada nilai >= 90 (Any):", ada_sempurna);
+cetak("    - Semua siswa lulus >= 70 (All):", semua_lulus);
+cetak("");
+
+// -----------------------------------------------------------------
+// 13. Konkurensi & Saluran Komunikasi (Threads & MPSC Channels)
+// -----------------------------------------------------------------
+misal pipa = saluran();
+saluran_kirim(pipa, "Data dari pengirim saluran!");
+misal pesan_masuk = saluran_terima(pipa);
+
+cetak("13. Konkurensi & Saluran Komunikasi (Channels):");
+cetak("    - Pesan Saluran Diterima:", pesan_masuk);
+cetak("");
+
+// -----------------------------------------------------------------
+// 14. Assertions & Safety Guarantee (pastikan / assert)
+// -----------------------------------------------------------------
+cetak("14. Penegasan Keamanan (Assertion / pastikan!):");
+pastikan(buka(hasil_ok) == 25, "Hasil pembagian harus tepat 25");
+pastikan(mut_penghitung == 5, "Penghitung harus bernilai 5");
+pastikan(total_penjumlahan == 300, "Total penjumlahan harus 300");
+pastikan(lat == -6.2088, "Latitude dekonstruksi harus tepat");
+pastikan(tik == 3, "Loop ulang harus 3 kali");
+pastikan(semua_lulus == benar, "Semua siswa harus lulus");
+pastikan(pesan_masuk == "Data dari pengirim saluran!", "Pesan saluran harus valid");
+cetak("   ✅ Semua penegasan (assertions) berhasil diverifikasi aman!");
+
+cetak("\n🎉 SEMUA FITUR PARADIGMA RUST BERJALAN 100% LENGKAP & TUNTAS DI WIDYA-LANG!");

@@ -1,0 +1,39 @@
+// =========================================================================
+// Contoh 108: Pilar WebAssembly (Wasm Binary Emit & Linear Memory)
+// WidyaWasmModule & WidyaWasmMemory
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR WEBASSEMBLY: BINARY MODULE & LINEAR MEMORY ===");
+
+    // 1. Pembuatan Modul WebAssembly (Wasm Binary)
+    var modul = ModulWasm("widya_math_core");
+    wasm_tambah_fungsi(modul, "tambah_angka", ["i32", "i32"], "i32", ["local.get 0", "local.get 1", "i32.add"]);
+
+    cetak("Modul Wasm Dibuat: " + modul.nama + " (Jumlah Fungsi: " + ke_teks(panjang(modul.fungsi_ekspor)) + ")");
+
+    // Bangun buffer biner Wasm (.wasm)
+    var biner_wasm = wasm_bangun_biner(modul);
+    cetak("Ukuran Bytecode Biner Wasm: " + ke_teks(panjang(biner_wasm)) + " bytes");
+
+    // Validasi Header Magic (\0asm versi 1)
+    var valid = wasm_validasi_biner(biner_wasm);
+    cetak("Status Validasi Header Wasm: " + ke_teks(valid));
+
+    // 2. Manajemen WebAssembly Linear Memory (Page Size 64 KiB)
+    var memori = MemoriWasmLinear(2, 16); // 2 halaman awal = 128 KiB, maks 16 halaman = 1 MiB
+    cetak("Kapasitas Alokasi Memori Linear: " + ke_teks(memori.kapasitas_byte) + " bytes (" + ke_teks(memori.halaman_awal) + " Pages)");
+
+    // Tulis String UTF-8 ke Linear Memory pada Offset 1024
+    var string_data = "Halo dari WebAssembly Linear Memory Widya-Lang!";
+    var bytes_tertulis = wasm_tulis_memori(memori, 1024, string_data);
+    cetak("Jumlah Byte Berhasil Ditulis ke Linear Memory: " + ke_teks(bytes_tertulis));
+
+    // Baca Kembali dari Linear Memory pada Offset 1024
+    var teks_terbaca = wasm_baca_memori(memori, 1024, panjang(string_data));
+    cetak("Data Terbaca dari Linear Memory: " + teks_terbaca);
+
+    cetak("=== UJI WASM BINARY & LINEAR MEMORY SUKSES ===");
+}
+
+utama();

@@ -1,0 +1,63 @@
+// Contoh 70: WidyaVectorDB & WidyaActorSystem
+// High-Dimensional Vector Embeddings & Fault-Tolerant Actor Concurrency
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 26: VectorDB & ActorSystem")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaVectorDB: Semantic Embedding Search (k-NN)
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaVectorDB: Pencarian Semantik ---")
+
+// Inisialisasi basis data vektor dengan dimensi 4
+let db_vektor = BasisDataVektor(4)
+
+// Menyimpan embedding artikel / dokumen
+vektor_sisip(db_vektor, "doc:ai_robotics", [0.95, 0.88, 0.12, 0.05], { "judul": "Robotika Cerdas & AI", "kategori": "Teknologi" })
+vektor_sisip(db_vektor, "doc:deep_learning", [0.91, 0.85, 0.15, 0.08], { "judul": "Pembelajaran Mendalam Modern", "kategori": "Teknologi" })
+vektor_sisip(db_vektor, "doc:kuliner_nusantara", [0.05, 0.10, 0.92, 0.89], { "judul": "Resep Rendang Daging Khas Minang", "kategori": "Kuliner" })
+vektor_sisip(db_vektor, "doc:wisata_pantai", [0.12, 0.08, 0.85, 0.95], { "judul": "Destinasi Pantai Eksotis Bali", "kategori": "Pariwisata" })
+
+cetak("Total dokumen terindeks di VectorDB:", vektor_hitung(db_vektor))
+
+// Kueri semantik pengguna: topik AI / Teknologi
+let vektor_kueri = [0.93, 0.87, 0.10, 0.04]
+cetak("\nMenjalankan pencarian k-NN untuk kueri AI...")
+let hasil_knn = vektor_kueri_knn(db_vektor, vektor_kueri, 2)
+
+untuk_setiap(hasil_knn, fungsi(doc) {
+    let meta = doc.metadata
+    cetak("  -> ID:", doc.id, "| Kemiripan:", doc.kemiripan)
+    cetak("     Judul:", meta["judul"], "| Kategori:", meta["kategori"])
+})
+
+// ----------------------------------------------------
+// 2. WidyaActorSystem: Actor Mailbox & Messaging
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaActorSystem: Konkurensi Aktor ---")
+
+let sistem = SistemAktor("KlasterWidya")
+
+// Membuat Aktor Pengolah Transaksi
+let aktor_transaksi = aktor_spawn(sistem, "AktorTransaksi", fungsi(aktor, pesan) {
+    cetak("  [AktorTransaksi] Menerima pesan:", pesan.aksi, "| Jumlah:", pesan.jumlah)
+})
+
+// Membuat Aktor Notifikasi
+let aktor_notifikasi = aktor_spawn(sistem, "AktorNotifikasi", fungsi(aktor, pesan) {
+    cetak("  [AktorNotifikasi] Mengirim notifikasi ke:", pesan.penerima, "| Teks:", pesan.isi)
+})
+
+cetak("Status Aktor Transaksi:", aktor_status(aktor_transaksi))
+cetak("Status Aktor Notifikasi:", aktor_status(aktor_notifikasi))
+
+// Mengirim pesan antar aktor
+aktor_kirim(aktor_transaksi, { "aksi": "DEPOSIT", "jumlah": 2500000 })
+aktor_kirim(aktor_transaksi, { "aksi": "TRANSFER", "jumlah": 750000 })
+aktor_kirim(aktor_notifikasi, { "penerima": "user_101@widya.id", "isi": "Transfer berhasil diproses!" })
+
+cetak("Total pesan di Mailbox Aktor Transaksi:", aktor_mailbox_panjang(aktor_transaksi))
+cetak("Total pesan di Mailbox Aktor Notifikasi:", aktor_mailbox_panjang(aktor_notifikasi))
+
+cetak("\n[SUKSES] Seluruh fitur VectorDB & ActorSystem beroperasi sempurna!")

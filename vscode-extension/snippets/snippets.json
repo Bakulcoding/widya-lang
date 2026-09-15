@@ -1,0 +1,138 @@
+{
+    "Fungsi Baru": {
+        "prefix": "fungsi",
+        "body": [
+            "fungsi ${1:nama_fungsi}(${2:parameter}) {",
+            "    ${0:// kode di sini}",
+            "    kembalikan ${3:nilai};",
+            "}"
+        ],
+        "description": "Deklarasi fungsi di Widya-Lang"
+    },
+    "Struktur Baru": {
+        "prefix": "struktur",
+        "body": [
+            "struktur ${1:NamaStruktur} {",
+            "    ${2:field1},",
+            "    ${3:field2},",
+            "    fungsi inisialisasi(${2:field1}, ${3:field2}) {",
+            "        ini.${2:field1} = ${2:field1};",
+            "        ini.${3:field2} = ${3:field2};",
+            "    }",
+            "    fungsi ${4:metode}() {",
+            "        ${0:// kode}",
+            "    }",
+            "}"
+        ],
+        "description": "Deklarasi struktur objek (OOP)"
+    },
+    "Enum ADT Baru": {
+        "prefix": "enum",
+        "body": [
+            "enum ${1:NamaEnum} {",
+            "    ${2:VarianSatu},",
+            "    ${3:VarianDua}(${4:payload})",
+            "}"
+        ],
+        "description": "Deklarasi Enum Aljabar Rust-like"
+    },
+    "Pencocokan Pola (Match)": {
+        "prefix": "cocokkan",
+        "body": [
+            "cocokkan ${1:target} {",
+            "    ${2:Pola::Satu} => ${3:aksi_satu},",
+            "    ${4:Pola::Dua}(${5:val}) => ${6:aksi_dua},",
+            "    _ => ${7:aksi_bawaan}",
+            "}"
+        ],
+        "description": "Pola Pattern Matching cocokkan"
+    },
+    "Sifat / Trait": {
+        "prefix": "sifat",
+        "body": [
+            "sifat ${1:NamaSifat} {",
+            "    fungsi ${2:nama_metode}(${3:params});",
+            "}"
+        ],
+        "description": "Deklarasi Sifat / Trait Antarmuka"
+    },
+    "Terapkan Sifat (Impl)": {
+        "prefix": "terapkan",
+        "body": [
+            "terapkan ${1:NamaSifat} untuk ${2:NamaStruktur} {",
+            "    fungsi ${3:nama_metode}(${4:params}) {",
+            "        ${0:// implementasi}",
+            "    }",
+            "}"
+        ],
+        "description": "Implementasi Sifat untuk Struktur"
+    },
+    "Perulangan Tak Hingga (Loop)": {
+        "prefix": "ulang",
+        "body": [
+            "ulang {",
+            "    ${0:// kode perulangan}",
+            "    jika ${1:kondisi_selesai} {",
+            "        berhenti;",
+            "    }",
+            "}"
+        ],
+        "description": "Perulangan tak terhingga (infinite loop)"
+    },
+    "Jika Percabangan": {
+        "prefix": "jika",
+        "body": [
+            "jika ${1:kondisi} {",
+            "    ${0:// jika benar}",
+            "} lainnya {",
+            "    ${2:// jika salah}",
+            "}"
+        ],
+        "description": "Pernyataan percabangan jika-lainnya"
+    },
+    "Jika Misal (If-Let)": {
+        "prefix": "jika_misal",
+        "body": [
+            "jika misal ${1:Pola} = ${2:ekspresi} {",
+            "    ${0:// jika pola cocok}",
+            "}"
+        ],
+        "description": "Pencocokan If-Let jika misal"
+    },
+    "Cetak Console": {
+        "prefix": "cetak",
+        "body": [
+            "cetak(${1:pesan});"
+        ],
+        "description": "Mencetak keluaran teks ke konsol"
+    },
+    "Coba Tangkap (Try Catch)": {
+        "prefix": "coba",
+        "body": [
+            "coba {",
+            "    ${0:// kode yang mungkin gagal}",
+            "} tangkap ${1:galat} {",
+            "    cetak(\"Terjadi kesalahan:\", ${1:galat});",
+            "}"
+        ],
+        "description": "Blok penanganan eksepsi coba-tangkap"
+    },
+    "Aplikasi UI Widya": {
+        "prefix": "aplikasi_ui",
+        "body": [
+            "misal app = Aplikasi({",
+            "    \"judul\": \"${1:Nama Aplikasi}\",",
+            "    \"badan\": Halaman({",
+            "        \"badan\": Kolom([",
+            "            TeksWidget(\"${2:Selamat Datang!}\"),",
+            "            Tombol(\"${3:Klik Saya}\", fungsi() {",
+            "                cetak(\"Tombol diklik!\");",
+            "            })",
+            "        ])",
+            "    })",
+            "});",
+            "kembalikan app;"
+        ],
+        "description": "Template aplikasi antarmuka deklaratif WidyaUI"
+    }
+}

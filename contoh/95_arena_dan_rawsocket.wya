@@ -1,0 +1,56 @@
+// =========================================================================
+// CONTOH 95: WidyaMemoryArena & WidyaSysSocket
+// Pilar Sistem & Infrastruktur Tingkat Rendah (Gelombang 38)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("🗜️ CONTOH 95: ARENA ALLOCATOR & SYS SOCKET (WAVE 38)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaMemoryArena (Custom Bump / Monolithic Memory Allocator)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaMemoryArena (Alokator Memori Arena Monolitik) ---")
+
+var arena = ArenaMemori(1024) // Arena 1024 bytes
+cetak(">> Inisialisasi Arena Memori 1024 bytes (Utilisasi Awal: " + arena_penggunaan_byte(arena) + " bytes)")
+
+// Lakukan alokasi kilat O(1)
+var ptr1 = arena_alokasi(arena, 64)   // Alokasi 64 bytes
+var ptr2 = arena_alokasi(arena, 128)  // Alokasi 128 bytes
+var ptr3 = arena_alokasi(arena, 250)  // Alokasi 250 bytes (aligned ke 256)
+
+cetak("   Alokasi Blok 1 (64 bytes)  -> Pointer Offset: " + ptr1)
+cetak("   Alokasi Blok 2 (128 bytes) -> Pointer Offset: " + ptr2)
+cetak("   Alokasi Blok 3 (250 bytes) -> Pointer Offset: " + ptr3)
+cetak(">> Total Memori Terpakai Saat Ini: " + arena_penggunaan_byte(arena) + " bytes")
+
+// Reset instan seluruh arena dalam O(1)
+arena_reset(arena)
+cetak(">> Reset Instan O(1) Arena Memori Selesai (Utilisasi Pasca-Reset: " + arena_penggunaan_byte(arena) + " bytes)")
+
+// -------------------------------------------------------------------------
+// 2. WidyaSysSocket (Raw TCP/UDP Socket & Non-Blocking Polling)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaSysSocket (Kontrol Soket Jaringan Tingkat Kernel) ---")
+
+var server_sock = SoketJaringan("tcp")
+soket_ikat(server_sock, "0.0.0.0", 8080)
+soket_dengarkan(server_sock, 128)
+cetak(">> Server TCP Socket berhasil diikat pada 0.0.0.0:8080 (Listening: benar)")
+
+// Simulasi penerimaan koneksi masuk
+var client_conn = soket_terima_koneksi(server_sock)
+cetak(">> Koneksi Klien Baru Diterima dari: " + client_conn["ip"] + ":" + client_conn["port"])
+
+// Kirim dan baca payload bytes biner
+var pesan_biner = "WIDYA_PROTO_PING_FRAME"
+var bytes_terkirim = soket_kirim_bytes(client_conn, pesan_biner)
+cetak(">> Terkirim " + bytes_terkirim + " bytes ke kanal soket klien")
+
+var bytes_diterima = soket_baca_bytes(client_conn, 32)
+cetak(">> Jumlah bytes terbaca dari buffer penerimaan: " + panjang(bytes_diterima) + " bytes")
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaMemoryArena & WidyaSysSocket Beroperasi 100%!")
+cetak("=================================================================")

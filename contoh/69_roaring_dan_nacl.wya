@@ -1,0 +1,65 @@
+// Contoh 69: WidyaRoaringBitmap & WidyaNaCl
+// Compressed Roaring Bitmaps & ChaCha20-Poly1305 AEAD Cryptography
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 25: RoaringBitmap & WidyaNaCl")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaRoaringBitmap: Compressed Bitset Indexing
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaRoaringBitmap ---")
+
+let bm_pengguna_aktif = RoaringBitmap([10, 25, 42, 100, 105, 250])
+let bm_pengguna_premium = RoaringBitmap([25, 42, 99, 105, 300])
+
+roaring_tambah(bm_pengguna_aktif, 300)
+roaring_tambah(bm_pengguna_aktif, 500)
+
+cetak("Jumlah anggota aktif:", roaring_hitung(bm_pengguna_aktif))
+cetak("Jumlah anggota premium:", roaring_hitung(bm_pengguna_premium))
+cetak("Apakah user 42 ada di aktif?", roaring_apakah_ada(bm_pengguna_aktif, 42))
+cetak("Apakah user 99 ada di aktif?", roaring_apakah_ada(bm_pengguna_aktif, 99))
+
+// Irisan (Intersection: Pengguna Aktif yang juga Premium)
+let bm_aktif_dan_premium = roaring_irisan(bm_pengguna_aktif, bm_pengguna_premium)
+cetak("Pengguna Aktif & Premium (Irisan):", roaring_ke_array(bm_aktif_dan_premium))
+
+// Gabungan (Union: Seluruh Pengguna Unik Terlibat)
+let bm_semua = roaring_gabungan(bm_pengguna_aktif, bm_pengguna_premium)
+cetak("Total Seluruh Pengguna Unik (Gabungan):", roaring_hitung(bm_semua))
+cetak("Daftar ID gabungan:", roaring_ke_array(bm_semua))
+
+// ----------------------------------------------------
+// 2. WidyaNaCl: ChaCha20 Stream Cipher & Poly1305 MAC
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaNaCl AEAD Cryptography ---")
+
+let kunci_rahasia = "widya_lang_super_secret_key_32b!"
+let nonce_acak = "widya_nonce!"
+
+let pesan_rahasia = "Widya-Lang adalah bahasa masa depan berstandar industri global!"
+cetak("Pesan Asli:", pesan_rahasia)
+
+// Enkripsi ChaCha20
+let ciphertext_hex = chacha20_enkripsi(pesan_rahasia, kunci_rahasia, nonce_acak)
+cetak("Ciphertext (ChaCha20 Hex):", ciphertext_hex)
+
+// Dekripsi ChaCha20
+let plaintext_pulih = chacha20_dekripsi(ciphertext_hex, kunci_rahasia, nonce_acak)
+cetak("Hasil Dekripsi:", plaintext_pulih)
+pastikan(plaintext_pulih == pesan_rahasia, "Dekripsi ChaCha20 harus cocok sempurna")
+
+// Poly1305 MAC Authentication & Verification
+let mac_tag = poly1305_otentikasi(pesan_rahasia, kunci_rahasia)
+cetak("Poly1305 MAC Tag:", mac_tag)
+
+let sah = poly1305_verifikasi(pesan_rahasia, mac_tag, kunci_rahasia)
+cetak("Otentikasi MAC Tag Valid?", sah)
+pastikan(sah, "Verifikasi MAC Poly1305 harus valid")
+
+let palsu = poly1305_verifikasi("Pesan yang telah dimodifikasi oleh penyusup", mac_tag, kunci_rahasia)
+cetak("Verifikasi Pesan Palsu:", palsu)
+pastikan(!palsu, "Pesan palsu harus ditolak oleh Poly1305")
+
+cetak("\n[SUKSES] Seluruh fitur RoaringBitmap & WidyaNaCl berjalan sempurna dan super aman!")

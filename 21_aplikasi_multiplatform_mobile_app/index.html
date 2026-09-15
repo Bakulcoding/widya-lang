@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>21_aplikasi_multiplatform (Widya Mobile App)</title>
+  <style>
+    body { margin: 0; padding: 0; background: #121212; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    .app-bar { background: #1f1f1f; padding: 1rem; font-weight: bold; border-bottom: 1px solid #333; text-align: center; }
+    .content { flex: 1; padding: 1rem; overflow-y: auto; }
+    .card { background: #242424; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #333; }
+    button { width: 100%; background: #6200ee; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="app-bar">📱 Widya Mobile WebApp</div>
+  <div class="content">
+    <div class="card">
+      <h3>🚀 Aplikasi Siap Distribusi (Android / iOS / Desktop)</h3>
+      <p>Aplikasi ini dikemas secara otomatis dari kode sumber Widya-Lang.</p>
+    </div>
+    <div class="card">
+      <h4>Kode Sumber Termasuk:</h4>
+      <pre style="color: #03dac6; overflow-x: auto;">// Contoh 21: Aplikasi Multiplatform & Native Mobile Bridge (Widya-Lang)
+
+cetak("=== 📱 1. Integrasi Native Mobile & Desktop Bridge ===");
+
+// Memeriksa informasi sistem dan kapabilitas perangkat
+misal info = DapatkanInfoPerangkat();
+cetak("Platform: " + info.platform);
+cetak("Sistem Operasi: " + info.os);
+cetak("Arsitektur CPU: " + info.arch);
+cetak("Status Baterai: " + string(info.baterai_persen) + "%");
+
+// Mengirim pesan IPC langsung ke platform container native
+KirimPesanAsli("sensor/gps", "permintaan_lokasi_terkini");
+KirimPesanAsli("notifikasi", "Aplikasi Widya Multiplatform Berhasil Dimuat!");
+
+cetak("=== 🚀 Selesai Menjalankan Native Mobile Bridge Demo ===");
+</pre>
+    </div>
+    <button onclick="kirimEventNative()">Kirim Event ke Native Bridge</button>
+  </div>
+  <script>
+    function kirimEventNative() {
+      alert("Pesan dikirim melalui Widya Mobile Bridge!");
+    }
+  </script>
+</body>
+</html>

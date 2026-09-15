@@ -1,0 +1,19 @@
+// Modul Pengolahan Sinyal Digital (DSP) & Rekayasa Audio Industri Widya-Lang
+// Mengintegrasikan FFT, IFFT, IIR Biquad Filters, dan Konvolusi
+
+fungsi proses_spektrum_sinyal(deret_sampel_waktu) {
+    var spektrum = dsp_fft_maju(deret_sampel_waktu);
+    var rekonstruksi = dsp_fft_balik(spektrum);
+    
+    kembalikan {
+        "spektrum": spektrum,
+        "rekonstruksi": rekonstruksi,
+        "jumlah_bin": panjang(spektrum)
+    };
+}
+
+fungsi bersihkan_noise_lowpass(deret_sampel, frekuensi_cutoff_hz, sampling_rate_hz) {
+    var lpf = FilterBiquadIIR("LOWPASS", frekuensi_cutoff_hz, sampling_rate_hz, 0.7071);
+    var hasil_filter = filter_proses_sinyal(lpf, deret_sampel);
+    kembalikan hasil_filter;
+}

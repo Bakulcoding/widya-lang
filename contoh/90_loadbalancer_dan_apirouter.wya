@@ -1,0 +1,84 @@
+// =========================================================================
+// CONTOH 90: WidyaLoadBalancer & WidyaAPIGatewayRouter
+// Pilar Cloud-Native & Ultra-Scale Backend Architecture (Gelombang 36)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("🌐 CONTOH 90: LOAD BALANCER & API GATEWAY ROUTER (WAVE 36)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaLoadBalancer (Round Robin, Least Connection, Weighted, IP Hash)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaLoadBalancer (High-Availability Traffic Director) ---")
+
+var lb_rr = PenyeimbangBeban("round_robin")
+lb_tambah_server(lb_rr, "srv-app-1", "http://10.0.0.1:8080", 1)
+lb_tambah_server(lb_rr, "srv-app-2", "http://10.0.0.2:8080", 1)
+lb_tambah_server(lb_rr, "srv-app-3", "http://10.0.0.3:8080", 1)
+
+cetak(">> Distribusi Round-Robin:")
+var i = 1
+selama i <= 5 {
+    var target = lb_pilih_server(lb_rr)
+    cetak("   Permintaan #" + i + " diarahkan ke: " + target["id"] + " (" + target["url"] + ")")
+    i = i + 1
+}
+
+// Simulasi Health-Check & Failover
+cetak("\n>> Simulasi Health-Check Failover (Server 2 Down):")
+lb_set_status(lb_rr, "srv-app-2", salah)
+var req1 = lb_pilih_server(lb_rr)
+var req2 = lb_pilih_server(lb_rr)
+cetak("   Permintaan A -> " + req1["id"])
+cetak("   Permintaan B -> " + req2["id"])
+
+// Least Connection Strategy
+cetak("\n>> Simulasi Least Connection:")
+var lb_lc = PenyeimbangBeban("least_conn")
+lb_tambah_server(lb_lc, "worker-node-1", "http://10.0.1.1:9000", 1)
+lb_tambah_server(lb_lc, "worker-node-2", "http://10.0.1.2:9000", 1)
+
+lb_laporkan_koneksi(lb_lc, "worker-node-1", 10) // node-1 sedang sibuk 10 koneksi
+lb_laporkan_koneksi(lb_lc, "worker-node-2", 2)  // node-2 hanya 2 koneksi
+
+var target_lc = lb_pilih_server(lb_lc)
+cetak("   Server terpilih dengan koneksi terendah: " + target_lc["id"] + " (Koneksi Aktif: " + target_lc["koneksi_aktif"] + ")")
+
+// -------------------------------------------------------------------------
+// 2. WidyaAPIGatewayRouter (High-Performance Path & Dynamic Param Router)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaAPIGatewayRouter (API Gateway Routing Engine) ---")
+
+var gateway = RouterAPI()
+router_tambah_rute(gateway, "GET", "/api/v1/pengguna", "AmbilSemuaPengguna")
+router_tambah_rute(gateway, "GET", "/api/v1/pengguna/:id", "AmbilDetailPengguna")
+router_tambah_rute(gateway, "POST", "/api/v1/pengguna/:id/pesanan/:order_id", "BuatPesananPengguna")
+router_tambah_rute(gateway, "*", "/aset/*", "StaticAssetsHandler")
+
+cetak(">> Pengujian Pencocokan Rute:")
+
+// Uji 1: Route statis
+var res1 = router_cocokkan(gateway, "GET", "/api/v1/pengguna")
+cetak("   GET /api/v1/pengguna -> Cocok: " + res1["cocok"] + ", Handler: " + res1["handler"])
+
+// Uji 2: Route dengan Dynamic Path Parameters (:id)
+var res2 = router_cocokkan(gateway, "GET", "/api/v1/pengguna/usr_9981")
+cetak("   GET /api/v1/pengguna/usr_9981 -> Cocok: " + res2["cocok"] + ", Handler: " + res2["handler"] + ", Parameter id: " + res2["parameter"]["id"])
+
+// Uji 3: Multi-Parameter (:id dan :order_id)
+var res3 = router_cocokkan(gateway, "POST", "/api/v1/pengguna/usr_100/pesanan/ord_777")
+cetak("   POST /api/v1/pengguna/usr_100/pesanan/ord_777 -> Cocok: " + res3["cocok"] + ", Handler: " + res3["handler"])
+cetak("        Param user: " + res3["parameter"]["id"] + ", Param order: " + res3["parameter"]["order_id"])
+
+// Uji 4: Wildcard Catch-all
+var res4 = router_cocokkan(gateway, "GET", "/aset/css/tema/gelap.css")
+cetak("   GET /aset/css/tema/gelap.css -> Cocok: " + res4["cocok"] + ", Handler: " + res4["handler"] + ", Wildcard: " + res4["wildcard"])
+
+// Uji 5: Route Not Found (404)
+var res5 = router_cocokkan(gateway, "DELETE", "/api/v1/produk/99")
+cetak("   DELETE /api/v1/produk/99 -> Cocok: " + res5["cocok"])
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaLoadBalancer & APIGatewayRouter Beroperasi 100%!")
+cetak("=================================================================")

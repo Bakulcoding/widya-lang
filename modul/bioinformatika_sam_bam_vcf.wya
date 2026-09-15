@@ -1,0 +1,26 @@
+// Modul Bioinformatika Genomika SAM / BAM & VCF Variant Analysis
+
+fungsi vcf_parse_variant_record(kromosom, posisi, id_snp, ref_base, alt_base, kualitas_phred, info_str) {
+    // VCF Format: CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO
+    var tipe_mutasi_str = "INDEL_INSERTION_DELETION";
+    jika (panjang(ref_base) == panjang(alt_base)) {
+        tipe_mutasi_str = "SNP_SINGLE_NUCLEOTIDE";
+    }
+    
+    var signifikansi_str = "RENDAH";
+    jika (kualitas_phred > 30.0) {
+        signifikansi_str = "TINGGI_AKURAT";
+    }
+    
+    kembalikan {
+        "chrom": kromosom,
+        "pos": posisi,
+        "id": id_snp,
+        "ref": ref_base,
+        "alt": alt_base,
+        "qual": kualitas_phred,
+        "info": info_str,
+        "tipe_mutasi": tipe_mutasi_str,
+        "signifikansi_klinis": signifikansi_str
+    };
+}

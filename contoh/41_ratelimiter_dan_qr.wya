@@ -1,0 +1,46 @@
+// ========================================================================
+// 🚦 & 🔲 CONTOH 41: WIDYARATELIMITER & WIDYAQR
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaRateLimiter (Token Bucket) & WidyaQR (2D Matrix)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYARATELIMITER: KONTROL LAJU PERMINTAAN TOKEN BUCKET
+// ------------------------------------------------------------------------
+cetak("");
+cetak("🚦 [1] Pembatasan Laju Trafik Token Bucket (WidyaRateLimiter)...");
+
+// Buat rate limiter: Kapasitas 3 token, refill 1 token/detik
+tetap limiter = PembatasLaju(3.0, 1.0);
+
+cetak("  * Token Awal Tersedia:", ambil_sisa_token(limiter));
+
+cetak("  * Mengirim Permintaan 1 (Biaya 1)... Izinkan? ->", izinkan_permintaan(limiter, 1.0));
+cetak("  * Mengirim Permintaan 2 (Biaya 1)... Izinkan? ->", izinkan_permintaan(limiter, 1.0));
+cetak("  * Mengirim Permintaan 3 (Biaya 1)... Izinkan? ->", izinkan_permintaan(limiter, 1.0));
+cetak("  * Mengirim Permintaan 4 (Biaya 1)... Izinkan? ->", izinkan_permintaan(limiter, 1.0));
+
+cetak("  * Sisa Token:", ambil_sisa_token(limiter));
+
+// ------------------------------------------------------------------------
+// [2] WIDYAQR: PEMBANGKIT MATRIKS KODE QR 2D & RENDER VISUAL
+// ------------------------------------------------------------------------
+cetak("");
+cetak("🔲 [2] Pembangkitan Matriks QR Code 2D (WidyaQR)...");
+
+tetap qr = buat_matriks_qr("https://widya-lang.org");
+cetak("  * Dimensi Matriks QR Terbuat:", qr["ukuran"], "x", qr["ukuran"], "modul");
+
+cetak("  * Visualisasi Kode QR Terminal ANSI:");
+cetak(render_qr_ansi(qr));
+
+tetap svg_qr = render_qr_svg(qr, 8);
+cetak("  * Header Dokumen SVG Vektor Terbuat (Panjang: " + ke_teks(panjang(svg_qr)) + " byte):");
+cetak("    " + potong(svg_qr, 0, 110) + "...");
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaRateLimiter & WidyaQR!");
+cetak("========================================================================");

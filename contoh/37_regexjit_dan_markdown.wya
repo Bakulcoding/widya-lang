@@ -1,0 +1,62 @@
+// ========================================================================
+// ⚡ & 📝 CONTOH 37: WIDYAREGEXJIT & WIDYAMARKDOWN
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaRegexJIT (Fast DFA) & WidyaMarkdown (Multi-Target)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYAREGEXJIT: PENCOCOKAN REGEX STATE MACHINE DFA BERKECEPATAN TINGGI
+// ------------------------------------------------------------------------
+cetak("");
+cetak("⚡ [1] Pencocokan Pola Cepat Deterministic Finite Automaton (WidyaRegexJIT)...");
+
+// Kompilasi pola DFA untuk mencocokkan format email
+tetap dfa_email = kompilasi_regex_dfa("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$");
+
+tetap tes_email_1 = "kontak@widya-lang.org";
+tetap tes_email_2 = "bukan_email_valid@";
+
+cetak("  * Apakah '" + tes_email_1 + "' valid? ->", regex_dfa_cocok(dfa_email, tes_email_1));
+cetak("  * Apakah '" + tes_email_2 + "' valid? ->", regex_dfa_cocok(dfa_email, tes_email_2));
+
+// Ekstraksi nomor versi dari teks
+tetap dfa_versi = kompilasi_regex_dfa("v[0-9]+\\.[0-9]+");
+tetap teks_log = "Rilis Widya v1.0 dan pembaruan v2.5 tersedia untuk diunduh.";
+tetap temuan = regex_dfa_temukan_semua(dfa_versi, teks_log);
+
+cetak("  * Temuan Versi dalam Teks Log:");
+untuk i dalam 0..panjang(temuan) - 1 {
+    cetak("    - " + temuan[i]["teks"] + " (indeks " + ke_teks(temuan[i]["awal"]) + ".." + ke_teks(temuan[i]["akhir"]) + ")");
+}
+
+// ------------------------------------------------------------------------
+// [2] WIDYAMARKDOWN: PARSING DOKUMEN AST & RENDER HTML/ANSI TERMINAL
+// ------------------------------------------------------------------------
+cetak("");
+cetak("📝 [2] Parsing Markdown ke AST & Rendering Dokumen (WidyaMarkdown)...");
+
+tetap teks_md = "# Panduan Widya-Lang
+Bahasa pemrograman mutakhir masa depan.
+## Fitur Unggulan
+- Kinerja Eksekusi Cepat
+- Multi-Paradigma
+```widya
+cetak(\"Widya Hebat!\");
+```";
+
+tetap ast_md = parse_markdown_ast(teks_md);
+cetak("  * Total Simpul AST Dokumen:", panjang(ast_md["nodes"]));
+
+tetap html_output = render_markdown_html(ast_md);
+cetak("  * Hasil Render HTML5:");
+cetak(html_output);
+
+tetap ansi_output = render_markdown_ansi(ast_md);
+cetak("  * Hasil Render Terminal ANSI:");
+cetak(ansi_output);
+
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaRegexJIT & WidyaMarkdown!");
+cetak("========================================================================");

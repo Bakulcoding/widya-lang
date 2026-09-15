@@ -1,0 +1,54 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 58 - Fotometri Transit Eksoplanet, Radio Interferometry & Astrometri Bintang
+// Demonstrasi analisis kurva cahaya transit planet Kepler, sintesis baseline UV radio teleskop, dan klasifikasi spektral Gaia.
+
+tulis("=== [WIDYA ASTROINFORMATIKA] EKSOPLANET & TELESKOPIK EKSTREM ===");
+
+// 1. Fotometri Kurva Cahaya Transit Eksoplanet (Model Mandel-Agol)
+tulis("--- ANALISIS FOTOMETRI TRANSIT EKSOPLANET ---");
+var kurva = KurvaCahayaBintang("Kepler-452", 1.11); // 1.11 Radius Solar
+
+// Catat deret waktu fluks bintang (simulasi penurunan fluks saat planet melintas)
+transit_tambah_titik_fluks(kurva, 0.0, 1.0000);
+transit_tambah_titik_fluks(kurva, 0.1, 0.9998);
+transit_tambah_titik_fluks(kurva, 0.2, 0.9982); // Titik terdalam transit
+transit_tambah_titik_fluks(kurva, 0.3, 0.9998);
+transit_tambah_titik_fluks(kurva, 0.4, 1.0000);
+
+var hasil_transit = transit_analisis_kedalaman_eksoplanet(kurva);
+tulis("Kedalaman Transit (Delta F/F) : " + hasil_transit["kedalaman_transit"]);
+tulis("Rasio Radius (Rp / R*)        : " + hasil_transit["rasio_radius_rp_rstar"]);
+tulis("Radius Eksoplanet (Bumi)      : " + hasil_transit["radius_planet_bumi"] + " R_Earth");
+tulis("Radius Eksoplanet (Jupiter)   : " + hasil_transit["radius_planet_jupiter"] + " R_Jup");
+tulis("Klasifikasi Eksoplanet        : " + hasil_transit["klasifikasi_planet"]);
+
+// 2. Teleskop Radio Interferometri (Aperture Synthesis UV-Plane & Dirty Beam)
+tulis("\n--- SINTESIS APERTUR INTERFEROMETRI RADIO (ALMA/EHT) ---");
+var array_radio = InterferometerRadio(230.0); // 230 GHz
+
+// Daftarkan stasiun antena
+interferometer_tambah_antena(array_radio, "Antena_Chajnantor_1", 0.0, 0.0, 5000.0);
+interferometer_tambah_antena(array_radio, "Antena_Chajnantor_2", 150.0, 200.0, 5000.0);
+interferometer_tambah_antena(array_radio, "Antena_Chajnantor_3", -300.0, 450.0, 5000.0);
+
+var jumlah_baseline = interferometer_hitung_baseline_uv(array_radio, -0.45, 0.12);
+tulis("Jumlah Titik Sampling Baseline UV: " + jumlah_baseline);
+
+var dirty_beam = interferometer_sintesis_citra_kotor(array_radio, 8);
+tulis("Resolusi Matriks Dirty Beam      : " + dirty_beam["resolusi"] + "x" + dirty_beam["resolusi"]);
+
+// 3. Astrometri Bintang & Klasifikasi Diagram HR (Gaia Data Release)
+tulis("\n--- ASTROMETRI BINTANG & KLASIFIKASI SPEKTRAL GAIA ---");
+var astrometri = AstrometriBintang();
+
+// Paralaks Sirius = 379.21 mili-arcsecond (mas)
+var jarak_sirius = astrometri_hitung_jarak_paralaks(379.21);
+tulis("Jarak Sirius (Parsec)       : " + jarak_sirius["jarak_parsec"] + " pc");
+tulis("Jarak Sirius (Tahun Cahaya) : " + jarak_sirius["jarak_tahun_cahaya"] + " ly");
+
+var mag_mutlak = astrometri_hitung_magnitudo_mutlak(-1.46, jarak_sirius["jarak_parsec"]);
+tulis("Magnitudo Absolut (M) Sirius: " + mag_mutlak);
+
+var spektral = astrometri_klasifikasi_spektral(9940.0, 25.4);
+tulis("Kelas Spektral Morgan-Keenan: " + spektral["kelas_spektral"] + " [" + spektral["tipe_bintang"] + "]");
+
+tulis("\n[WIDYA ASTROINFORMATIKA] Eksoplanet, Interferometri & Astrometri Berhasil!");

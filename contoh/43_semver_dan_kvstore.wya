@@ -1,0 +1,68 @@
+// contoh/43_semver_dan_kvstore.wya
+// Demonstrasi Pilar Mutakhir: WidyaSemver & WidyaKV
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaSemver (Versioning) & WidyaKV (Key-Value Store)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaSemver (Semantic Versioning Parser & Matcher)
+cetak("🏷️ [1] Semantic Versioning Engine (WidyaSemver)...");
+misal ver_str = "2.1.4-beta.1+build2026";
+misal u = urai_semver(ver_str);
+
+cetak("  * Parsing Versi Semver: " + ver_str);
+cetak("    - Mayor: " + teks(u.mayor));
+cetak("    - Minor: " + teks(u.minor));
+cetak("    - Patch / Tambalan: " + teks(u.tambalan));
+cetak("    - Pra-Rilis: " + u.pra_rilis);
+cetak("    - Info Bangun: " + u.info_bangun);
+
+misal cmp = bandingkan_semver("1.2.3", "1.3.0");
+cetak("  * Perbandingan 1.2.3 vs 1.3.0 -> " + teks(cmp) + " (v1 < v2)");
+
+misal match_caret = cocokkan_semver("1.2.5", "^1.2.0");
+misal match_tilde = cocokkan_semver("1.2.5", "~1.2.0");
+misal match_gte = cocokkan_semver("2.0.0", ">=1.5.0");
+misal match_fail = cocokkan_semver("2.0.0", "^1.0.0");
+
+cetak("  * Apakah 1.2.5 cocok dengan '^1.2.0'? -> " + teks(match_caret));
+cetak("  * Apakah 1.2.5 cocok dengan '~1.2.0'? -> " + teks(match_tilde));
+cetak("  * Apakah 2.0.0 cocok dengan '>=1.5.0'? -> " + teks(match_gte));
+cetak("  * Apakah 2.0.0 cocok dengan '^1.0.0'? -> " + teks(match_fail));
+cetak("");
+
+// 2. WidyaKV (In-Memory Key-Value Store dengan TTL & Prefix Scan)
+cetak("🗄️ [2] In-Memory Key-Value Store Berkinerja Tinggi (WidyaKV)...");
+misal kv = PenyimpananKV();
+
+// Memasang data normal & dengan TTL
+kv_pasang(kv, "pengguna:101:nama", "Budi Santoso");
+kv_pasang(kv, "pengguna:101:peran", "Arsitek Sistem");
+kv_pasang(kv, "pengguna:102:nama", "Siti Rahma");
+kv_pasang(kv, "sesi:token_sementara", "XYZ987654", 5000); // TTL 5000 ms
+kv_pasang(kv, "metrik:kunjungan", 100);
+
+cetak("  * Mengambil 'pengguna:101:nama' -> " + teks(kv_ambil(kv, "pengguna:101:nama")));
+cetak("  * Mengambil 'sesi:token_sementara' -> " + teks(kv_ambil(kv, "sesi:token_sementara")));
+
+// Operasi Atomic Increment
+misal kunjungan_baru = kv_inkremen(kv, "metrik:kunjungan", 5);
+cetak("  * Nilai metrik:kunjungan setelah inkremen +5 -> " + teks(kunjungan_baru));
+
+// Pemindaian Awalan (Prefix Scanning)
+cetak("  * Memindai entri dengan awalan 'pengguna:':");
+misal hasil_pindai = kv_pindai_awalan(kv, "pengguna:");
+untuk baris dalam hasil_pindai {
+    cetak("    -> Kunci: " + baris.kunci + " | Nilai: " + teks(baris.nilai));
+}
+
+// Menghapus kunci
+misal terhapus = kv_hapus(kv, "pengguna:102:nama");
+cetak("  * Menghapus 'pengguna:102:nama'? Berhasil: " + teks(terhapus));
+cetak("  * Cek kembali 'pengguna:102:nama' -> " + teks(kv_ambil(kv, "pengguna:102:nama")));
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaSemver & WidyaKV!");
+cetak("========================================================================");

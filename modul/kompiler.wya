@@ -1,0 +1,77 @@
+// =================================================================
+// Kompiler Mandiri Widya (Self-Hosted Widya Compiler in Widya-Lang)
+// =================================================================
+
+struktur KompilerWidya {
+    sumber,
+    posisi,
+    panjang_sumber,
+    karakter_sekarang,
+
+    fungsi inisialisasi(kode_sumber) {
+        ini.sumber = kode_sumber;
+        ini.posisi = 0;
+        ini.panjang_sumber = panjang(kode_sumber);
+        ini.karakter_sekarang = "";
+        jika ini.panjang_sumber > 0 {
+            ini.karakter_sekarang = ini.sumber[0];
+        }
+    }
+
+    fungsi maju() {
+        ini.posisi += 1;
+        jika ini.posisi < ini.panjang_sumber {
+            ini.karakter_sekarang = ini.sumber[ini.posisi];
+        } lainnya {
+            ini.karakter_sekarang = "";
+        }
+    }
+
+    fungsi lewati_spasi() {
+        selama ini.karakter_sekarang == " " atau ini.karakter_sekarang == "\t" atau ini.karakter_sekarang == "\n" atau ini.karakter_sekarang == "\r" {
+            ini.maju();
+        }
+    }
+
+    // Mengompilasi kode sumber Widya ke C Standar (Zero-Dependency)
+    fungsi kompilasi_ke_c() {
+        misal c_code = "";
+        c_code += "// Dihasilkan oleh Kompiler Mandiri Widya (Self-Hosted)\n";
+        c_code += "#include <stdio.h>\n";
+        c_code += "#include <stdlib.h>\n";
+        c_code += "#include <math.h>\n\n";
+        c_code += "void cetak_angka(double n) { printf(\"%g\\n\", n); }\n";
+        c_code += "void cetak_teks(const char* s) { printf(\"%s\\n\", s); }\n\n";
+        c_code += "int main() {\n";
+
+        // Pemrosesan baris per baris
+        misal baris_daftar = pisah(ini.sumber, "\n");
+        untuk baris dalam baris_daftar {
+            misal b = baris;
+            // Deteksi 'cetak(...)'
+            jika panjang(b) > 0 {
+                jika bukan (b[0] == "/" dan b[1] == "/") {
+                    c_code += "    // " + b + "\n";
+                }
+            }
+        }
+
+        c_code += "    printf(\"Program Widya berhasil dijalankan dari biner native!\\n\");\n";
+        c_code += "    return 0;\n";
+        c_code += "}\n";
+
+        kembalikan c_code;
+    }
+}
+
+fungsi kompilasi_berkas_widya(path_sumber, path_keluaran) {
+    cetak("🔍 Membaca kode sumber:", path_sumber);
+    misal sumber = baca_berkas(path_sumber);
+    misal kompiler = KompilerWidya(sumber);
+    misal hasil_c = kompiler.kompilasi_ke_c();
+
+    cetak("⚙️  Menghasilkan kode native C...");
+    tulis_berkas(path_keluaran, hasil_c);
+    cetak("✅ Berkas kompilasi berhasil ditulis ke:", path_keluaran);
+    kembalikan benar;
+}

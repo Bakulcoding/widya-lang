@@ -1,0 +1,66 @@
+// Contoh 61: WidyaBitBuffer & WidyaLevenshteinMatrix
+// Pengujian Bit-Level Binary Stream Buffer & Matriks Perbedaan Jarak Edit (Wagner-Fischer)
+
+fungsi utama() {
+    tulis("=== CONTOH 61: BIT BUFFER & LEVENSHTEIN MATRIX ===");
+
+    // 1. WidyaBitBuffer: Arbitrary Bit Streaming & Huffman Codec Support
+    tulis("\n--- 1. WidyaBitBuffer (Arbitrary Bit-Level Stream Reader/Writer) ---");
+
+    var bb = BitBuffer();
+
+    tulis("   Menulis bit stream:");
+    tulis("   - Tulis 5 bit (nilai 25 = 0b11001)");
+    bitbuf_tulis_bit(bb, 25, 5);
+
+    tulis("   - Tulis 3 bit (nilai 6  = 0b110)");
+    bitbuf_tulis_bit(bb, 6, 3);
+
+    tulis("   - Tulis 8 bit (nilai 65 = 'A')");
+    bitbuf_tulis_bit(bb, 65, 8);
+
+    tulis("   Total bit dalam buffer : " + teks(bitbuf_panjang_bit(bb)) + " bits (2 bytes)");
+    var byte_arr = bitbuf_ke_bytes(bb);
+    tulis("   Hasil byte stream : " + teks(byte_arr));
+
+    // Membaca kembali dari stream
+    tulis("\n   Membaca kembali bit stream:");
+    var val1 = bitbuf_baca_bit(bb, 5);
+    var val2 = bitbuf_baca_bit(bb, 3);
+    var val3 = bitbuf_baca_bit(bb, 8);
+    tulis("   - Baca 5 bit : " + teks(val1) + " (harus 25)");
+    tulis("   - Baca 3 bit : " + teks(val2) + " (harus 6)");
+    tulis("   - Baca 8 bit : " + teks(val3) + " (harus 65)");
+
+    // 2. WidyaLevenshteinMatrix: Matriks Alignment & Langkah Operasi Edit
+    tulis("\n--- 2. WidyaLevenshteinMatrix (Wagner-Fischer Alignment Matrix) ---");
+
+    var str1 = "kucing";
+    var str2 = "kancil";
+
+    tulis("   Teks 1: '" + str1 + "'");
+    tulis("   Teks 2: '" + str2 + "'");
+
+    var matriks = levenshtein_matriks(str1, str2);
+    tulis("   Matriks Edit Distance Cost:");
+    var idx = 0;
+    selama (idx < panjang(matriks)) {
+        tulis("     " + teks(matriks[idx]));
+        idx = idx + 1;
+    }
+
+    var langkah = levenshtein_langkah_operasi(str1, str2);
+    tulis("\n   Langkah Operasi Transformasi Teks:");
+    var l_idx = 0;
+    selama (l_idx < panjang(langkah)) {
+        tulis("     " + teks(l_idx + 1) + ". " + langkah[l_idx]);
+        l_idx = l_idx + 1;
+    }
+
+    var rasio = levenshtein_rasio_kemiripan(str1, str2);
+    tulis("\n   Rasio Kemiripan (0.0 - 1.0): " + teks(rasio * 100) + "%");
+
+    tulis("\n=== SELESAI CONTOH 61 ===");
+}
+
+utama();

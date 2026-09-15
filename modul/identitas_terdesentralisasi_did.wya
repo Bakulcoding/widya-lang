@@ -1,0 +1,86 @@
+// Modul Identitas Terdesentralisasi W3C DID & Verifiable Credentials (VC)
+
+fungsi buat_did_document(did_identifier, tipe_kunci, public_key_multibase) {
+    kembalikan {
+        "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/ed25519-2020/v1"
+        ],
+        "id": did_identifier,
+        "verificationMethod": [
+            {
+                "id": did_identifier + "#key-1",
+                "type": tipe_kunci,
+                "controller": did_identifier,
+                "publicKeyMultibase": public_key_multibase
+            }
+        ],
+        "authentication": [
+            did_identifier + "#key-1"
+        ]
+    };
+}
+
+fungsi terbitkan_verifiable_credential(issuer_did, subject_did, claims_data, secret_key) {
+    var issued_at = ke_teks(waktu());
+    var vc_payload = {
+        "@context": [
+            "https://www.w3.org/2018/credentials/v1"
+        ],
+        "id": "urn:uuid:" + sha256(issuer_did + subject_did + issued_at),
+        "type": ["VerifiableCredential", "DigitalIdentityCredential"],
+        "issuer": issuer_did,
+        "issuanceDate": issued_at,
+        "credentialSubject": {
+            "id": subject_did,
+            "data": claims_data
+        }
+    };
+    
+    // Tanda tangani payload secara kriptografis
+    var raw_str = ke_json(vc_payload);
+    var ttd = hmac_sha256(raw_str, secret_key);
+    
+    vc_payload["proof"] = {
+        "type": "Ed25519Signature2020",
+        "created": issued_at,
+        "verificationMethod": issuer_did + "#key-1",
+        "proofPurpose": "assertionMethod",
+        "jws": ttd
+    };
+    
+    kembalikan vc_payload;
+}
+
+fungsi verifikasi_verifiable_credential(vc_obj, secret_key) {
+    jika (!ada_kunci(vc_obj, "proof")) {
+        kembalikan { "sah": salah, "alasan": "Tidak ditemukan bukti kriptografis proof" };
+    }
+    
+    var signature = vc_obj["proof"]["jws"];
+    var clone_obj = vc_obj;
+    // Salin dan hapus field proof untuk re-kalkulasi hash
+    var payload_tanpa_proof = {
+        "@context": clone_obj["@context"],
+        "id": clone_obj["id"],
+        "type": clone_obj["type"],
+        "issuer": clone_obj["issuer"],
+        "issuanceDate": clone_obj["issuanceDate"],
+        "credentialSubject": clone_obj["credentialSubject"]
+    };
+    
+    var expected_ttd = hmac_sha256(ke_json(payload_tanpa_proof), secret_key);
+    var cocok = signature == expected_ttd;
+    
+    var status_str = "TANDA_TANGAN_PALSU";
+    jika (cocok) {
+        status_str = "TERVERIFIKASI_SAH";
+    }
+    
+    kembalikan {
+        "sah": cocok,
+        "issuer": vc_obj["issuer"],
+        "subject": vc_obj["credentialSubject"]["id"],
+        "status": status_str
+    };
+}

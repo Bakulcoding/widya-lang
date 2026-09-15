@@ -1,0 +1,39 @@
+// Modul Konstruksi Digital BIM & ISO 16739 IFC (Industry Foundation Classes)
+
+fungsi ifc_buat_elemen_dinding(ifc_guid, nama_elemen, panjang_m, tinggi_m, tebal_m, material) {
+    var volume_m3 = panjang_m * tinggi_m * tebal_m;
+    kembalikan {
+        "ifc_type": "IfcWallStandardCase",
+        "global_id": ifc_guid,
+        "name": nama_elemen,
+        "dimensi": {
+            "panjang": panjang_m,
+            "tinggi": tinggi_m,
+            "tebal": tebal_m
+        },
+        "volume_beton_m3": volume_m3,
+        "material": material,
+        "status_bim": "LOD_350_CONSTRUCTION"
+    };
+}
+
+fungsi ifc_rekap_kebutuhan_material_proyek(daftar_elemen_ifc) {
+    var total_vol = 0.0;
+    untuk elem dalam daftar_elemen_ifc {
+        jika (ada_kunci(elem, "volume_beton_m3")) {
+            total_vol = total_vol + elem["volume_beton_m3"];
+        }
+    }
+    
+    kembalikan {
+        "total_elemen": panjang(daftar_elemen_ifc),
+        "total_volume_beton_m3": total_vol,
+        "estimasi_truk_molen": ceil_val_approx(total_vol / 7.0) // 1 truk ~7 m3
+    };
+}
+
+fungsi ceil_val_approx(val) {
+    var l = lantai(val);
+    jika (val > l) { kembalikan l + 1; }
+    kembalikan l;
+}

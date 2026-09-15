@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Widya-Lang",
+  "scopeName": "source.widya",
+  "fileTypes": ["wya", "widya"],
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.widya",
+      "match": "//.*$"
+    },
+    {
+      "name": "comment.block.widya",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    {
+      "name": "string.quoted.double.widya",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.widya",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "string.quoted.single.widya",
+      "begin": "'",
+      "end": "'",
+      "patterns": [
+        {
+          "name": "constant.character.escape.widya",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "keyword.control.widya",
+      "match": "\\b(jika|kalau|lainnya|selain_itu|selama|untuk|dalam|berhenti|lanjut|kembalikan|coba|tangkap|lempar|impor|muat|sebagai)\\b"
+    },
+    {
+      "name": "keyword.declaration.widya",
+      "match": "\\b(misal|tetap|fungsi|struktur|kelas|baru)\\b"
+    },
+    {
+      "name": "variable.language.this.widya",
+      "match": "\\b(ini|this|self)\\b"
+    },
+    {
+      "name": "constant.language.boolean.widya",
+      "match": "\\b(benar|salah|true|false)\\b"
+    },
+    {
+      "name": "constant.language.null.widya",
+      "match": "\\b(nihil|kosong|null|nil)\\b"
+    },
+    {
+      "name": "support.function.builtin.widya",
+      "match": "\\b(cetak|tulis|baca|tipe|ke_angka|ke_teks|ke_boolean|ke_json|dari_json|panjang|tambah|hapus|sisip|gabung|pisah|potong|kunci|nilai|ada_kunci|urutkan|balik|akar|pangkat|sin|cos|tan|mutlak|bulat|lantai|atap|acak|maks|min|waktu|tunggu|baca_berkas|tulis_berkas)\\b"
+    },
+    {
+      "name": "constant.numeric.widya",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    {
+      "name": "keyword.operator.logical.widya",
+      "match": "\\b(dan|atau|bukan|tidak)\\b"
+    },
+    {
+      "name": "keyword.operator.arithmetic.widya",
+      "match": "(\\+|\\-|\\*|\\/|%|\\^|==|!=|<=|>=|<|>|=|\\+=|\\-=|\\*=|\\/=|\\.\\.)"
+    },
+    {
+      "name": "entity.name.function.widya",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()"
+    }
+  ]
+}

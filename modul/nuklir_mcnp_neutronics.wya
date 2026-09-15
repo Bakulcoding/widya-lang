@@ -1,0 +1,36 @@
+// Modul Fisika Nuklir, Fluks Neutron & Proteksi Radiasi (IAEA / MCNP Specification)
+
+fungsi nuklir_hitung_peluruhan_radioaktif(aktivitas_awal_bq, waktu_paruh_tahun, waktu_berjalan_tahun) {
+    // Rumus: A(t) = A0 * (0.5)^(t / t_half)
+    var fraksi_waktu = waktu_berjalan_tahun / waktu_paruh_tahun;
+    var faktor_peluruhan = pangkat(0.5, fraksi_waktu);
+    var aktivitas_akhir = aktivitas_awal_bq * faktor_peluruhan;
+    
+    kembalikan {
+        "aktivitas_awal_bq": aktivitas_awal_bq,
+        "aktivitas_akhir_bq": aktivitas_akhir,
+        "persentase_sisa": faktor_peluruhan * 100.0,
+        "status_isotop": "TERLURUH_AMAN"
+    };
+}
+
+fungsi nuklir_hitung_atenuasi_perisai_radiasi(dosis_awal_msv, tebal_perisai_cm, koefisien_atenuasi_per_cm) {
+    // Hukum Beer-Lambert: I = I0 * e^(-mu * x)
+    // Pendekatan pangkat eksponensial e^(-u*x)
+    var eksponen = -(koefisien_atenuasi_per_cm * tebal_perisai_cm);
+    var faktor_atenuasi = pangkat(E, eksponen);
+    var dosis_teratenuasi = dosis_awal_msv * faktor_atenuasi;
+    
+    var status_keamanan = "AMAN_DI_BAWAH_BATAS";
+    jika (dosis_teratenuasi > 20.0) {
+        status_keamanan = "PERINGATAN_DOSIS_TINGGI";
+    }
+    
+    kembalikan {
+        "dosis_awal_msv": dosis_awal_msv,
+        "tebal_perisai_cm": tebal_perisai_cm,
+        "dosis_akhir_msv": dosis_teratenuasi,
+        "efisiensi_penyerapan_persen": (1.0 - faktor_atenuasi) * 100.0,
+        "status_radiasi": status_keamanan
+    };
+}

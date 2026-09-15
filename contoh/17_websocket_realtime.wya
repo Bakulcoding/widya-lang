@@ -1,0 +1,20 @@
+// Contoh 17: Real-Time Full-Duplex WebSocket Server (Widya-Lang)
+
+cetak("🚀 Memulai Widya Real-Time WebSocket Server...");
+
+// Inisialisasi WebSocket Server pada port 9090
+misal server_ws = ServerWebSocket("127.0.0.1", 9090);
+
+cetak("Informasi Server:");
+cetak("  - Host   :", server_ws["host"]);
+cetak("  - Port   :", server_ws["port"]);
+cetak("  - Status :", server_ws["status"]);
+cetak("  - Klien Terdaftar :", server_ws["klien_terhubung"]);
+
+// Simulasi pengiriman pesan real-time ke klien spesifik
+ws_kirim(server_ws, "ws://klien-1", "Halo klien 1, koneksi Anda telah diverifikasi.");
+
+// Simulasi siaran (broadcast) live event ke seluruh klien
+ws_siarkan(server_ws, "Pemberitahuan Sistem: Update harga pasar saham terbaru telah tersedia!");
+
+cetak("✅ Real-Time WebSocket Engine siap melayani aplikasi live chat & streaming!");

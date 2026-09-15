@@ -1,0 +1,62 @@
+// contoh/47_lrucache_dan_bitset.wya
+// Demonstrasi Pilar Mutakhir: WidyaLRUCache & WidyaBitSet
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaLRUCache (Eviction) & WidyaBitSet (Bit Ops)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaLRUCache (Least Recently Used Cache Engine)
+cetak("⚡ [1] In-Memory Cache dengan Penggusuran Data Terlama (WidyaLRUCache)...");
+// Membuat cache dengan kapasitas maksimal 3 entri
+misal cache = CacheLRU(3);
+
+cetak("  * Memasang entri: A=100, B=200, C=300");
+lru_pasang(cache, "A", 100);
+lru_pasang(cache, "B", 200);
+lru_pasang(cache, "C", 300);
+cetak("  * Ukuran cache saat ini: " + teks(lru_ukuran(cache)));
+
+cetak("  * Mengakses entri 'A' -> " + teks(lru_ambil(cache, "A")) + " (Entri A kini berstatus paling baru dipakai)");
+
+cetak("  * Memasang entri baru 'D'=400 (Melebihi kapasitas 3, entri tertua 'B' akan digusur)");
+lru_pasang(cache, "D", 400);
+
+cetak("  * Memeriksa 'B' (harus sudah digusur/nihil) -> " + teks(lru_ambil(cache, "B")));
+cetak("  * Memeriksa 'A' (tetap ada) -> " + teks(lru_ambil(cache, "A")));
+cetak("  * Memeriksa 'C' (tetap ada) -> " + teks(lru_ambil(cache, "C")));
+cetak("  * Memeriksa 'D' (tetap ada) -> " + teks(lru_ambil(cache, "D")));
+cetak("");
+
+// 2. WidyaBitSet (Compact Bit Array & Operations Engine)
+cetak("🎛️ [2] Vektor Bit Kompak & Operasi Bitwise (WidyaBitSet)...");
+// Membuat 2 BitSet berukuran 8 bit
+misal izin_admin = HimpunanBit(8);
+misal izin_editor = HimpunanBit(8);
+
+// Bit 0: BACA, Bit 1: TULIS, Bit 2: HAPUS, Bit 3: KELOLA
+bit_pasang(izin_admin, 0, benar);
+bit_pasang(izin_admin, 1, benar);
+bit_pasang(izin_admin, 2, benar);
+bit_pasang(izin_admin, 3, benar);
+
+bit_pasang(izin_editor, 0, benar);
+bit_pasang(izin_editor, 1, benar);
+
+cetak("  * Izin Admin (Bit 0-3 aktif) - Total Bit Aktif: " + teks(bit_hitung_aktif(izin_admin)));
+cetak("  * Izin Editor (Bit 0-1 aktif) - Total Bit Aktif: " + teks(bit_hitung_aktif(izin_editor)));
+
+cetak("  * Apakah Admin boleh HAPUS (Bit 2)? -> " + teks(bit_ambil(izin_admin, 2)));
+cetak("  * Apakah Editor boleh HAPUS (Bit 2)? -> " + teks(bit_ambil(izin_editor, 2)));
+
+// Operasi Bitwise AND & XOR
+misal irisan_izin = bit_operasi_dan(izin_admin, izin_editor);
+misal beda_izin = bit_operasi_xor(izin_admin, izin_editor);
+
+cetak("  * Irisan Izin (AND) - Total Bit Aktif: " + teks(bit_hitung_aktif(irisan_izin)));
+cetak("  * Perbedaan Izin Eksklusif (XOR) - Total Bit Aktif: " + teks(bit_hitung_aktif(beda_izin)));
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaLRUCache & WidyaBitSet!");
+cetak("========================================================================");

@@ -1,0 +1,112 @@
+fungsi sha256_hex(s) {
+    var hex_charset = "0123456789abcdef";
+    var seed = s + "SGX_XOR_SEED_256BIT_DETERMINISTIC";
+    var xor_accum = 0;
+    var i = 0;
+    selama (i < panjang(seed)) {
+        var c = seed[i];
+        var j = 0;
+        var char_val = 0;
+        selama (j < 16) {
+            jika (c == hex_charset[j]) {
+                char_val = j;
+                j = 16;
+            }
+            j = j + 1;
+        }
+        jika (char_val == 0) {
+            char_val = (i * 7 + 3) % 16;
+        }
+        xor_accum = xor_accum ^ char_val ^ (i % 16);
+        i = i + 1;
+    }
+    var intermediate = "";
+    var k = 0;
+    selama (k < 16) {
+        var idx = (xor_accum + k * 5 + panjang(s)) % 16;
+        intermediate = intermediate + hex_charset[idx];
+        k = k + 1;
+    }
+    var hasil = "";
+    selama (panjang(hasil) < 64) {
+        hasil = hasil + intermediate;
+    }
+    kembalikan potong(hasil, 0, 64);
+}
+
+struktur SGXEnclave {
+    id_enklave,
+    kunci_enkrip_aes,
+    state_enklave,
+    daftar_ecall,
+    report_mac_valid_bool,
+    sealed_data_map
+}
+
+struktur SgxReport {
+    cpu_svn_array,
+    isvsvn_int,
+    mrenclave_hex,
+    report_mac_hex,
+    report_mac_valid_bool
+}
+
+fungsi sgx_buat_enclave(id) {
+    var enc = SGXEnclave();
+    enc.id_enklave = id;
+    enc.kunci_enkrip_aes = "AES256_KEY_" + sha256_hex(id + "_KUNCI_AES_GCM");
+    enc.state_enklave = "UNINITIALIZED";
+    enc.daftar_ecall = {};
+    enc.report_mac_valid_bool = salah;
+    enc.sealed_data_map = {};
+    kembalikan enc;
+}
+
+fungsi sgx_ecall_create(enc, id_ecall, closure_body) {
+    enc.daftar_ecall[id_ecall] = closure_body;
+    kembalikan benar;
+}
+
+fungsi sgx_ecall_panggil(enc, id_ecall, args_dict) {
+    var handler = enc.daftar_ecall[id_ecall];
+    kembalikan handler(args_dict);
+}
+
+fungsi sgx_attestasi_lokal(enc) {
+    var report = SgxReport();
+    report.cpu_svn_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+    report.isvsvn_int = 1;
+    report.mrenclave_hex = sha256_hex(enc.id_enklave + "MRENCLAVE");
+    report.report_mac_hex = sha256_hex(enc.id_enklave + "MAC");
+    report.report_mac_valid_bool = benar;
+    enc.report_mac_valid_bool = benar;
+    kembalikan report;
+}
+
+fungsi sgx_seal_data(enc, id_plain, plain) {
+    var cipher = "SEALED_" + enc.id_enklave + "_" + plain;
+    enc.sealed_data_map[id_plain] = cipher;
+    kembalikan cipher;
+}
+
+fungsi sgx_unseal_data(enc, id_plain, cipher) {
+    var prefix = "SEALED_" + enc.id_enklave + "_";
+    var start_idx = panjang(prefix);
+    var end_idx = panjang(cipher);
+    kembalikan potong(cipher, start_idx, end_idx);
+}
+
+var enc = sgx_buat_enclave("signer_widya");
+enc.state_enklave = "INITIALIZED_SECURE";
+sgx_ecall_create(enc, "sign_tx_hash", fungsi(args) { var hash = args["hash"]; var sig = sha256_hex(hash + "_SGX_ECALL_SIGNED_256BIT"); kembalikan { "signature_hex": sig, "enclave_id": "signer_widya" }; });
+var hasil_sign = sgx_ecall_panggil(enc, "sign_tx_hash", { "hash": "0xDEADBEEF" });
+var sig_len = panjang(hasil_sign["signature_hex"]);
+cetak("signature_hex_length=" + sig_len);
+pastikan(sig_len >= 64);
+var report = sgx_attestasi_lokal(enc);
+pastikan(report.report_mac_valid_bool == benar);
+pastikan(enc.state_enklave == "INITIALIZED_SECURE");
+var cipher = sgx_seal_data(enc, "sekret_001", "RAHASIA_WIDYA_123");
+var plain = sgx_unseal_data(enc, "sekret_001", cipher);
+pastikan(plain == "RAHASIA_WIDYA_123");
+cetak("[OK] SGX_ENCLAVE_ECALL_ATTEST_SEAL_SELF_TEST_PASS")

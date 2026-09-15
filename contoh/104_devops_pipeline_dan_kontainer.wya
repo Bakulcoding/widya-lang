@@ -1,0 +1,38 @@
+// =========================================================================
+// Contoh 104: Pilar Otomatisasi, Scripting & DevOps (CI/CD Pipeline & Docker)
+// WidyaDevOpsPipeline & WidyaContainerConfig
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR DEVOPS & SCRIPTING: CI/CD PIPELINE & DOCKER ===");
+
+    // 1. Eksekusi CI/CD Pipeline Stages
+    var pipa = PipaKerjaDevOps("Widya Enterprise Production Build");
+    pipa_tambah_tahap(pipa, "Linter", ["widya lint --ketat", "widya format --cek"]);
+    pipa_tambah_tahap(pipa, "Pengujian", ["cargo test --lib", "widya uji tests/"]);
+    pipa_tambah_tahap(pipa, "Kompilasi Binary", ["widya bangun --rilis -o bin/server"]);
+    pipa_tambah_tahap(pipa, "Deploy Klaster", ["kubectl apply -f k8s/production.yaml"]);
+
+    cetak("Jumlah Tahap CI/CD: " + ke_teks(panjang(pipa.tahap)));
+
+    // Jalankan Pipeline
+    var sukses_eksekusi = pipa_jalankan(pipa);
+    cetak("Status Eksekusi Pipeline: " + pipa.status + " (Sukses: " + ke_teks(sukses_eksekusi) + ")");
+    cetak("Total Waktu Eksekusi: " + ke_teks(pipa.waktu_total_ms) + " ms");
+
+    // 2. Konfigurasi Container OCI / Docker Compose Generator
+    var kontainer = KonfigurasiKontainer("widya-api-backend", "ghcr.io/widya/api:v1.2", "8080:8080");
+    kontainer_tambah_env(kontainer, "PORT", "8080");
+    kontainer_tambah_env(kontainer, "ENV", "production");
+    kontainer_tambah_env(kontainer, "DATABASE_URL", "postgresql://db.widya.internal:5432/app");
+
+    var valid = kontainer_validasi(kontainer);
+    cetak("Spesifikasi Kontainer Valid: " + ke_teks(valid));
+
+    var compose_yaml = kontainer_ke_yaml(kontainer);
+    cetak("Hasil Generasi Docker Compose YAML:\n" + compose_yaml);
+
+    cetak("=== UJI CI/CD PIPELINE & KONTAINER SUKSES ===");
+}
+
+utama();

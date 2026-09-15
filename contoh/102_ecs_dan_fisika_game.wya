@@ -1,0 +1,51 @@
+// =========================================================================
+// Contoh 102: Pilar Pengembangan Game (ECS Architecture & Fisika 2D)
+// WidyaECS & WidyaPhysics2D
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR PENGEMBANGAN GAME: ECS & FISIKA 2D ===");
+
+    // 1. Entity Component System (ECS) Architecture
+    var dunia = DuniaECS();
+    var player_id = ecs_buat_entitas(dunia, "PemainUtama");
+    var enemy_id = ecs_buat_entitas(dunia, "MusuhGoblin");
+    cetak("Entitas Dibuat: Player ID=" + ke_teks(player_id) + ", Enemy ID=" + ke_teks(enemy_id));
+
+    // Pasang Komponen Data ke Entitas
+    ecs_tambah_komponen(dunia, player_id, "Posisi", { "x": 100.0, "y": 250.0 });
+    ecs_tambah_komponen(dunia, player_id, "Kesehatan", { "hp": 100.0, "max_hp": 100.0 });
+    ecs_tambah_komponen(dunia, enemy_id, "Posisi", { "x": 120.0, "y": 250.0 });
+
+    var pos_opt = ecs_ambil_komponen(dunia, player_id, "Posisi");
+    var pos_data = buka(pos_opt);
+    cetak("Posisi Pemain Awal: X=" + ke_teks(pos_data.x) + ", Y=" + ke_teks(pos_data.y));
+
+    var entitas_bergerak = ecs_kueri_komponen(dunia, "Posisi");
+    cetak("Jumlah Entitas yang Memiliki Komponen Posisi: " + ke_teks(panjang(entitas_bergerak)));
+
+    // 2. Simulasi Fisika 2D Rigid Body (Gravitasi & Impuls Gaya)
+    var bola = BendaFisika2D("Dinamis", 2.0, 0.8, 0.2);
+    bola.posisi_x = 50.0;
+    bola.posisi_y = 100.0;
+
+    // Terapkan Gaya Dorong Melompat (Impulse Jump: X=10, Y=-50)
+    fisika_terapkan_gaya(bola, 10.0, -50.0);
+    cetak("Kecepatan Bola Setelah Diberi Gaya: Vx=" + ke_teks(bola.kecepatan_x) + ", Vy=" + ke_teks(bola.kecepatan_y));
+
+    // Jalankan Langkah Simulasi 1 Frame (dt = 0.016 detik / 60 FPS)
+    fisika_langkah_simulasi(bola, 0.016, 9.8);
+    cetak("Posisi Bola Frame Berikutnya: X=" + ke_teks(bola.posisi_x) + ", Y=" + ke_teks(bola.posisi_y));
+
+    // 3. Deteksi Tabrakan AABB (Axis-Aligned Bounding Box)
+    var rintangan = BendaFisika2D("Statis", 0.0, 0.0, 1.0);
+    rintangan.posisi_x = 55.0;
+    rintangan.posisi_y = 100.0;
+
+    var apakah_tabrakan = fisika_deteksi_tabrakan_aabb(bola, rintangan);
+    cetak("Status Tabrakan AABB Bola vs Rintangan: " + ke_teks(apakah_tabrakan));
+
+    cetak("=== UJI ECS & FISIKA GAME SUKSES ===");
+}
+
+utama();

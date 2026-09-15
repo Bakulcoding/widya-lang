@@ -1,0 +1,35 @@
+// Modul Bioinformatika Struktur Makromolekul Protein PDB & mmCIF
+
+fungsi pdb_parse_atom_record(atom_num, atom_name, residue_name, chain_id, res_seq, x, y, z, occupancy, temp_factor) {
+    kembalikan {
+        "record_type": "ATOM",
+        "atom_number": atom_num,
+        "atom_name": atom_name,
+        "residue": residue_name,
+        "chain": chain_id,
+        "residue_seq": res_seq,
+        "koordinat_3d": {
+            "x": x,
+            "y": y,
+            "z": z
+        },
+        "occupancy": occupancy,
+        "b_factor": temp_factor
+    };
+}
+
+fungsi pdb_hitung_jarak_antar_atom(atom1, atom2) {
+    var dx = atom1["koordinat_3d"]["x"] - atom2["koordinat_3d"]["x"];
+    var dy = atom1["koordinat_3d"]["y"] - atom2["koordinat_3d"]["y"];
+    var dz = atom1["koordinat_3d"]["z"] - atom2["koordinat_3d"]["z"];
+    
+    var dist_sq = (dx * dx) + (dy * dy) + (dz * dz);
+    var jarak_angstrom = akar(dist_sq);
+    
+    var ikatan_hidrogen = jarak_angstrom >= 2.5 dan jarak_angstrom <= 3.5;
+    
+    kembalikan {
+        "jarak_angstrom": jarak_angstrom,
+        "kemungkinan_ikatan_hidrogen": ikatan_hidrogen
+    };
+}

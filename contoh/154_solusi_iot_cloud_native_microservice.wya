@@ -1,0 +1,34 @@
+// Contoh 154: Solusi IoT Cloud-Native Microservice Terintegrasi
+// Mengintegrasikan edge IoT, resilient microservice mesh, dan distributed tracing
+
+impor "modul/microservice_stack.wya";
+impor "modul/edge_iot.wya";
+
+cetak("==================================================================");
+cetak("🌐 WIDYA CLOUD-NATIVE IOT TELEMETRY & RESILIENT MESH PIPELINE");
+cetak("==================================================================");
+
+// 1. Inisialisasi Service Mesh & Resiliency Policy
+var mesh = buat_mesh_layanan("Cluster-Edge-Gateway");
+daftarkan_node_backend(mesh, "node-1", "http://10.0.1.10:8080", 5);
+daftarkan_node_backend(mesh, "node-2", "http://10.0.1.11:8080", 5);
+
+cetak("🚀 Service Mesh Siap dengan Backend Nodes:", mesh["layanan_terdaftar"]);
+
+// 2. Inisialisasi Edge IoT Device Hub
+var hub_edge = buat_hub_perangkat_edge("EDGE_NODE_JAKARTA_01");
+cetak("📡 Edge IoT Hub Diaktifkan [ID:", hub_edge["id"], "]");
+
+// 3. Baca Telemetri dari Perangkat Keras Edge
+var telemetri = hub_baca_telemetri_sensor(hub_edge, 4, "0x68");
+cetak("⚡ Telemetri Sensor Terbaca:", telemetri);
+
+// 4. Kirimkan ke Cloud Gateway Melalui Resilient Service Mesh
+cetak("\n🛡️ Mengalirkan Data melalui Resilient Gateway (Rate Limiter + Circuit Breaker + OTel)...");
+var hasil_panggilan = eksekusi_panggilan_resilient(mesh, "/v1/telemetri/ingest", telemetri);
+
+cetak("📥 Respon Gateway:", hasil_panggilan);
+cetak("🔍 Distributed Trace Span ID:", hasil_panggilan["span_id"]);
+cetak("📍 Rute Backend:", hasil_panggilan["node_terpilih"]);
+
+cetak("\n✅ Pipeline Edge-to-Cloud Berhasil Berjalan Aman dan Resilien!");

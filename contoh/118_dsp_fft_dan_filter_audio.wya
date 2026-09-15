@@ -1,0 +1,37 @@
+// =========================================================================
+// Contoh 118: Pilar DSP & Audio (Fast Fourier Transform & Filter IIR Biquad)
+// WidyaFFT & WidyaFilterDSP
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR DSP & AUDIO: FAST FOURIER TRANSFORM & BIQUAD IIR ===");
+
+    // 1. Sintesis Sinyal Domain Waktu Komposit: Komponen Frekuensi Rendah + Noise Frekuensi Tinggi
+    var sinyal_waktu = [1.0, -0.5, -0.5, -0.5, 1.0, -0.5, -0.5, -0.5, 1.0, -0.5, -0.5, -0.5, 1.0, -0.5, -0.5, -0.5];
+    cetak("Panjang Sinyal Domain Waktu: " + ke_teks(panjang(sinyal_waktu)) + " sampel");
+
+    // 2. Eksekusi Fast Fourier Transform (FFT Cooley-Tukey O(N log N))
+    var spektrum_fft = dsp_fft_maju(sinyal_waktu);
+    cetak("Spektrum Frekuensi Dihasilkan (Bin Count: " + ke_teks(panjang(spektrum_fft)) + ")");
+    cetak("DC Component (Bin 0) Magnitudo: " + ke_teks(spektrum_fft[0].magnitudo) + ", Fase: " + ke_teks(spektrum_fft[0].fase));
+    cetak("Peak Bin 4 Magnitudo: " + ke_teks(spektrum_fft[4].magnitudo));
+
+    // 3. Rekonstruksi Sinyal Domain Waktu (Inverse FFT / IFFT)
+    var sinyal_rekonstruksi = dsp_fft_balik(spektrum_fft);
+    cetak("Sampel Awal Asli: " + ke_teks(sinyal_waktu[0]) + " vs IFFT: " + ke_teks(sinyal_rekonstruksi[0]));
+
+    // 4. Desain Filter Digital IIR Biquad (Low-Pass Filter)
+    // Cutoff = 1000 Hz, Sampling Rate = 44100 Hz, Q = 0.7071 (Butterworth)
+    var lpf = FilterBiquadIIR("LOWPASS", 1000.0, 44100.0, 0.7071);
+    var sinyal_terfilter = filter_proses_sinyal(lpf, sinyal_waktu);
+    cetak("Sinyal Berhasil Diproses oleh Filter Biquad IIR: Total " + ke_teks(panjang(sinyal_terfilter)) + " sampel");
+
+    // 5. Konvolusi Sinyal & Impulse Response (Spatial Acoustic Simulation)
+    var ir_reverb = [0.8, 0.4, 0.2, 0.1];
+    var sinyal_reverb = dsp_konvolusi_sinyal([1.0, 0.5, 0.0], ir_reverb);
+    cetak("Panjang Output Konvolusi Reverb: " + ke_teks(panjang(sinyal_reverb)) + " sampel");
+
+    cetak("=== UJI DSP FFT, IFFT & FILTER BIQUAD SUKSES ===");
+}
+
+utama();

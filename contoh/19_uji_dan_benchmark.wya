@@ -1,0 +1,53 @@
+// Contoh 19: Integrated Test Runner, Benchmark, & Documentation (Widya-Lang)
+
+/// Menghitung faktorial dari bilangan bulat `n`.
+/// # Parameter
+/// - `n`: Angka masukan
+/// # Kembalian
+/// - Hasil faktorial
+fungsi faktorial(n) {
+    jika n <= 1 {
+        kembalikan 1;
+    }
+    kembalikan n * faktorial(n - 1);
+}
+
+/// Menghitung bilangan deret Fibonacci ke-`n`.
+fungsi fibonacci(n) {
+    jika n <= 1 {
+        kembalikan n;
+    }
+    kembalikan fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// ==========================================
+// 1. Suite Unit Test Terintegrasi (widya uji)
+// ==========================================
+
+#[uji]
+fungsi uji_faktorial() {
+    misal f5 = faktorial(5);
+    pastikan(f5 == 120, "Faktorial 5 harus bernilai 120");
+}
+
+#[uji]
+fungsi uji_fibonacci() {
+    misal fib7 = fibonacci(7);
+    pastikan(fib7 == 13, "Fibonacci 7 harus bernilai 13");
+}
+
+// ==========================================
+// 2. Micro-Benchmark Suite (widya tolak_ukur)
+// ==========================================
+
+#[tolak_ukur]
+fungsi tolak_ukur_faktorial() {
+    faktorial(10);
+}
+
+#[tolak_ukur]
+fungsi tolak_ukur_fibonacci() {
+    fibonacci(15);
+}
+
+cetak("Program kalkulasi matematika siap diuji!");

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WidyaPay - Dompet Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .widya-app-frame { width: 100%; max-width: 440px; min-height: 720px; background: #1e293b; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; border: 1px solid #334155; }
+        .widya-appbar { background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 18px 24px; color: white; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .widya-body { flex: 1; padding: 24px; display: flex; flex-direction: column; overflow-y: auto; }
+        .widya-kolom { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+        .widya-baris { display: flex; flex-direction: row; gap: 12px; align-items: center; width: 100%; }
+        .widya-teks { font-size: 1rem; color: #e2e8f0; line-height: 1.5; }
+        .widya-tombol { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; padding: 14px 20px; border-radius: 14px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(99,102,241,0.4); text-align: center; width: 100%; }
+        .widya-tombol:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.6); }
+        .widya-tombol:active { transform: translateY(0); }
+        .widya-kartu { background: #334155; border-radius: 18px; padding: 20px; border: 1px solid #475569; }
+        .widya-bidang-teks { width: 100%; background: #0f172a; border: 1px solid #475569; border-radius: 12px; padding: 12px 16px; color: white; font-size: 0.95rem; outline: none; }
+        .widya-bidang-teks:focus { border-color: #6366f1; }
+        .widya-pemisah { width: 100%; height: 16px; }
+        .widya-badge { display: inline-block; background: rgba(99,102,241,0.2); color: #818cf8; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="widya-app-frame">
+        <div class="widya-appbar">
+            <span>WidyaPay - Dompet Digital</span>
+            <span style="font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px;">WidyaUI</span>
+        </div>
+        <div class="widya-body">
+            <div class="widya-kolom"><div class="widya-kartu"><div class="widya-kolom"><div class="widya-teks">SALDO TERSEDIA</div><div class="widya-pemisah"></div><div class="widya-teks">Rp 1.450.000</div><div class="widya-pemisah"></div><div class="widya-baris"><div class="widya-teks">🔹 Alamat: 0x71C...89A4</div></div></div></div><div class="widya-pemisah"></div><div class="widya-teks">Aksi Cepat</div><div class="widya-pemisah"></div><div class="widya-baris"><button class="widya-tombol" onclick="alert('Aksi dijalankan!')">Kirim WIDYA</button><button class="widya-tombol" onclick="alert('Aksi dijalankan!')">Terima</button></div><div class="widya-pemisah"></div><div class="widya-kartu"><div class="widya-kolom"><div class="widya-teks">Kirim Saldo Baru</div><div class="widya-pemisah"></div><input class="widya-bidang-teks" placeholder="Alamat Penerima (0x...)" /><div class="widya-pemisah"></div><input class="widya-bidang-teks" placeholder="Nominal Transfer" /><div class="widya-pemisah"></div><button class="widya-tombol" onclick="alert('Aksi dijalankan!')">Konfirmasi Transaksi</button></div></div></div>
+        </div>
+    </div>
+</body>
+</html>

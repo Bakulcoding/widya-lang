@@ -1,0 +1,32 @@
+// =========================================================================
+// Contoh 105: Pilar Otomatisasi, Scripting & DevOps (Dotenv Vault & Webhook)
+// WidyaEnvVault & WidyaWebhookNotifier
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR DEVOPS: DOTENV VAULT & WEBHOOK ALERT ===");
+
+    // 1. Dotenv Environment Vault & Secret Interpolation
+    var raw_env = "# Konfigurasi Lingkungan\nAPP_NAME=WidyaService\nAPP_PORT=9000\nDB_HOST=10.0.0.15\nDB_USER=admin\n";
+    var vault = VaultEnv(raw_env);
+
+    var port_opt = env_ambil(vault, "APP_PORT");
+    cetak("Port Terbaca dari .env: " + buka(port_opt));
+
+    var template = "Aplikasi ${APP_NAME} berjalan pada ${DB_HOST}:${APP_PORT} sebagai user ${DB_USER}";
+    var terisi = env_interpolasi_teks(vault, template);
+    cetak("Hasil Interpolasi Template: " + terisi);
+
+    // 2. Pemeriksaan Kesehatan Layanan (Health Check Probe)
+    var probe = PemeriksaKesehatan("https://api.widya.internal/healthz", "HTTP_GET");
+    var hasil_probe = probe_jalankan(probe);
+    cetak("Health Probe: Status HTTP " + ke_teks(hasil_probe.kode_http) + ", Sehat=" + ke_teks(hasil_probe.sehat) + ", Latensi=" + ke_teks(hasil_probe.latensi_ms) + " ms");
+
+    // 3. Webhook Alert Notifier (Slack / Discord / Teams / Telegram)
+    var alert = webhook_kirim_alert("https://hooks.slack.com/services/T00/B00/X00", "Slack", "CRITICAL", "[ALERT] Klaster Widya Mengalami Beban Tinggi!");
+    cetak("Status Notifikasi Webhook: " + alert.status_kirim + " via " + alert.platform + " [Response HTTP " + ke_teks(alert.kode_http) + "]");
+
+    cetak("=== UJI DOTENV VAULT & WEBHOOK ALERT SUKSES ===");
+}
+
+utama();

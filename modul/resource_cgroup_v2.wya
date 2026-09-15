@@ -1,0 +1,63 @@
+cetak("=== CGROUP_V2_CONTROLLER INIT ===");
+
+struktur CgroupV2Controller {
+    nama,
+    daftar_pid,
+    cpu_max_ms,
+    memory_max_bytes,
+    io_max_rbps,
+    statistik_enforce,
+
+    fungsi inisialisasi(nama_cg) {
+        ini.nama = nama_cg;
+        ini.daftar_pid = [];
+        ini.cpu_max_ms = 0;
+        ini.memory_max_bytes = 0;
+        ini.io_max_rbps = 0;
+        ini.statistik_enforce = salah;
+    }
+}
+
+fungsi cg_buat(nama) {
+    misal cg = CgroupV2Controller(nama);
+    kembalikan cg;
+}
+
+fungsi cgroup_tambah_proses(cg, pid, cpu_ms, mem_bytes, io_bps) {
+    tambah(cg.daftar_pid, pid);
+    cg.cpu_max_ms = cpu_ms;
+    cg.memory_max_bytes = mem_bytes;
+    cg.io_max_rbps = io_bps;
+    kembalikan benar;
+}
+
+fungsi cgroup_terapkan_limit(cg) {
+    cg.statistik_enforce = benar;
+    kembalikan benar;
+}
+
+fungsi cgroup_baca_statistik(cg) {
+    misal max_mem_mb = cg.memory_max_bytes / 1048576;
+    misal stats = {
+        "enforcement_terapkan": cg.statistik_enforce,
+        "daftar_pid": cg.daftar_pid,
+        "max_mem_mb": max_mem_mb,
+        "cpu_max_ms": cg.cpu_max_ms,
+        "io_max_rbps": cg.io_max_rbps,
+        "nama_cgroup": cg.nama,
+        "jumlah_proses": panjang(cg.daftar_pid)
+    };
+    kembalikan stats;
+}
+
+misal cg = cg_buat("widya_db_container");
+cgroup_tambah_proses(cg, 1234, 50000, 536870912, 104857600);
+misal diterapkan = cgroup_terapkan_limit(cg);
+pastikan(diterapkan == benar);
+
+misal statistik = cgroup_baca_statistik(cg);
+pastikan(statistik["enforcement_terapkan"] == benar);
+pastikan(statistik["daftar_pid"][0] == 1234);
+pastikan(statistik["max_mem_mb"] == 512);
+
+cetak("[OK] CGROUP_V2_CONTROLLER_INIT_SELF_TEST_PASS");

@@ -1,0 +1,46 @@
+{
+    "name": "widya-lang",
+    "displayName": "Widya-Lang (Bahasa Pemrograman Widya)",
+    "description": "Dukungan resmi Bahasa Pemrograman Widya untuk Visual Studio Code: Syntax Highlighting, Snippets, dan Language Configuration.",
+    "version": "1.0.0",
+    "publisher": "widya-lang",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets"
+    ],
+    "icon": "icon.png",
+    "contributes": {
+        "languages": [
+            {
+                "id": "widya",
+                "aliases": [
+                    "Widya",
+                    "widya",
+                    "Widya-Lang",
+                    "widya-lang"
+                ],
+                "extensions": [
+                    ".wya",
+                    ".widya"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "widya",
+                "scopeName": "source.widya",
+                "path": "./syntaxes/widya.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "widya",
+                "path": "./snippets/snippets.json"
+            }
+        ]
+    }
+}

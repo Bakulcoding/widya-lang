@@ -1,0 +1,49 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 64 - Internet Antar-Planet DTN & FDIR Wahana Antariksa
+// Demonstrasi Store-and-Forward Internet Antar-Planet RFC 9171 DTN Bundle Protocol dan isolasi kegagalan otonom FDIR Safe Mode.
+
+tulis("=== [WIDYA DEEP SPACE] INTERNET ANTAR-PLANET DTN & FDIR WAHANA ===");
+
+// 1. Delay-Tolerant Networking (IETF RFC 9171 Bundle Protocol v7 - Interplanetary Internet)
+tulis("--- PROTOKOL DTN INTERNET ANTAR-PLANET (RFC 9171 BPv7) ---");
+var dtn = ProtokolBundleDTN("dtn://mars-perseverance.sol", "dtn://earth-ground-station.sol");
+
+// Buat Bundle Data Gambar Resolusi Tinggi Mars dengan Masa Berlaku 72 Jam (259200 detik)
+dtn_buat_bundle_antarplanet(
+    dtn,
+    "BUNDLE_MARS_PANORAMA_001",
+    259200.0,
+    "DATA_SPEKTROSKOPI_BATUAN_KANDUNGAN_MINERAL_SILIKAT"
+);
+
+// Kunci Hak Asuh Penyimpanan Onboard (Custody Transfer)
+dtn_terima_dan_simpan_custody(dtn, "BUNDLE_MARS_PANORAMA_001");
+tulis("Bundle Mars Berhasil Disimpan dalam Storage Hak Asuh Onboard.");
+
+// Teruskan Bundle saat Jendela Kontak Antena Deep Space Network (DSN) Terbuka (900 detik)
+var kontak_dsn = dtn_teruskan_saat_kontak_tersedia(dtn, "BUNDLE_MARS_PANORAMA_001", 900.0);
+tulis("ID Bundle               : " + kontak_dsn["id_bundle"]);
+tulis("Jendela Kontak DSN      : " + kontak_dsn["jendela_kontak_dsn_detik"] + " detik");
+tulis("Status Transmisi        : " + kontak_dsn["status_transmisi"]);
+
+// 2. Fault Detection, Isolation & Recovery (FDIR Autonomous Spacecraft Safe Mode)
+tulis("\n--- PENGENDALI OTONOM FDIR & RECOVERY SAFE MODE ---");
+var fdir = PengendaliFDIRWahana("Wahana_Jelajah_Voyager_Nusantara");
+
+// Daftarkan Subsistem Kritis Wahana
+fdir_daftarkan_subsistem(fdir, "PanelSurya_A", "NOMINAL");
+fdir_daftarkan_subsistem(fdir, "SensorBintang_Primer", "NOMINAL");
+fdir_daftarkan_subsistem(fdir, "Pendorong_RCS_1", "NOMINAL");
+
+// Picu Deteksi Anomali Kritis Hilangnya Kunci Arah Sensor Bintang
+fdir_picu_anomali_telemetri(fdir, "SensorBintang_Primer", "LOSS_OF_ATTITUDE_LOCK");
+tulis("State Wahana Pasca Anomali: " + fdir["state_wahana"]);
+
+// Eksekusi Mesin State FDIR untuk Pemulihan Otonom Safe Mode
+var safe_mode = fdir_eksekusi_pemulihan_safemode(fdir);
+tulis("\nStatus Transisi FDIR    : " + safe_mode["status_transisi"]);
+tulis("Orientasi Wahana        : " + safe_mode["orientasi_wahana"]);
+tulis("Transceiver Darurat     : " + safe_mode["transceiver_darurat"]);
+tulis("Hasil Rekayasa          : " + safe_mode["rekayasa_pemulihan"]);
+tulis("State Wahana Terkini    : " + fdir["state_wahana"]);
+
+tulis("\n[WIDYA DEEP SPACE] DTN Antarplanet & FDIR Berhasil Diverifikasi!");

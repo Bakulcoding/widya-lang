@@ -1,0 +1,105 @@
+// Contoh 68: WidyaWAL & WidyaParquetLite
+// Write-Ahead Logging Crash Recovery & Columnar Storage Engine
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 25: WidyaWAL & ParquetLite")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaWAL: Write-Ahead Logging Engine
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaWAL: Write-Ahead Log ---")
+
+let wal = LogWAL("akun_bank")
+cetak("Inisialisasi LogWAL untuk tabel:", wal.tabel)
+
+// Menulis transaksi ke WAL
+let lsn1 = wal_tulis(wal, "PUT", "user:101", 500000)
+let lsn2 = wal_tulis(wal, "PUT", "user:102", 750000)
+let lsn3 = wal_tulis(wal, "PUT", "user:103", 1000000)
+let lsn4 = wal_tulis(wal, "PUT", "user:101", 620000) // Update saldo
+let lsn5 = wal_tulis(wal, "DELETE", "user:102", 0)   // Penutupan akun
+
+cetak("Total log transaksi tersimpan di WAL:", wal_panjang(wal))
+cetak("LSN transaksi terakhir:", lsn5)
+
+// Checkpointing
+let cp = wal_checkpoint(wal)
+cetak("Checkpoint LSN:", cp.checkpoint_lsn)
+
+// Pemulihan data setelah crash (Crash Recovery Replay)
+let state_pulih = wal_pulihkan(wal)
+cetak("Hasil pemulihan state dari WAL:")
+cetak("  Saldo user:101 =", state_pulih["user:101"])
+cetak("  Saldo user:103 =", state_pulih["user:103"])
+cetak("  Apakah user:102 ada?", ada_kunci(state_pulih, "user:102"))
+
+// ----------------------------------------------------
+// 2. WidyaParquetLite: Columnar Storage & Aggregations
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaParquetLite: Columnar Analytics ---")
+
+let kolom_tabel = ["id", "nama", "kategori", "harga", "stok"]
+let tabel = TabelKolumnar(kolom_tabel)
+
+// Menambahkan baris data transaksi e-commerce
+kolumnar_tambah_baris(tabel, {
+    "id": 1,
+    "nama": "Laptop Gaming Pro",
+    "kategori": "Elektronik",
+    "harga": 18500000,
+    "stok": 12
+})
+kolumnar_tambah_baris(tabel, {
+    "id": 2,
+    "nama": "Mouse Nirkabel RGB",
+    "kategori": "Aksesoris",
+    "harga": 450000,
+    "stok": 85
+})
+kolumnar_tambah_baris(tabel, {
+    "id": 3,
+    "nama": "Monitor Ultrawide 34",
+    "kategori": "Elektronik",
+    "harga": 6200000,
+    "stok": 20
+})
+kolumnar_tambah_baris(tabel, {
+    "id": 4,
+    "nama": "Keyboard Mekanikal",
+    "kategori": "Aksesoris",
+    "harga": 1250000,
+    "stok": 45
+})
+kolumnar_tambah_baris(tabel, {
+    "id": 5,
+    "nama": "Headset Studio Hi-Fi",
+    "kategori": "Audio",
+    "harga": 2100000,
+    "stok": 30
+})
+
+cetak("Jumlah total baris dalam tabel kolumnar:", tabel.jumlah_baris)
+
+// Kueri agregasi cepat satu lintasan memori kontinu
+let total_aset = kolumnar_kueri_agregasi(tabel, "harga", "SUM")
+let rata_harga = kolumnar_kueri_agregasi(tabel, "harga", "AVG")
+let harga_termahal = kolumnar_kueri_agregasi(tabel, "harga", "MAX")
+let harga_termurah = kolumnar_kueri_agregasi(tabel, "harga", "MIN")
+let total_stok = kolumnar_kueri_agregasi(tabel, "stok", "SUM")
+
+cetak("Agregasi Kolom Harga:")
+cetak("  Total Harga (SUM)     :", total_aset)
+cetak("  Rata-rata Harga (AVG) :", rata_harga)
+cetak("  Harga Termahal (MAX)  :", harga_termahal)
+cetak("  Harga Termurah (MIN)  :", harga_termurah)
+cetak("  Total Seluruh Stok    :", total_stok)
+
+// Saring (Filter) Kolumnar
+cetak("\nSaring produk dengan harga > 2000000:")
+let mahal = kolumnar_saring(tabel, "harga", ">", 2000000)
+untuk_setiap(mahal, fungsi(item) {
+    cetak("  ->", item["nama"], "| Kategori:", item["kategori"], "| Rp", item["harga"])
+})
+
+cetak("\n[SUKSES] Seluruh fitur WidyaWAL & ParquetLite berjalan tangguh!")

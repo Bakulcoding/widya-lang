@@ -1,0 +1,45 @@
+// Modul Pengisian Daya Kendaraan Listrik EV OCPP 2.0.1 & ISO 15118 (SPKLU & V2G)
+
+fungsi ocpp_buat_call_request(action, payload_data) {
+    var msg_id = "MSG_OCPP_" + ke_teks(waktu());
+    kembalikan {
+        "messageTypeId": 2, // 2 = Call
+        "messageId": msg_id,
+        "action": action,
+        "payload": payload_data
+    };
+}
+
+fungsi ocpp_authorize_id_tag(id_tag, charging_station_id) {
+    var req = ocpp_buat_call_request("Authorize", {
+        "idToken": {
+            "idToken": id_tag,
+            "type": "ISO14443" // RFID Card Tag
+        }
+    });
+    
+    // Simulasi respons CSMS Server (CallResult 3)
+    kembalikan {
+        "call_request": req,
+        "status_id_token": "Accepted",
+        "station_id": charging_station_id,
+        "izin_pengisian": benar
+    };
+}
+
+fungsi ocpp_meter_values_report(evse_id, daya_kw, tegangan_volt, soc_persen) {
+    kembalikan {
+        "evseId": evse_id,
+        "meterValue": [
+            {
+                "timestamp": ke_teks(waktu()),
+                "sampledValue": [
+                    { "measurand": "Power.Active.Import", "value": daya_kw, "unit": "kW" },
+                    { "measurand": "Voltage", "value": tegangan_volt, "unit": "V" },
+                    { "measurand": "SoC", "value": soc_persen, "unit": "Percent" }
+                ]
+            }
+        ],
+        "status": "CHARGING_IN_PROGRESS"
+    };
+}

@@ -1,0 +1,403 @@
+// Modul OS Kernel Abstraction Layer WidyaOS
+// Mikrokernel, Kapabilitas IPC, MMU, dan Integrasi Node Terdistribusi
+
+struktur DompetKripto {
+    kunci_privat,
+    kunci_publik,
+    alamat,
+
+    fungsi inisialisasi() {
+        var bantu = buat_kunci();
+        ini.kunci_privat = bantu.kunci_privat;
+        ini.kunci_publik = bantu.kunci_publik;
+        ini.alamat = bantu.alamat;
+    }
+}
+
+var SYSCALL_BACA_GPIO = 1;
+var SYSCALL_TULIS_GPIO = 2;
+var SYSCALL_BACA_I2C = 3;
+var SYSCALL_KIRIM_IPC = 4;
+var SYSCALL_SPAWN_DRIVER = 5;
+var SYSCALL_ALOKASI_MEM = 6;
+
+struktur InitProcess {
+    nama,
+    prioritas,
+    waktu_kuantum_ms
+}
+
+struktur DriverUserSpace {
+    nama,
+    endpoint,
+    status,
+    memory_wasm_pages
+}
+
+struktur WidyaOSKernel {
+    profil,
+    cspace,
+    mmu,
+    scheduler,
+    boot_log,
+    capability_insiden,
+    heap_limit_mb,
+    daftar_driver_userspace,
+
+    fungsi inisialisasi(profil_param) {
+        ini.profil = profil_param;
+        ini.cspace = MikrokernelCapSpace();
+        ini.mmu = TabelHalamanMMU(4.0);
+        ini.scheduler = PenjadwalMikrokernel(5.0);
+        ini.boot_log = [];
+        ini.capability_insiden = [];
+        ini.daftar_driver_userspace = [];
+        jika ini.profil == "edge" {
+            ini.heap_limit_mb = 128;
+        } lainnya {
+            ini.heap_limit_mb = 8192;
+        }
+    }
+}
+
+fungsi os_boot(kernel, daftar_init_process) {
+    tambah(kernel.boot_log, "[" + waktu() + "] [BOOT] Memulai inisialisasi WidyaOS Kernel...");
+
+    tambah(kernel.boot_log, "[" + waktu() + "] [INIT] Inisialisasi CSpace (Capability Space)");
+    cap_buat_endpoint(kernel.cspace, "ep_init", "KIRIM_TERIMA");
+    cap_buat_endpoint(kernel.cspace, "ep_syscall", "KIRIM_TERIMA");
+
+    tambah(kernel.boot_log, "[" + waktu() + "] [INIT] Inisialisasi MMU (Memory Management Unit)");
+    mmu_petakan_halaman(kernel.mmu, "0xC0000000", "0x00100000", "RWX");
+
+    tambah(kernel.boot_log, "[" + waktu() + "] [INIT] Inisialisasi TCB Scheduler");
+
+    untuk init_proc dalam daftar_init_process {
+        misal tcb = tcb_buat(init_proc.nama, init_proc.prioritas, init_proc.waktu_kuantum_ms, "SIAP");
+        penjadwal_tambah_tcb(kernel.scheduler, tcb);
+        tambah(kernel.boot_log, "[" + waktu() + "] [SPAWN] Init process TCB dibuat: " + init_proc.nama);
+    }
+
+    tambah(kernel.boot_log, "[" + waktu() + "] [BOOT] WidyaOS Kernel siap beroperasi.");
+    kembalikan kernel;
+}
+
+fungsi cek_capability_valid(kernel, nama_capability) {
+    misal ada = salah;
+    misal dicabut = salah;
+    kembalikan { "ada": ada, "dicabut": dicabut };
+}
+
+fungsi os_syscall(kernel, nama_capability_pemanggil, syscall_num, args_arr) {
+    misal cap_valid = cek_capability_valid(kernel, nama_capability_pemanggil);
+
+    jika bukan cap_valid.ada atau cap_valid.dicabut {
+        tambah(kernel.capability_insiden, {
+            "waktu": waktu(),
+            "nama_cap": nama_capability_pemanggil,
+            "syscall_num": syscall_num,
+            "args": args_arr,
+            "alasan": "CAPABILITY_DICABUT_ATAU_TIDAK_ADA"
+        });
+        kembalikan {
+            "sukses": salah,
+            "galat": "GALAT_CAPABILITY_DICABUT",
+            "syscall_num": syscall_num,
+            "args": args_arr
+        };
+    }
+
+    misal hasil = nihil;
+
+    jika syscall_num == SYSCALL_BACA_GPIO {
+        misal pin_num = args_arr[0];
+        misal pin = PinGPIO(pin_num, "Input");
+        hasil = gpio_baca(pin);
+    } lain_jika syscall_num == SYSCALL_TULIS_GPIO {
+        misal pin_num = args_arr[0];
+        misal nilai = args_arr[1];
+        misal pin = PinGPIO(pin_num, "Output");
+        gpio_tulis(pin, nilai);
+        hasil = nilai;
+    } lain_jika syscall_num == SYSCALL_BACA_I2C {
+        misal alamat_slave = args_arr[0];
+        misal reg_addr = args_arr[1];
+        misal jumlah_byte = args_arr[2];
+        misal bus_i2c = BusI2C(0);
+        hasil = i2c_baca_register(bus_i2c, alamat_slave, reg_addr, jumlah_byte);
+    } lain_jika syscall_num == SYSCALL_KIRIM_IPC {
+        misal nama_endpoint = args_arr[0];
+        misal pesan = args_arr[1];
+        cap_kirim_pesan_ipc(kernel.cspace, nama_endpoint, pesan);
+        hasil = "IPCTERKIRIM_" + ke_teks(waktu());
+    } lain_jika syscall_num == SYSCALL_SPAWN_DRIVER {
+        misal nama_driver = args_arr[0];
+        misal binary_wasm_bytes = args_arr[1];
+        hasil = os_spawn_userspace_driver(kernel, nama_driver, binary_wasm_bytes);
+    } lain_jika syscall_num == SYSCALL_ALOKASI_MEM {
+        misal jumlah_mb = args_arr[0];
+        jika jumlah_mb <= kernel.heap_limit_mb {
+            hasil = { "alamat_virtual": "0x" + ke_teks(0xC0100000 + panjang(kernel.boot_log) * 4096, 16), "ukuran_mb": jumlah_mb };
+        } lain {
+            tambah(kernel.capability_insiden, {
+                "waktu": waktu(),
+                "nama_cap": nama_capability_pemanggil,
+                "syscall_num": syscall_num,
+                "args": args_arr,
+                "alasan": "ALOKASI_MELEBIHI_HEAP_LIMIT"
+            });
+            kembalikan {
+                "sukses": salah,
+                "galat": "GALAT_HEAP_LIMIT_TERLAMPAUI",
+                "syscall_num": syscall_num,
+                "args": args_arr
+            };
+        }
+    } lain {
+        kembalikan {
+            "sukses": salah,
+            "galat": "GALAT_SYSCALL_TIDAK_DIKENALI",
+            "syscall_num": syscall_num,
+            "args": args_arr
+        };
+    }
+
+    kembalikan {
+        "sukses": benar,
+        "hasil": hasil,
+        "syscall_num": syscall_num
+    };
+}
+
+fungsi os_spawn_userspace_driver(kernel, nama_driver, binary_wasm_bytes) {
+    misal nama_endpoint = "ep_" + nama_driver;
+    cap_buat_endpoint(kernel.cspace, nama_endpoint, "KIRIM_TERIMA");
+
+    misal driver = DriverUserSpace();
+    driver.nama = nama_driver;
+    driver.endpoint = nama_endpoint;
+    driver.status = "BERJALAN";
+    driver.memory_wasm_pages = 2;
+
+    tambah(kernel.daftar_driver_userspace, driver);
+    tambah(kernel.boot_log, "[" + waktu() + "] [DRIVER] Userspace driver di-spawn: " + nama_driver + " -> " + nama_endpoint);
+
+    kembalikan nama_endpoint;
+}
+
+struktur WidyaOSNode {
+    nama_node,
+    profil,
+    kernel,
+    node_kademlia,
+    node_raft,
+    ai_runtime,
+    blockchain_wallet,
+    heartbeat_last_ts,
+    status_node,
+
+    fungsi inisialisasi(nama_node_param, profil_param) {
+        ini.nama_node = nama_node_param;
+        ini.profil = profil_param;
+        ini.kernel = WidyaOSKernel(profil_param);
+        ini.node_kademlia = TabelKademlia(nama_node_param, 20);
+        ini.node_raft = KlasterRaft([nama_node_param]);
+        jika profil_param == "edge" {
+            ini.ai_runtime = { "tipe": "INT8_QUANTIZED", "model_dim": 512 };
+        } lainnya {
+            ini.ai_runtime = { "tipe": "FULL_FP16", "model_dim": 4096 };
+        }
+        ini.blockchain_wallet = DompetKripto();
+        ini.heartbeat_last_ts = waktu();
+        ini.status_node = "BOOTING";
+    }
+}
+
+fungsi os_node_boot(node, daftar_init) {
+    os_boot(node.kernel, daftar_init);
+    node.status_node = "ONLINE";
+    node.heartbeat_last_ts = waktu();
+    kembalikan node;
+}
+
+fungsi os_node_check_capabilty_syscall_test_helper() {
+    cetak("=== WIDYAOS TEST HELPER: T1-TR3 CAPABILITY & SYSCALL ===");
+
+    var hasil_tes = { "T1": "GAGAL", "T2": "GAGAL", "T3": "GAGAL" };
+
+    var kernel_edge = WidyaOSKernel("edge");
+    jika kernel_edge.heap_limit_mb == 128 {
+        hasil_tes["T1"] = "LULUS";
+        cetak("[T1 LULUS] Kernel edge heap_limit_mb = 128 MB");
+    } lain {
+        cetak("[T1 GAGAL] Kernel edge heap_limit_mb seharusnya 128, tapi: " + ke_teks(kernel_edge.heap_limit_mb));
+    }
+
+    var kernel_server = WidyaOSKernel("server");
+    jika kernel_server.heap_limit_mb == 8192 {
+        cetak("[T1 EXTRA LULUS] Kernel server heap_limit_mb = 8192 MB");
+    }
+
+    var init_list = [
+        InitProcess("init_proc1", 1, 10.0),
+        InitProcess("init_proc2", 2, 5.0)
+    ];
+    var kernel_booted = os_boot(kernel_edge, init_list);
+    jika panjang(kernel_booted.boot_log) > 3 {
+        hasil_tes["T2"] = "LULUS";
+        cetak("[T2 LULUS] os_boot berhasil membuat boot_log dengan " + ke_teks(panjang(kernel_booted.boot_log)) + " entri");
+    } lain {
+        cetak("[T2 GAGAL] boot_log tidak terisi dengan benar");
+    }
+
+    var node_test = WidyaOSNode("node-test-edge", "edge");
+    jika node_test.ai_runtime.tipe == "INT8_QUANTIZED" dan node_test.ai_runtime.model_dim == 512 {
+        cetak("[T2 EXTRA LULUS] WidyaOSNode edge ai_runtime = INT8_QUANTIZED/512");
+    }
+
+    var node_booted = os_node_boot(node_test, init_list);
+    jika node_booted.status_node == "ONLINE" {
+        hasil_tes["T3"] = "LULUS";
+        cetak("[T3 LULUS] os_node_boot berhasil set status_node = ONLINE");
+    } lain {
+        cetak("[T3 GAGAL] status_node seharusnya ONLINE, tapi: " + node_booted.status_node);
+    }
+
+    var id_driver = os_spawn_userspace_driver(kernel_booted, "sensor_temp", [0x00, 0x61, 0x73, 0x6D]);
+    jika panjang(kernel_booted.daftar_driver_userspace) == 1 dan kernel_booted.daftar_driver_userspace[0].endpoint == "ep_sensor_temp" {
+        cetak("[T3 EXTRA LULUS] os_spawn_userspace_driver berhasil: " + id_driver);
+    }
+
+    cetak("");
+    cetak("=== RINGKASAN HASIL TEST HELPER ===");
+    cetak("T1 (Konstruktor Kernel Heap Limit)  : " + hasil_tes["T1"]);
+    cetak("T2 (Boot & Inisialisasi CSpace/MMU)  : " + hasil_tes["T2"]);
+    cetak("T3 (Node Boot & Driver Spawn)        : " + hasil_tes["T3"]);
+    cetak("");
+    jika hasil_tes["T1"] == "LULUS" dan hasil_tes["T2"] == "LULUS" dan hasil_tes["T3"] == "LULUS" {
+        cetak("✔ SEMUA TEST T1-TR3 LULUS! WidyaOS Kernel Abstraction Layer valid.");
+    } lain {
+        cetak("✖ BEBERAPA TEST GAGAL. Periksa implementasi.");
+    }
+
+    kembalikan hasil_tes;
+}
+
+
+struktur InterruptVector {
+    nomor_vector_int,
+    nama_isr_string,
+    fungsi_handler_closure,
+    dipanggil_flag,
+    data_terakhir_dict
+}
+
+struktur SyscallInterruptDispatcher {
+    daftar_vector_dict,
+    idt_terpasang_flag,
+    apic_eoi_terakhir_int,
+    counter_dispatch_int
+}
+
+fungsi os_interrupt_buat_dispatcher() {
+    var disp = SyscallInterruptDispatcher();
+    disp.daftar_vector_dict = {};
+    disp.idt_terpasang_flag = benar;
+    disp.apic_eoi_terakhir_int = 0;
+    disp.counter_dispatch_int = 0;
+    kembalikan disp;
+}
+
+fungsi os_interrupt_tambah_vector(disp, nomor_vector, nama_vector, handler_func) {
+    var vec = InterruptVector();
+    vec.nomor_vector_int = nomor_vector;
+    vec.nama_isr_string = nama_vector;
+    vec.fungsi_handler_closure = handler_func;
+    vec.dipanggil_flag = salah;
+    vec.data_terakhir_dict = {};
+    disp.daftar_vector_dict[nomor_vector] = vec;
+    kembalikan benar;
+}
+
+fungsi os_interrupt_cek_capability(kernel_obj, cap_obj, vector_num) {
+    jika kernel_obj == nihil atau cap_obj == nihil {
+        kembalikan salah;
+    }
+    var nama_kal = cap_obj.nama_kemampuan;
+    var level_akses = cap_obj.level_akses;
+    jika nama_kal == "SYSTEM_KERNEL_INTERRUPT" atau nama_kal == "KAL_KERNEL_CONTROL_FULL" {
+        kembalikan benar;
+    }
+    jika level_akses >= 3 {
+        kembalikan benar;
+    }
+    kembalikan salah;
+}
+
+struktur PerizinanSumberDaya {
+    nama_izin_string,
+    nilai_minimal_int,
+    nilai_maksimal_int
+}
+
+struktur CapabilityKAL {
+    nama_kemampuan,
+    level_akses,
+    daftar_izin,
+    status_approval_string
+}
+
+fungsi os_interrupt_syscall(kernel_obj, cap_obj, vector_num, args_dict) {
+    var disp_global = kernel_obj.interrupt_dispatcher_obj;
+    jika disp_global == nihil {
+        disp_global = os_interrupt_buat_dispatcher();
+        kernel_obj.interrupt_dispatcher_obj = disp_global;
+    }
+    jika panjang(disp_global.daftar_vector_dict) == 0 {
+        os_interrupt_tambah_vector(disp_global, 32, "PIT_TIMER_IRQ0", fungsi(a) { kembalikan "ISR_TIMER_0X20_OK"; });
+        os_interrupt_tambah_vector(disp_global, 33, "PS2_KEYBOARD_IRQ1", fungsi(a) { kembalikan "ISR_KEYBOARD_0X21_OK"; });
+        os_interrupt_tambah_vector(disp_global, 36, "SERIAL_UART_IRQ4", fungsi(a) { kembalikan "ISR_SERIAL_0X24_OK"; });
+        os_interrupt_tambah_vector(disp_global, 14, "PAGE_FAULT_EXCEPTION_0XE", fungsi(a) { kembalikan "ISR_PAGE_FAULT_0X0E_HANDLED"; });
+        os_interrupt_tambah_vector(disp_global, 13, "GENERAL_PROTECTION_FAULT_0XD", fungsi(a) { kembalikan "ISR_GP_FAULT_0X0D_HANDLED"; });
+        os_interrupt_tambah_vector(disp_global, 128, "LINUX_LEGACY_SYSCALL_INT0X80", fungsi(a) { kembalikan "ISR_SYSCALL_0X80_DISPATCH_OK"; });
+    }
+    var cap_ok = os_interrupt_cek_capability(kernel_obj, cap_obj, vector_num);
+    jika cap_ok == salah {
+        kembalikan { "status": "DENIED_CAPABILITY_NOT_GRANTED", "vector": vector_num, "cap_level": 0 };
+    }
+    var vec = disp_global.daftar_vector_dict[vector_num];
+    jika vec == nihil {
+        kembalikan { "status": "VECTOR_NOT_REGISTERED", "vector": vector_num };
+    }
+    vec.dipanggil_flag = benar;
+    vec.data_terakhir_dict = args_dict;
+    disp_global.apic_eoi_terakhir_int = vector_num;
+    disp_global.counter_dispatch_int = disp_global.counter_dispatch_int + 1;
+    var hasil_isr = vec.fungsi_handler_closure(args_dict);
+    kembalikan {
+        "status": "ISR_DISPATCH_OK",
+        "vector": vector_num,
+        "nama_isr": vec.nama_isr_string,
+        "hasil": hasil_isr,
+        "apic_eoi_ack": vector_num,
+        "counter_dispatch": disp_global.counter_dispatch_int
+    };
+}
+
+var _os_append_tes_kernel = WidyaOSKernel("edge_append");
+var _os_append_tes_cap = CapabilityKAL();
+_os_append_tes_cap.nama_kemampuan = "SYSTEM_KERNEL_INTERRUPT";
+_os_append_tes_cap.level_akses = 5;
+_os_append_tes_cap.daftar_izin = [
+    PerizinanSumberDaya("MEMORY", 134217728, 4294967296),
+    PerizinanSumberDaya("CPU", 1, 16)
+];
+_os_append_tes_cap.status_approval_string = "APPROVED";
+var _os_append_hasil = os_interrupt_syscall(_os_append_tes_kernel, _os_append_tes_cap, 128, { "syscall_num": 1, "args": ["test_arg"] });
+cetak("[APPEND_WIDYA_OS_INTERRUPT_RESULT] status=" + _os_append_hasil["status"] + " vector=" + ke_teks(_os_append_hasil["vector"]) + " hasil_isr=" + _os_append_hasil["hasil"]);
+pastikan(_os_append_hasil["status"] == "ISR_DISPATCH_OK");
+pastikan(_os_append_hasil["vector"] == 128);
+pastikan(_os_append_hasil["hasil"] == "ISR_SYSCALL_0X80_DISPATCH_OK");
+var _os_append_tes_keyboard = os_interrupt_syscall(_os_append_tes_kernel, _os_append_tes_cap, 33, { "scancode": 28 });
+pastikan(_os_append_tes_keyboard["nama_isr"] == "PS2_KEYBOARD_IRQ1");
+cetak("[APPEND_WIDYA_OS_INTERRUPT_6VECTOR_OK] LULUS");

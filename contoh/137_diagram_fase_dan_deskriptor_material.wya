@@ -1,0 +1,44 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 59 - Diagram Fase CALPHAD & Deskriptor Material
+// Demonstrasi analisis termodinamika energi Gibbs pencampuran larutan reguler, aturan tuas, dan faktor toleransi perovskit.
+
+tulis("=== [WIDYA MATERIAL INFORMATICS] DIAGRAM FASE & DESKRIPTOR MATERIAL ===");
+
+// 1. Termodinamika Paduan Logam Biner (CALPHAD Gibbs Free Energy)
+tulis("--- MODEL TERMODINAMIKA GIBBS PADUAN BINER (Cu-Ni) ---");
+var paduan = DiagramFasePaduan("Tembaga_Cu", "Nikel_Ni");
+fase_set_parameter_interaksi(paduan, 6200.0); // Parameter interaksi Omega = 6200 J/mol
+
+// Hitung energi bebas Gibbs pencampuran pada komposisi 40% Ni (X_Ni = 0.4) dan T = 1200 K
+var gibbs_info = fase_hitung_energi_gibbs(paduan, 0.4, 1200.0);
+tulis("Komposisi Fraksi Mol Ni       : " + gibbs_info["fraksi_mol_b"]);
+tulis("Suhu Paduan                   : " + gibbs_info["temperatur_kelvin"] + " K");
+tulis("Entalpi Pencampuran (Delta H) : " + gibbs_info["delta_h_mix_j_mol"] + " J/mol");
+tulis("Entropi Pencampuran (Delta S) : " + gibbs_info["delta_s_mix_j_mol_k"] + " J/(mol K)");
+tulis("Energi Gibbs (Delta G_mix)    : " + gibbs_info["delta_g_mix_j_mol"] + " J/mol (Spontan jika negatif)");
+
+// Analisis Kesetimbangan Fasa Padat-Cair (Lever Rule / Aturan Tuas)
+// Komposisi total 50%, batas fasa padat (alfa) = 30%, batas fasa cair (beta) = 75%
+var tuas = fase_analisis_kesetimbangan_tuas(paduan, 0.50, 0.30, 0.75);
+tulis("\n--- ANALISIS ATURAN TUAS (LEVER RULE) ---");
+tulis("Fraksi Massa Fasa Padat (Alfa) : " + tuas["fraksi_fase_alfa"]);
+tulis("Fraksi Massa Fasa Cair (Beta)  : " + tuas["fraksi_fase_beta"]);
+tulis("Status Sistem                  : " + tuas["status_kesetimbangan"]);
+
+// 2. Deskriptor Material Kuantum & Faktor Toleransi Goldschmidt Perovskit
+tulis("\n--- DESKRIPTOR MATERIAL & FAKTOR TOLERANSI PEROVSKIT ---");
+var deskriptor = DeskriptorMaterial();
+
+// Kasus CH3NH3PbI3 (Perovskit Sel Surya MAPI): r_A = 217 pm, r_B = 119 pm, r_X = 220 pm
+var tol_mapi = material_hitung_faktor_toleransi_perovskit(217.0, 119.0, 220.0);
+tulis("Perovskit MAPI (Solar Cell):");
+tulis("  Faktor Toleransi Goldschmidt (t) : " + tol_mapi["faktor_toleransi_goldschmidt"]);
+tulis("  Prediksi Fase Kristal             : " + tol_mapi["prediksi_struktur"]);
+
+// Prediksi Stabilitas Entalpi & Karakter Ionik Ikatan Cs-Cl
+var kestabilan_ikatan = material_prediksi_stabilitas_energi(0.79, 3.16); // Cs=0.79, Cl=3.16
+tulis("\nIkatan Senyawa CsCl:");
+tulis("  Selisih Elektronegativitas Pauling : " + kestabilan_ikatan["selisih_elektronegativitas"]);
+tulis("  Persentase Karakter Ionik          : " + kestabilan_ikatan["persentase_karakter_ionik"] + " %");
+tulis("  Estimasi Entalpi Pembentukan       : " + kestabilan_ikatan["estimasi_entalpi_pembentukan_kj_mol"] + " kJ/mol");
+
+tulis("\n[WIDYA MATERIAL INFORMATICS] Diagram Fase & Deskriptor Material Berhasil Diverifikasi!");

@@ -1,0 +1,64 @@
+// contoh/51_kompresi_dan_eventbus.wya
+// Demonstrasi Pilar Mutakhir: WidyaCompress & WidyaEventBus
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaCompress (RLE/LZW) & WidyaEventBus (Pub/Sub)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaCompress (In-Memory Compression RLE & LZW)
+cetak("🗜️ [1] Kompresi Data In-Memory RLE & LZW (WidyaCompress)...");
+misal data_repetitif = "AAAAABBBCCCCCCDDDDDDDDDD";
+misal rle_hasil = kompres_rle(data_repetitif);
+misal rle_kembali = dekompres_rle(rle_hasil);
+
+cetak("  * Data Teks Asli (Panjang: " + teks(panjang(data_repetitif)) + "): " + data_repetitif);
+cetak("  * Hasil Kompresi RLE (Panjang: " + teks(panjang(rle_hasil)) + "): " + rle_hasil);
+cetak("  * Dekompresi RLE Kembali: " + rle_kembali);
+
+misal teks_panjang = "WIDYA_LANG_WIDYA_LANG_WIDYA_LANG_EKOSISTEM_WIDYA";
+misal lzw_hasil = kompres_lzw(teks_panjang);
+misal lzw_kembali = dekompres_lzw(lzw_hasil);
+misal hemat = rasio_kompresi(panjang(teks_panjang), panjang(lzw_hasil));
+
+cetak("  * Teks LZW: " + teks_panjang);
+cetak("  * Array Kode LZW Terkompres: " + teks(lzw_hasil));
+cetak("  * Dekompresi LZW Kembali: " + lzw_kembali);
+cetak("  * Penghematan Ruang: " + teks(hemat) + "%");
+cetak("");
+
+// 2. WidyaEventBus (Centralized Pub/Sub Event Dispatcher)
+cetak("📢 [2] Centralized Pub/Sub Event Dispatcher (WidyaEventBus)...");
+misal bus = BusEvent();
+
+// Mendaftarkan Handler Reguler
+bus_dengarkan(bus, "pesanan_dibuat", fungsi(pesanan) {
+    cetak("  [Event: pesanan_dibuat] Notifikasi SMS dikirim ke ID Pesanan: " + pesanan.id);
+    kembalikan 1;
+});
+
+bus_dengarkan(bus, "pesanan_dibuat", fungsi(pesanan) {
+    cetak("  [Event: pesanan_dibuat] Stok barang dikurangi untuk: " + pesanan.produk);
+    kembalikan 1;
+});
+
+// Mendaftarkan Handler Sekali Pakai (Once Listener)
+bus_dengarkan_sekali(bus, "pesanan_dibuat", fungsi(pesanan) {
+    cetak("  [Event Sekali Pakai] Voucher Diskon Selamat Datang Diberikan!");
+    kembalikan 1;
+});
+
+cetak("  * Memancarkan Event #1 (pesanan_dibuat)...");
+misal payload_1 = { "id": "ORD-001", "produk": "Widya T-Shirt", "total": 150000 };
+misal terpanggil_1 = bus_pancarkan(bus, "pesanan_dibuat", payload_1);
+cetak("    -> Total Handler Terpicu: " + teks(terpanggil_1));
+
+cetak("  * Memancarkan Event #2 (pesanan_dibuat - Handler Sekali Pakai sudah otomatis dilepas)...");
+misal payload_2 = { "id": "ORD-002", "produk": "Widya Sticker Pack", "total": 35000 };
+misal terpanggil_2 = bus_pancarkan(bus, "pesanan_dibuat", payload_2);
+cetak("    -> Total Handler Terpicu: " + teks(terpanggil_2));
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaCompress & WidyaEventBus!");
+cetak("========================================================================");

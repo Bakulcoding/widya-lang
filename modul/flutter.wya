@@ -1,0 +1,29 @@
+// =================================================================
+// Modul WidyaUI - Flutter-like Declarative Widget Tree
+// =================================================================
+
+fungsi WidgetAplikasi(judul, badan) {
+    kembalikan Aplikasi({
+        "judul": judul,
+        "badan": badan
+    });
+}
+
+fungsi WidgetScaffold(judul_appbar, badan_widget) {
+    kembalikan Halaman({
+        "judul": judul_appbar,
+        "badan": badan_widget
+    });
+}
+
+fungsi WidgetKartuModern(judul, konten, tombol_label, on_klik) {
+    kembalikan Kartu({
+        "anak": Kolom([
+            TeksWidget(judul, {"tebal": benar, "ukuran": 18}),
+            Pemisah(8),
+            TeksWidget(konten),
+            Pemisah(12),
+            Tombol(tombol_label, on_klik)
+        ])
+    });
+}

@@ -1,0 +1,78 @@
+// ========================================================================
+// CONTOH 33: Probabilistic Data Structures & Graph Engine (Dijkstra/PageRank)
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 3 & 4: WidyaBloom (Probabilistic Big Data) & WidyaGraph")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// 1. WidyaBloom: Bloom Filter & HyperLogLog Cardinality Estimation
+// ------------------------------------------------------------------------
+cetak("\n🎲 [1] Struktur Data Probabilistik Hemat Memori (WidyaBloom)...")
+
+// 1.1 Bloom Filter
+var filter_bloom = FilterBloom(500)
+
+bloom_tambah(filter_bloom, "alice@widya-lang.org")
+bloom_tambah(filter_bloom, "bob@widya-lang.org")
+bloom_tambah(filter_bloom, "charlie@widya-lang.org")
+
+var cek_alice = bloom_mungkin_ada(filter_bloom, "alice@widya-lang.org")
+var cek_hacker = bloom_mungkin_ada(filter_bloom, "hacker@evil.com")
+
+cetak("  * Apakah 'alice@widya-lang.org' ada dalam Bloom Filter? -> " + ke_teks(cek_alice))
+cetak("  * Apakah 'hacker@evil.com' ada dalam Bloom Filter?     -> " + ke_teks(cek_hacker))
+
+// 1.2 HyperLogLog (Estimasi Kardinalitas Data Unik)
+var hll = HyperLogLog(8)
+
+// Sisipkan aliran log identitas (termasuk duplikat)
+var data_pengguna = [
+    "user_1", "user_2", "user_3", "user_1", "user_4",
+    "user_5", "user_2", "user_6", "user_7", "user_8"
+]
+
+untuk u dalam data_pengguna {
+    hll_tambah(hll, u)
+}
+
+var estimasi_unik = hll_hitung_unik(hll)
+cetak("  * Total data mentah disisipkan: " + ke_teks(panjang(data_pengguna)))
+cetak("  * Estimasi Kardinalitas Elemen Unik (HLL): " + ke_teks(estimasi_unik))
+
+// ------------------------------------------------------------------------
+// 2. WidyaGraphEngine: Graph Topology, Dijkstra Shortest Path & PageRank
+// ------------------------------------------------------------------------
+cetak("\n🕸️ [2] Topologi Jaringan Graf & Jalur Terpendek Dijkstra (WidyaGraph)...")
+
+var graf = GrafJaringan(salah) // Graf tidak berarah
+
+tambah_simpul(graf, "A", "Pusat Data Jakarta")
+tambah_simpul(graf, "B", "Node Bandung")
+tambah_simpul(graf, "C", "Node Cirebon")
+tambah_simpul(graf, "D", "Node Semarang")
+tambah_simpul(graf, "E", "Pusat Data Surabaya")
+
+// Tambah sisi berbobot (jarak / latensi jaringan ms)
+tambah_sisi(graf, "A", "B", 10.0)
+tambah_sisi(graf, "A", "C", 15.0)
+tambah_sisi(graf, "B", "D", 25.0)
+tambah_sisi(graf, "C", "D", 20.0)
+tambah_sisi(graf, "D", "E", 12.0)
+
+// Cari jalur terpendek dari A (Jakarta) ke E (Surabaya)
+var rute_dijkstra = jalur_terpendek_dijkstra(graf, "A", "E")
+cetak("  * Jalur Terpendek Dijkstra Jakarta -> Surabaya:")
+cetak("    Rute : " + ke_teks(rute_dijkstra.jalur))
+cetak("    Total Latensi / Jarak: " + ke_teks(rute_dijkstra.jarak_total) + " ms")
+
+// Hitung Sentralitas Simpul PageRank
+var ranking = hitung_pagerank(graf, 25, 0.85)
+cetak("  * Sentralitas Simpul PageRank:")
+cetak("    " + ke_teks(ranking))
+
+cetak("\n========================================================================")
+cetak("✅ Selesai mengeksekusi WidyaBloom & WidyaGraphEngine!")
+cetak("========================================================================")

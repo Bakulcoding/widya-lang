@@ -1,0 +1,39 @@
+// =========================================================================
+// Contoh 115: Pilar Sains Spasial & GIS (R-Tree Indexing & Proyeksi CRS)
+// WidyaSpatialIndexing & WidyaCRSProjection
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR SPASIAL & GIS: R-TREE, GEOHASH & PROYEKSI CRS ===");
+
+    // 1. Struktur Data Indeks Spasial R-Tree (Bounding Box Overlap Query)
+    var rtree = IndeksRTree(16);
+
+    // Sisipkan Objek Spasial (Gedung Monas, Bundaran HI, GBK)
+    rtree_sisip(rtree, "MONAS", 106.825, -6.176, 106.829, -6.174, { "nama": "Monumen Nasional" });
+    rtree_sisip(rtree, "BUNDARAN_HI", 106.821, -6.195, 106.825, -6.192, { "nama": "Hotel Indonesia Roundabout" });
+    rtree_sisip(rtree, "GBK_SENAYAN", 106.799, -6.220, 106.805, -6.215, { "nama": "Gelora Bung Karno" });
+
+    // Kueri Spasial Kotak Bounding Box Area Jakarta Pusat [106.810, -6.200] s.d. [106.830, -6.170]
+    var hasil_kueri = rtree_kueri_kotak(rtree, 106.810, -6.200, 106.830, -6.170);
+    cetak("Objek Ditemukan dalam Bounding Box Jakarta Pusat: " + ke_teks(panjang(hasil_kueri)));
+
+    // 2. Geohash Encoding & Decoding
+    var lat_jkt = -6.2088;
+    var lon_jkt = 106.8456;
+    var kode_geohash = geohash_enkode(lat_jkt, lon_jkt, 7);
+    cetak("Geohash Koordinat Jakarta (Presisi 7): " + kode_geohash);
+
+    var dekode_geo = geohash_dekode(kode_geohash);
+    cetak("Hasil Dekode Geohash: Lintang=" + ke_teks(dekode_geo.lintang) + ", Bujur=" + ke_teks(dekode_geo.bujur));
+
+    // 3. Transformasi Sistem Koordinat Referensi (CRS Projections EPSG)
+    // WGS84 Geodetic (EPSG:4326 derajat) -> Web Mercator (EPSG:3857 meter)
+    var proj = ProyeksiCRS("EPSG:4326", "EPSG:3857");
+    var coords_meter = crs_transformasi_koordinat(proj, 106.8456, -6.2088);
+    cetak("Koordinat Terproyeksi Web Mercator (Meter): X=" + ke_teks(coords_meter.x) + " m, Y=" + ke_teks(coords_meter.y) + " m");
+
+    cetak("=== UJI R-TREE, GEOHASH & PROYEKSI CRS SUKSES ===");
+}
+
+utama();

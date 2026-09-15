@@ -1,0 +1,36 @@
+// ==========================================
+// Contoh 01: Halo Dunia & Dasar Bahasa Widya
+// ==========================================
+
+cetak("====================================");
+cetak("✨ Selamat Datang di Widya-Lang! ✨");
+cetak("====================================");
+
+// 1. Variabel dan Konstanta
+misal nama = "Widya";
+misal versi = 1.0;
+tetap TAHUN = 2026;
+
+cetak("Bahasa:", nama);
+cetak("Versi:", versi);
+cetak("Tahun Rilis:", TAHUN);
+
+// 2. Operasi Aritmatika & String
+misal a = 20;
+misal b = 6;
+
+cetak("\n--- Operasi Aritmatika ---");
+cetak(a, "+", b, "=", a + b);
+cetak(a, "-", b, "=", a - b);
+cetak(a, "*", b, "=", a * b);
+cetak(a, "/", b, "=", a / b);
+cetak(a, "%", b, "=", a % b);
+cetak(2, "^", 8, "=", 2 ^ 8);
+
+// 3. Tipe Data
+cetak("\n--- Pengecekan Tipe Data ---");
+cetak("Tipe 'Widya':", tipe(nama));
+cetak("Tipe 42:", tipe(42));
+cetak("Tipe benar:", tipe(benar));
+cetak("Tipe [1, 2, 3]:", tipe([1, 2, 3]));
+cetak("Tipe nihil:", tipe(nihil));

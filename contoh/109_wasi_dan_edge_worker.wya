@@ -1,0 +1,36 @@
+// =========================================================================
+// Contoh 109: Pilar WebAssembly (WASI Runtime, JS FFI Bridge & Edge Worker)
+// WidyaWASIEngine, WidyaWasmJSBridge & WidyaEdgeWorker
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR WEBASSEMBLY: WASI, JS FFI & EDGE WORKER ===");
+
+    // 1. WebAssembly System Interface (WASI Snapshot Preview 1) Context
+    var konteks_wasi = WASIContext(["widya_app.wasm", "--mode=fast"], { "RUST_LOG": "info", "EDGE_ENV": "prod" });
+    cetak("WASI Environment Context: " + konteks_wasi.versi_wasi + " (Args: " + ke_teks(konteks_wasi.args) + ")");
+
+    // 2. JavaScript FFI Bridge (Browser DOM & Web API Interop)
+    var jembatan = JembatanWasmJS();
+    
+    // Daftarkan fungsi JS callback interop
+    wasm_js_daftarkan_fungsi(jembatan, "hitung_kuadrat", fungsi(x) {
+        kembalikan x * x;
+    });
+
+    var hasil_js = wasm_js_panggil(jembatan, "hitung_kuadrat", [12]);
+    cetak("Hasil Panggilan JS FFI Bridge (12^2): " + ke_teks(hasil_js));
+
+    // 3. Serverless Edge Computing Worker (Cloudflare Workers / Fastly V8 Wasm)
+    var worker = PekerjaEdge("/api/v1/telemetri");
+    cetak("Edge Worker Diinisialisasi pada Rute: " + worker.rute + " [Engine: " + worker.runtime + "]");
+
+    var dummy_req = { "metode": "POST", "url": "https://widya.dev/api/v1/telemetri", "body": "{\"sensor\":\"suhu\",\"nilai\":28.5}" };
+    var respons_edge = edge_tangani_permintaan(worker, dummy_req);
+
+    cetak("Respons Serverless Edge Worker: Status " + ke_teks(respons_edge.status) + " via " + respons_edge.edge_region + " [Latensi: " + ke_teks(respons_edge.latensi_eksekusi_ms) + " ms]");
+
+    cetak("=== UJI WASI, JS FFI & EDGE WORKER SUKSES ===");
+}
+
+utama();

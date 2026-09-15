@@ -1,0 +1,580 @@
+fungsi rad(deg) {
+    kembalikan deg * PI / 180.0
+}
+
+fungsi my_faktorial(n) {
+    jika n == 0 {
+        kembalikan 1.0
+    }
+    misal hasil = 1.0
+    untuk i dalam 1..n {
+        hasil = hasil * i
+    }
+    kembalikan hasil
+}
+
+fungsi my_exp(x) {
+    jika x == 0 {
+        kembalikan 1.0
+    }
+    misal negatif = salah
+    jika x < 0 {
+        negatif = benar
+        x = -x
+    }
+    misal hasil = 1.0
+    misal suku = 1.0
+    untuk n dalam 1..25 {
+        suku = suku * x / n
+        hasil = hasil + suku
+    }
+    jika negatif {
+        kembalikan 1.0 / hasil
+    } lainnya {
+        kembalikan hasil
+    }
+}
+
+fungsi my_ln(x) {
+    jika x <= 0 {
+        kembalikan 0.0
+    }
+    jika x == 1.0 {
+        kembalikan 0.0
+    }
+    misal y = (x - 1.0) / (x + 1.0)
+    misal y2 = y * y
+    misal hasil = 0.0
+    misal y_pow = y
+    untuk n dalam 1..30 {
+        jika n % 2 == 1 {
+            hasil = hasil + y_pow / n
+        }
+        y_pow = y_pow * y2
+    }
+    kembalikan 2.0 * hasil
+}
+
+fungsi my_atan(x) {
+    jika x == 0 {
+        kembalikan 0.0
+    }
+    misal negatif = salah
+    jika x < 0 {
+        negatif = benar
+        x = -x
+    }
+    misal besar = salah
+    jika x > 1.0 {
+        besar = benar
+        x = 1.0 / x
+    }
+    misal x2 = x * x
+    misal hasil = 0.0
+    misal x_pow = x
+    untuk n dalam 1..30 {
+        jika n % 2 == 1 {
+            jika n % 4 == 1 {
+                hasil = hasil + x_pow / n
+            } lainnya {
+                hasil = hasil - x_pow / n
+            }
+        }
+        x_pow = x_pow * x2
+    }
+    jika besar {
+        hasil = PI / 2.0 - hasil
+    }
+    jika negatif {
+        hasil = -hasil
+    }
+    kembalikan hasil
+}
+
+fungsi my_atan2(y, x) {
+    jika x > 0 {
+        kembalikan my_atan(y / x)
+    } lainnya jika x < 0 {
+        jika y >= 0 {
+            kembalikan my_atan(y / x) + PI
+        } lainnya {
+            kembalikan my_atan(y / x) - PI
+        }
+    } lainnya {
+        jika y > 0 {
+            kembalikan PI / 2.0
+        } lainnya jika y < 0 {
+            kembalikan -PI / 2.0
+        } lainnya {
+            kembalikan 0.0
+        }
+    }
+}
+
+fungsi haversine_meter(lat1, lon1, lat2, lon2) {
+    misal r = 6371000.0
+    misal d_lat = rad(lat2 - lat1)
+    misal d_lon = rad(lon2 - lon1)
+    misal a = sin(d_lat / 2.0) * sin(d_lat / 2.0) + cos(rad(lat1)) * cos(rad(lat2)) * sin(d_lon / 2.0) * sin(d_lon / 2.0)
+    misal c = 2.0 * my_atan2(akar(a), akar(1.0 - a))
+    kembalikan r * c
+}
+
+fungsi spasial_titik_dalam_poligon(titik, poly) {
+    jika panjang(poly) < 3 {
+        kembalikan salah
+    }
+    misal px = titik[0]
+    misal py = titik[1]
+    misal inside = salah
+    misal n = panjang(poly)
+    misal j = n - 1
+    untuk i dalam 0..(n - 1) {
+        misal xi = poly[i][0]
+        misal yi = poly[i][1]
+        misal xj = poly[j][0]
+        misal yj = poly[j][1]
+        misal cond1 = yi > py
+        misal cond2 = yj > py
+        misal intersect_cond1 = cond1 != cond2
+        misal denom = yj - yi
+        misal px_intersect = px
+        jika denom != 0 {
+            px_intersect = (xj - xi) * (py - yi) / denom + xi
+        }
+        misal intersect = intersect_cond1 dan (px < px_intersect)
+        jika intersect {
+            inside = !inside
+        }
+        j = i
+    }
+    kembalikan inside
+}
+
+fungsi spasial_hitung_luas_poligon(poly) {
+    jika panjang(poly) < 3 {
+        kembalikan 0.0
+    }
+    misal area = 0.0
+    misal n = panjang(poly)
+    untuk i dalam 0..(n - 1) {
+        misal j = (i + 1) % n
+        area = area + poly[i][0] * poly[j][1]
+        area = area - poly[j][0] * poly[i][1]
+    }
+    misal result = (mutlak(area) / 2.0) * 111.0 * 111.0
+    kembalikan result
+}
+
+struktur TabelRelasional {
+    nama_tabel,
+    kolom,
+    baris_data,
+    indeks_pk,
+
+    fungsi inisialisasi(nama, daftar_kolom) {
+        ini.nama_tabel = nama;
+        ini.kolom = daftar_kolom;
+        ini.baris_data = [];
+        ini.indeks_pk = {};
+    }
+
+    fungsi sisip(data_record) {
+        misal id = data_record["id"];
+        jika ada_kunci(ini.indeks_pk, ke_teks(id)) {
+            kembalikan Err("Galat SQL: Kunci Utama (Primary Key) " + ke_teks(id) + " sudah ada!");
+        }
+        tambah(ini.baris_data, data_record);
+        ini.indeks_pk[ke_teks(id)] = panjang(ini.baris_data) - 1;
+        kembalikan Ok(benar);
+    }
+
+    fungsi pilih_di_mana(fungsi_predikat) {
+        kembalikan saring(ini.baris_data, fungsi_predikat);
+    }
+
+    fungsi perbarui_berdasarkan_id(id, data_baru) {
+        misal key = ke_teks(id);
+        jika bukan ada_kunci(ini.indeks_pk, key) {
+            kembalikan Err("Galat: Data dengan ID " + key + " tidak ditemukan");
+        }
+        misal idx = ini.indeks_pk[key];
+        ini.baris_data[idx] = data_baru;
+        kembalikan Ok(benar);
+    }
+}
+
+struktur KoleksiDokumen {
+    nama_koleksi,
+    dokumen,
+    indeks_field,
+    _dokumen_by_id,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_koleksi = nama;
+        ini.dokumen = [];
+        ini.indeks_field = {};
+        ini._dokumen_by_id = {};
+    }
+
+    fungsi sisip_satu(doc) {
+        jika bukan ada_kunci(doc, "_id") {
+            doc["_id"] = "doc_" + ke_teks(waktu()) + "_" + ke_teks(panjang(ini.dokumen) + 1);
+        }
+        tambah(ini.dokumen, doc);
+        ini._dokumen_by_id[doc["_id"]] = panjang(ini.dokumen) - 1;
+
+        misal field_terindeks = kunci(ini.indeks_field);
+        jika panjang(field_terindeks) > 0 {
+            untuk_setiap(field_terindeks, fungsi(nama_field) {
+                misal pohon = ini.indeks_field[nama_field];
+                jika ada_kunci(doc, nama_field) {
+                    misal nilai_field = ke_teks(doc[nama_field]);
+                    misal existing = bplus_cari(pohon, nilai_field);
+                    misal daftar_id = [];
+                    jika existing != nil {
+                        daftar_id = existing;
+                    }
+                    tambah(daftar_id, doc["_id"]);
+                    bplus_sisip(pohon, nilai_field, daftar_id);
+                }
+            });
+        }
+        kembalikan Ok(doc["_id"]);
+    }
+
+    fungsi cari(kunci_field, nilai_target) {
+        kembalikan saring(ini.dokumen, fungsi(item) {
+            jika ada_kunci(item, kunci_field) {
+                kembalikan item[kunci_field] == nilai_target;
+            }
+            kembalikan salah;
+        });
+    }
+
+    fungsi agregasi_total(kunci_angka) {
+        kembalikan lipat(ini.dokumen, 0, fungsi(acc, item) {
+            jika ada_kunci(item, kunci_angka) {
+                kembalikan acc + item[kunci_angka];
+            }
+            kembalikan acc;
+        });
+    }
+}
+
+struktur WidyaDB {
+    nama_db,
+    geo,
+    rel,
+    nosql,
+
+    fungsi inisialisasi(nama_db) {
+        misal rtree = IndeksRTree(16);
+        misal proj = ProyeksiCRS("EPSG:4326", "EPSG:3857");
+        misal wal = LogWAL(nama_db + "_rel");
+        misal vektor = BasisDataVektor(128);
+        misal kv = PenyimpananKV();
+        misal ts = DeretWaktu(nama_db + "_ts");
+        misal lsm = BukaLSM(nama_db + "_lsm");
+        misal bplus = PohonBPlus(32);
+
+        ini.nama_db = nama_db;
+        ini.geo = {
+            "parser": ParserGeoJSON,
+            "rtree": rtree,
+            "proyeksi": proj,
+            "geohash_enkode": geohash_enkode,
+            "geohash_dekode": geohash_dekode,
+            "titik_dalam_poligon": spasial_titik_dalam_poligon,
+            "hitung_luas_poligon": spasial_hitung_luas_poligon,
+            "hitung_panjang_garis": spasial_hitung_panjang_garis,
+            "geojson_ke_wkt": geojson_ke_wkt,
+            "wkt_ke_geojson": wkt_ke_geojson,
+            "rtree_sisip": rtree_sisip,
+            "rtree_kueri_kotak": rtree_kueri_kotak,
+            "crs_transformasi": crs_transformasi_koordinat
+        };
+        ini.rel = {
+            "tabel": {},
+            "wal": wal,
+            "bplus": bplus,
+            "kolumnar": {}
+        };
+        ini.nosql = {
+            "dokumen": {},
+            "vektor": vektor,
+            "kv": kv,
+            "ts": ts,
+            "lsm": lsm
+        };
+    }
+}
+
+fungsi spasial_join_atribut(db, list_id_geom, nama_tabel_relasional, kolom_fk) {
+    misal hasil = [];
+    jika bukan ada_kunci(db.rel.tabel, nama_tabel_relasional) {
+        kembalikan hasil;
+    }
+    misal tbl = db.rel.tabel[nama_tabel_relasional];
+    untuk geom_id dalam list_id_geom {
+        misal baris_cocok = tbl.pilih_di_mana(fungsi(baris) {
+            jika ada_kunci(baris, kolom_fk) {
+                kembalikan ke_teks(baris[kolom_fk]) == ke_teks(geom_id);
+            }
+            kembalikan salah;
+        });
+        untuk b dalam baris_cocok {
+            tambah(hasil, {
+                "id_geom": geom_id,
+                "atribut": b
+            });
+        }
+    }
+    kembalikan hasil;
+}
+
+fungsi widydb_simpan_ke_disk(db, path) {
+    misal state = {
+        "_engine": "WidyaDB v1.0",
+        "nama_db": db.nama_db,
+        "rel": {
+            "tabel": {},
+            "wal": db.rel.wal
+        },
+        "nosql": {
+            "dokumen": {},
+            "vektor": db.nosql.vektor,
+            "kv": db.nosql.kv,
+            "ts": db.nosql.ts,
+            "lsm": db.nosql.lsm
+        }
+    };
+    untuk nama_tbl dalam kunci_kamus(db.rel.tabel) {
+        misal t = db.rel.tabel[nama_tbl];
+        state.rel.tabel[nama_tbl] = {
+            "nama_tabel": t.nama_tabel,
+            "kolom": t.kolom,
+            "baris_data": t.baris_data,
+            "indeks_pk": t.indeks_pk
+        };
+    }
+    untuk nama_kol dalam kunci_kamus(db.rel.kolumnar) {
+        jika bukan ada_kunci(state.rel, "kolumnar") {
+            state.rel["kolumnar"] = {};
+        }
+        state.rel.kolumnar[nama_kol] = db.rel.kolumnar[nama_kol];
+    }
+    untuk nama_dok dalam kunci_kamus(db.nosql.dokumen) {
+        misal d = db.nosql.dokumen[nama_dok];
+        state.nosql.dokumen[nama_dok] = {
+            "nama_koleksi": d.nama_koleksi,
+            "dokumen": d.dokumen
+        };
+    }
+    misal json_str = ke_json(state, 2);
+    tulis_berkas(path, json_str);
+    kembalikan benar;
+}
+
+fungsi _cari_dokumen_by_id(koleksi, id) {
+    jika ada_kunci(koleksi._dokumen_by_id, id) {
+        kembalikan koleksi.dokumen[koleksi._dokumen_by_id[id]];
+    }
+    misal hasil = saring(koleksi.dokumen, fungsi(d) {
+        kembalikan d["_id"] == id;
+    });
+    jika panjang(hasil) > 0 {
+        kembalikan hasil[0];
+    }
+    kembalikan nil;
+}
+
+fungsi indeks_tambah(koleksi, nama_field) {
+    misal pohon = PohonBPlus(4);
+    untuk_setiap(koleksi.dokumen, fungsi(doc) {
+        jika ada_kunci(doc, nama_field) {
+            misal nilai_field = ke_teks(doc[nama_field]);
+            misal existing = bplus_cari(pohon, nilai_field);
+            misal daftar_id = [];
+            jika existing != nil {
+                daftar_id = existing;
+            }
+            tambah(daftar_id, doc["_id"]);
+            bplus_sisip(pohon, nilai_field, daftar_id);
+        }
+    });
+    koleksi.indeks_field[nama_field] = pohon;
+    kembalikan benar;
+}
+
+fungsi indeks_cari(koleksi, nama_field, nilai_cari) {
+    jika bukan ada_kunci(koleksi.indeks_field, nama_field) {
+        kembalikan [];
+    }
+    misal pohon = koleksi.indeks_field[nama_field];
+    misal kunci_cari = ke_teks(nilai_cari);
+    misal hasil_ids = bplus_cari(pohon, kunci_cari);
+    jika hasil_ids == nil {
+        kembalikan [];
+    }
+    misal hasil = [];
+    untuk_setiap(hasil_ids, fungsi(id) {
+        misal doc = _cari_dokumen_by_id(koleksi, id);
+        jika doc != nil {
+            tambah(hasil, doc);
+        }
+    });
+    kembalikan hasil;
+}
+
+cetak("===============================================================")
+cetak("[WidyaDB 166] INIT DIMULAI...")
+cetak("===============================================================")
+
+misal db = WidyaDB("kecamatan_xyz")
+pastikan(db.nama_db == "kecamatan_xyz", "Nama DB harus kecamatan_xyz")
+pastikan(db.geo != nihil, "Komponen geo harus ada")
+pastikan(db.rel != nihil, "Komponen rel harus ada")
+pastikan(db.nosql != nihil, "Komponen nosql harus ada")
+cetak("[2/10 PASS] WidyaDB.init berhasil: nama_db = " + db.nama_db)
+
+misal geo_kecamatan = []
+misal bbox_A = [0.0, 0.0, 10.0, 10.0]
+misal poly_A = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]
+misal kec_A = {"id": 1, "nama": "KecA", "bbox": bbox_A, "poligon": poly_A}
+tambah(geo_kecamatan, kec_A)
+rtree_sisip(db.geo.rtree, 1, 0.0, 0.0, 10.0, 10.0, kec_A)
+
+misal bbox_B = [11.0, 0.0, 25.0, 15.0]
+misal poly_B = [[11.0, 0.0], [25.0, 0.0], [25.0, 15.0], [11.0, 15.0], [11.0, 0.0]]
+misal kec_B = {"id": 2, "nama": "KecB", "bbox": bbox_B, "poligon": poly_B}
+tambah(geo_kecamatan, kec_B)
+rtree_sisip(db.geo.rtree, 2, 11.0, 0.0, 25.0, 15.0, kec_B)
+
+misal bbox_C = [0.0, 16.0, 15.0, 30.0]
+misal poly_C = [[0.0, 16.0], [15.0, 16.0], [15.0, 30.0], [0.0, 30.0], [0.0, 16.0]]
+misal kec_C = {"id": 3, "nama": "KecC", "bbox": bbox_C, "poligon": poly_C}
+tambah(geo_kecamatan, kec_C)
+rtree_sisip(db.geo.rtree, 3, 0.0, 16.0, 15.0, 30.0, kec_C)
+
+pastikan(panjang(geo_kecamatan) == 3, "Harus ada 3 kecamatan di array geo_kecamatan")
+misal cek_rt = rtree_kueri_kotak(db.geo.rtree, 0.0, 0.0, 30.0, 30.0)
+pastikan(panjang(cek_rt) == 3, "RTree harus berisi 3 kecamatan")
+cetak("[3/10 PASS] GIS RTree INSERT 3 kecamatan sukses: KecA, KecB, KecC")
+
+misal kolom_warga = [
+    {"nama": "id", "tipe": "INT"},
+    {"nama": "nama", "tipe": "STR"},
+    {"nama": "kecamatan_id", "tipe": "INT"},
+    {"nama": "lat", "tipe": "FLOAT"},
+    {"nama": "lng", "tipe": "FLOAT"}
+]
+misal tabel_warga = TabelRelasional("warga", kolom_warga)
+db.rel.tabel["warga"] = tabel_warga
+
+tabel_warga.sisip({"id": 1, "nama": "Warga1", "kecamatan_id": 1, "lat": 5.0, "lng": 5.0})
+tabel_warga.sisip({"id": 2, "nama": "Warga2", "kecamatan_id": 1, "lat": 3.0, "lng": 7.0})
+tabel_warga.sisip({"id": 3, "nama": "Warga3", "kecamatan_id": 1, "lat": 8.0, "lng": 2.0})
+tabel_warga.sisip({"id": 4, "nama": "Warga4", "kecamatan_id": 2, "lat": 12.0, "lng": 18.0})
+tabel_warga.sisip({"id": 5, "nama": "Warga5", "kecamatan_id": 2, "lat": 5.0, "lng": 20.0})
+tabel_warga.sisip({"id": 6, "nama": "Warga6", "kecamatan_id": 2, "lat": 10.0, "lng": 15.0})
+tabel_warga.sisip({"id": 7, "nama": "Warga7", "kecamatan_id": 2, "lat": 8.0, "lng": 22.0})
+tabel_warga.sisip({"id": 8, "nama": "Warga8", "kecamatan_id": 3, "lat": 20.0, "lng": 8.0})
+tabel_warga.sisip({"id": 9, "nama": "Warga9", "kecamatan_id": 3, "lat": 25.0, "lng": 10.0})
+tabel_warga.sisip({"id": 10, "nama": "Warga10", "kecamatan_id": 3, "lat": 22.0, "lng": 5.0})
+
+pastikan(panjang(tabel_warga.baris_data) == 10, "Tabel warga harus berisi 10 baris")
+misal cek_kecA = tabel_warga.pilih_di_mana(fungsi(b) { kembalikan b.kecamatan_id == 1 })
+pastikan(panjang(cek_kecA) == 3, "Warga KecA harus 3 orang")
+misal cek_kecB = tabel_warga.pilih_di_mana(fungsi(b) { kembalikan b.kecamatan_id == 2 })
+pastikan(panjang(cek_kecB) == 4, "Warga KecB harus 4 orang")
+misal cek_kecC = tabel_warga.pilih_di_mana(fungsi(b) { kembalikan b.kecamatan_id == 3 })
+pastikan(panjang(cek_kecC) == 3, "Warga KecC harus 3 orang")
+cetak("[4/10 PASS] SQL Tabel warga 10 baris sukses (KecA:3, KecB:4, KecC:3)")
+
+misal log_sensor_koleksi = KoleksiDokumen("log_sensor")
+db.nosql.dokumen["log_sensor"] = log_sensor_koleksi
+misal ts_now = 1700000000
+misal nomor_s = 1
+selama nomor_s <= 20 {
+    misal kid = ((nomor_s - 1) % 3) + 1
+    misal suhu = 20.0 + (acak() * 15.0)
+    log_sensor_koleksi.sisip_satu({
+        "sensor_id": "S1",
+        "waktu": ts_now + nomor_s * 60,
+        "lokasi_kecamatan_id": kid,
+        "kecamatan_id": kid,
+        "nilai_suhu": suhu
+    })
+    nomor_s = nomor_s + 1
+}
+pastikan(panjang(log_sensor_koleksi.dokumen) == 20, "log_sensor harus berisi 20 dokumen")
+cetak("[5/10 PASS] NoSQL KoleksiDokumen log_sensor 20 dokumen sukses")
+
+misal suhu_rata2 = DeretWaktu("suhu_rata2")
+db.nosql.ts = suhu_rata2
+misal ts_awal = 1700100000
+untuk i_ts dalam 0..99 {
+    misal ts_p = ts_awal + i_ts * 300
+    misal val_p = 24.0 + (acak() * 4.0)
+    tambah_titik_waktu(suhu_rata2, ts_p, val_p)
+}
+pastikan(panjang(suhu_rata2.data_points) == 100, "DeretWaktu suhu_rata2 harus 100 titik")
+cetak("[6/10 PASS] DeretWaktu suhu_rata2 100 titik sukses")
+
+misal embedding_warga = BasisDataVektor(4)
+db.nosql.vektor = embedding_warga
+misal nama_warga_list = ["Warga1", "Warga2", "Warga3", "Warga4", "Warga5"]
+untuk iv dalam 0..4 {
+    misal wid = iv + 1
+    misal v = [
+        acak() * 2.0 - 1.0,
+        acak() * 2.0 - 1.0,
+        acak() * 2.0 - 1.0,
+        acak() * 2.0 - 1.0
+    ]
+    vektor_sisip(embedding_warga, "w" + ke_teks(wid), v, {"nama_warga": nama_warga_list[iv], "id_warga": wid})
+}
+pastikan(vektor_hitung(embedding_warga) == 5, "BasisDataVektor embedding_warga harus 5 entri")
+cetak("[7/10 PASS] BasisDataVektor embedding_warga D=4 5 vektor sukses")
+
+indeks_tambah(log_sensor_koleksi, "kecamatan_id")
+misal hasil_idx_kec2 = indeks_cari(log_sensor_koleksi, "kecamatan_id", 2)
+pastikan(panjang(hasil_idx_kec2) >= 4, "indeks_cari kecamatan_id=2 harus >= 4, tapi: " + ke_teks(panjang(hasil_idx_kec2)))
+cetak("[8/10 PASS] SECONDARY INDEX indeks_cari kecamatan_id=2 jumlah: " + ke_teks(panjang(hasil_idx_kec2)) + " >= 4")
+
+misal rtree_kecB = rtree_kueri_kotak(db.geo.rtree, 11.0, 0.0, 25.0, 15.0)
+pastikan(panjang(rtree_kecB) >= 1, "RTree query kotak KecB harus menemukan minimal 1")
+
+misal list_id_kecB = []
+untuk_setiap(rtree_kecB, fungsi(item) {
+    misal id_geom = item.id
+    misal poly_item = nil
+    untuk_setiap(geo_kecamatan, fungsi(gk) {
+        jika gk.id == id_geom {
+            poly_item = gk.poligon
+        }
+    })
+    jika poly_item != nihil {
+        misal sample_pt = [(item.min_x + item.max_x) / 2.0, (item.min_y + item.max_y) / 2.0]
+        jika spasial_titik_dalam_poligon(sample_pt, poly_item) {
+            tambah(list_id_kecB, id_geom)
+        }
+    } lainnya {
+        tambah(list_id_kecB, id_geom)
+    }
+})
+
+misal warga_yang_ada_di_KecB = spasial_join_atribut(db, list_id_kecB, "warga", "kecamatan_id")
+pastikan(panjang(warga_yang_ada_di_KecB) == 4, "SPATIAL JOIN warga di KecB harus 4 orang, tapi: " + ke_teks(panjang(warga_yang_ada_di_KecB)))
+
+cetak("[9/10 PASS] SPATIAL JOIN warga KecB (4 orang): ")
+untuk_setiap(warga_yang_ada_di_KecB, fungsi(wjoin) {
+    cetak("   -> " + wjoin.atribut.nama + " (id=" + ke_teks(wjoin.atribut.id) + ")")
+})
+
+cetak("===============================================================")
+cetak("[WidyaDB 166] FULL STACK MULTI-MODAL DEMO SUKSES!")
+cetak("===============================================================")
+
+kembalikan benar

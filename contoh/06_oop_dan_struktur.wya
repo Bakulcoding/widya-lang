@@ -1,0 +1,36 @@
+// ==========================================
+// Contoh 06: Pemrograman Berorientasi Objek (OOP)
+// ==========================================
+
+struktur RekeningBank {
+    pemilik,
+    saldo,
+
+    fungsi setor(jumlah) {
+        ini.saldo += jumlah;
+        cetak("Setoran berhasil sebesar:", jumlah, "| Saldo baru:", ini.saldo);
+    }
+
+    fungsi tarik(jumlah) {
+        jika jumlah > ini.saldo {
+            cetak("Gagal menarik: Saldo tidak mencukupi!");
+            kembalikan salah;
+        }
+        ini.saldo -= jumlah;
+        cetak("Penarikan berhasil sebesar:", jumlah, "| Sisa saldo:", ini.saldo);
+        kembalikan benar;
+    }
+
+    fungsi info() {
+        kembalikan "Rekening [" + ini.pemilik + "] - Saldo: Rp " + ke_teks(ini.saldo);
+    }
+}
+
+misal rek = RekeningBank("Widya", 500000);
+cetak(rek.info());
+
+rek.setor(250000);
+rek.tarik(100000);
+rek.tarik(900000); // Saldo tidak cukup
+
+cetak("\nStatus Akhir:", rek.info());

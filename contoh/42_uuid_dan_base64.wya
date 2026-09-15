@@ -1,0 +1,52 @@
+// contoh/42_uuid_dan_base64.wya
+// Demonstrasi Pilar Mutakhir: WidyaUUID & WidyaBase64
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaUUID (v4 & v7) & WidyaBase64 (Base64/Hex)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaUUID (Universal Unique Identifier Engine)
+cetak("🆔 [1] Universal Unique Identifier Engine (WidyaUUID)...");
+misal id_v4 = buat_uuid_v4();
+misal id_v7 = buat_uuid_v7();
+
+cetak("  * Pembangkitan UUID v4 (Random): " + id_v4);
+cetak("  * Pembangkitan UUID v7 (Time-Ordered): " + id_v7);
+
+misal cek_v4 = validasi_uuid(id_v4);
+misal cek_v7 = validasi_uuid(id_v7);
+misal cek_palsu = validasi_uuid("bukan-uuid-yang-sah");
+
+cetak("  * Validasi UUID v4? -> " + teks(cek_v4));
+cetak("  * Validasi UUID v7? -> " + teks(cek_v7));
+cetak("  * Validasi String Palsu? -> " + teks(cek_palsu));
+
+misal detail_v7 = urai_uuid(id_v7);
+cetak("  * Hasil Urai UUID v7:");
+cetak("    - Valid: " + teks(detail_v7.valid));
+cetak("    - Versi: " + teks(detail_v7.versi));
+cetak("    - Timestamp Milidetik: " + teks(detail_v7.waktu_ms));
+cetak("");
+
+// 2. WidyaBase64 (Binary-to-Text & Hex Engine)
+cetak("🔤 [2] Enkoding dan Dekoding Base64 & Hex (WidyaBase64)...");
+misal teks_rahasia = "Widya-Lang: Bahasa Pemrograman Mutakhir Indonesia 🚀";
+misal b64 = enkode_base64(teks_rahasia);
+misal b64_url = enkode_base64_url(teks_rahasia);
+misal teks_kembali = dekode_base64(b64);
+
+cetak("  * Teks Asli: " + teks_rahasia);
+cetak("  * Hasil Enkoding Base64: " + b64);
+cetak("  * Hasil Enkoding Base64-URL Safe: " + b64_url);
+cetak("  * Hasil Dekoding Base64: " + teks_kembali);
+
+misal hex_str = enkode_hex("Widya2026");
+misal hex_asli = dekode_hex(hex_str);
+cetak("  * Enkoding Hex 'Widya2026': " + hex_str);
+cetak("  * Dekoding Hex kembali: " + hex_asli);
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaUUID & WidyaBase64!");
+cetak("========================================================================");

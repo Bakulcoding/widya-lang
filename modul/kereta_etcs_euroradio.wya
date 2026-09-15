@@ -1,0 +1,17 @@
+// Modul Transportasi Perkeretaapian & Sinyal Kereta Cepat ETCS (Subset-026 Euroradio)
+
+fungsi etcs_buat_movement_authority(nid_engine, lokasi_sekarang_km, batas_jarak_aman_km, batas_kecepatan_kmh) {
+    var pengereman = "AMAN_BERJALAN";
+    jika (lokasi_sekarang_km > batas_jarak_aman_km - 0.5) {
+        pengereman = "PENGEREMAN_EMERGENCY";
+    }
+    
+    kembalikan {
+        "nid_engine": nid_engine,
+        "mode_etcs": "FULL_SUPERVISION",
+        "lokasi_km": lokasi_sekarang_km,
+        "eoa_target_km": batas_jarak_aman_km, // End of Authority
+        "v_perm_kmh": batas_kecepatan_kmh,     // Permitted Speed
+        "status_pengereman": pengereman
+    };
+}

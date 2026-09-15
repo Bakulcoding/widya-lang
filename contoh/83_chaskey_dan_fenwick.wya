@@ -1,0 +1,48 @@
+// ===================================================================
+// CONTOH 83: CHASKEY LIGHTWEIGHT MAC & FENWICK BINARY INDEXED TREES
+// Widya-Lang Embedded Cryptographic Authentication & Dynamic Range Sums
+// ===================================================================
+
+cetak("=== DEMO WIDYA CHASKEY 128-BIT LIGHTWEIGHT MAC ===")
+var kunci_rahasia_iot = "KUNCI_CHASKEY_16" // 16 byte (128-bit)
+var telemetri_drone = "DRONE_GPS:-6.2088,106.8456;ALT:120M;BAT:94%"
+
+var tag_mac = chaskey_hitung_mac(kunci_rahasia_iot, telemetri_drone)
+cetak("Pesan Telemetri IoT : " + telemetri_drone)
+cetak("Chaskey MAC Tag     : " + tag_mac)
+
+var sah = chaskey_verifikasi_mac(kunci_rahasia_iot, telemetri_drone, tag_mac)
+cetak("Verifikasi Pesan Asli : " + teks(sah))
+pastikan(sah, "Tag MAC Chaskey harus valid untuk pesan asli")
+
+var palsu = chaskey_verifikasi_mac(kunci_rahasia_iot, telemetri_drone + ";TAMPERED", tag_mac)
+cetak("Deteksi Pemalsuan     : " + teks(palsu == salah))
+pastikan(palsu == salah, "Tag MAC Chaskey harus menolak pesan yang termodifikasi")
+
+cetak("")
+cetak("=== DEMO WIDYA FENWICK TREE (BINARY INDEXED TREE) ===")
+var transaksi_harian = [100.0, 250.0, 300.0, 150.0, 400.0, 500.0, 200.0, 350.0]
+cetak("Daftar nominal awal: " + teks(transaksi_harian))
+
+var bit = PohonFenwick(transaksi_harian)
+
+// Kueri Prefix Sum (Akumulasi hari ke-1 s.d. hari ke-4)
+// 100 + 250 + 300 + 150 = 800
+var total_hari_1_4 = fenwick_kueri_awalan(bit, 4)
+cetak("Total omset Hari 1-4 : " + teks(total_hari_1_4))
+pastikan(total_hari_1_4 == 800.0, "Prefix sum hari 1-4 harus tepat 800")
+
+// Kueri Rentang Dinamis (Akumulasi hari ke-3 s.d. hari ke-7)
+// 300 + 150 + 400 + 500 + 200 = 1550
+var rentang_3_7 = fenwick_kueri_rentang(bit, 3, 7)
+cetak("Total omset Hari 3-7 : " + teks(rentang_3_7))
+pastikan(rentang_3_7 == 1550.0, "Range sum hari 3-7 harus tepat 1550")
+
+// Pembaruan Point Update O(log N) pada hari ke-5 (+100)
+fenwick_perbarui(bit, 5, 100.0)
+var rentang_3_7_baru = fenwick_kueri_rentang(bit, 3, 7)
+cetak("Total omset Hari 3-7 Pasca-Revisi: " + teks(rentang_3_7_baru))
+pastikan(rentang_3_7_baru == 1650.0, "Range sum setelah update harus tepat 1650")
+
+cetak("")
+cetak("✔ Seluruh pengujian Chaskey MAC & Fenwick Tree sukses 100%!")

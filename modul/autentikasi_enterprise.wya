@@ -1,0 +1,52 @@
+// Modul Autentikasi Enterprise & RBAC Matrix Widya-Lang
+// Mengintegrasikan JWT Authentication, Role-Based Access Control, dan Permission Matrix
+
+fungsi buat_manajer_rbac() {
+    kembalikan {
+        "peran_matriks": {
+            "Admin": ["baca", "tulis", "hapus", "kelola_pengguna"],
+            "Editor": ["baca", "tulis"],
+            "Viewer": ["baca"]
+        },
+        "kunci_rahasia_jwt": "widya_enterprise_jwt_secret_key_2026!"
+    };
+}
+
+fungsi terbitkan_token_sesi(rbac, id_pengguna, nama, peran, durasi_detik) {
+    var payload = {
+        "sub": id_pengguna,
+        "nama": nama,
+        "peran": peran,
+        "dibuat_pada": waktu()
+    };
+    var token = buat_jwt(payload, rbac["kunci_rahasia_jwt"], durasi_detik);
+    kembalikan token;
+}
+
+fungsi validasi_dan_periksa_izin(rbac, token_jwt, aksi_target) {
+    var verif = verifikasi_jwt(token_jwt, rbac["kunci_rahasia_jwt"]);
+    jika (!verif.sah) {
+        kembalikan {
+            "diizinkan": salah,
+            "alasan": "Token JWT tidak sah atau kadaluarsa"
+        };
+    }
+    
+    var peran_user = verif.payload.peran;
+    jika (!ada_kunci(rbac["peran_matriks"], peran_user)) {
+        kembalikan {
+            "diizinkan": salah,
+            "alasan": "Peran pengguna tidak dikenal"
+        };
+    }
+    
+    var daftar_izin = rbac["peran_matriks"][peran_user];
+    var diizinkan = apakah_ada(daftar_izin, fungsi(item) { kembalikan item == aksi_target; });
+    
+    kembalikan {
+        "diizinkan": diizinkan,
+        "pengguna": verif.payload.nama,
+        "peran": peran_user,
+        "aksi": aksi_target
+    };
+}

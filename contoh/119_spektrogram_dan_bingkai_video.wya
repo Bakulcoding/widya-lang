@@ -1,0 +1,42 @@
+// =========================================================================
+// Contoh 119: Pilar DSP & Video (Spektrogram STFT & Frame Video Raw)
+// WidyaSpectralAnalysis & WidyaVideoFrameProcessor
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR DSP & VIDEO: SPEKTROGRAM STFT & FRAME VIDEO ===");
+
+    // 1. Short-Time Fourier Transform (STFT) & Matriks Spektrogram
+    var audio_samples = [
+        0.8, 0.8, 0.8, 0.8, -0.8, -0.8, -0.8, -0.8,
+        0.8, 0.8, 0.8, 0.8, -0.8, -0.8, -0.8, -0.8,
+        0.8, 0.8, 0.8, 0.8, -0.8, -0.8, -0.8, -0.8,
+        0.8, 0.8, 0.8, 0.8, -0.8, -0.8, -0.8, -0.8
+    ];
+
+    // Window size = 16, Hop size = 8
+    var spektrogram = dsp_spektrogram(audio_samples, 16, 8);
+    cetak("Spektrogram STFT Dihasilkan: Total Frame Waktu = " + ke_teks(spektrogram.total_frame) + ", Resolusi Frekuensi = " + ke_teks(spektrogram.panjang_fft / 2) + " bins");
+
+    // 2. Dynamic Range Compression (Audio Peak Limiter)
+    // Threshold = -6 dB, Ratio = 4:1
+    var audio_terkompresi = dsp_kompresor_dinamis(audio_samples, -6.0, 4.0);
+    cetak("Audio Dynamic Range Compression Selesai (" + ke_teks(panjang(audio_terkompresi)) + " sampel)");
+
+    // 3. Manajemen Frame Video Mentah (RGB24 vs YUV420p Planar)
+    // Resolusi HD 720p (1280x720)
+    var frame_yuv = BingkaiVideo(1280, 720, "YUV420P");
+    cetak("Video Frame Dibuat: Resolusi " + ke_teks(frame_yuv.lebar) + "x" + ke_teks(frame_yuv.tinggi) + " [" + frame_yuv.format_piksel + "] - Ukuran Buffer: " + ke_teks(panjang(frame_yuv.buffer)) + " bytes");
+
+    // Konversi Format Color-Space Video (YUV420p -> RGB24)
+    var frame_rgb = video_konversi_yuv_ke_rgb(frame_yuv);
+    cetak("Konversi Color-Space Video Sukses: Format Baru = " + frame_rgb.format_piksel + " (Ukuran Buffer: " + ke_teks(panjang(frame_rgb.buffer)) + " bytes)");
+
+    // 4. Bilinear Video Frame Rescaler (Downscaling 720p -> 480p)
+    var frame_scaled = video_ubah_skala_bilinear(frame_rgb, 640, 480);
+    cetak("Video Bilinear Scaler Selesai: Resolusi Baru = " + ke_teks(frame_scaled.lebar) + "x" + ke_teks(frame_scaled.tinggi));
+
+    cetak("=== UJI SPEKTROGRAM & BINGKAI VIDEO SUKSES ===");
+}
+
+utama();

@@ -1,0 +1,62 @@
+// Contoh 53: WidyaCountingBloom & WidyaMatrixMath
+// Pengujian Counting Bloom Filter (Insert & Delete) dan Operasi Aljabar Linier Matriks 2D
+
+fungsi utama() {
+    tulis("=== CONTOH 53: COUNTING BLOOM FILTER & MATRIKS MATH ===");
+
+    // 1. WidyaCountingBloom: Filter dengan Dukungan Hapus
+    tulis("\n--- 1. WidyaCountingBloom ---");
+    var cbf = CountingBloomFilter(100, 3);
+    
+    tulis("   Menambahkan elemen: 'admin', 'user123', 'guest'...");
+    cbloom_tambah(cbf, "admin");
+    cbloom_tambah(cbf, "user123");
+    cbloom_tambah(cbf, "guest");
+
+    tulis("   Cek keberadaan sebelum hapus:");
+    tulis("   - 'admin' mungkin ada? " + teks(cbloom_mungkin_ada(cbf, "admin")));
+    tulis("   - 'user123' mungkin ada? " + teks(cbloom_mungkin_ada(cbf, "user123")));
+    tulis("   - 'hacker' mungkin ada? " + teks(cbloom_mungkin_ada(cbf, "hacker")));
+
+    tulis("\n   Menghapus elemen 'admin' dari counting bloom filter...");
+    var terhapus = cbloom_hapus(cbf, "admin");
+    tulis("   Status penghapusan 'admin': " + teks(terhapus));
+    tulis("   - 'admin' sekarang mungkin ada? " + teks(cbloom_mungkin_ada(cbf, "admin")));
+    tulis("   - 'user123' masih ada? " + teks(cbloom_mungkin_ada(cbf, "user123")));
+
+    // 2. WidyaMatrixMath: Operasi Aljabar Linier Matriks 2D
+    tulis("\n--- 2. WidyaMatrixMath ---");
+
+    // Matriks 2x2
+    var m1 = matriks_dari_array([[1, 2], [3, 4]]);
+    tulis("   Matriks M1 (2x2): " + teks(matriks_ke_array(m1)));
+    
+    var det_m1 = matriks_determinan(m1);
+    tulis("   Determinan(M1) = " + teks(det_m1)); // 1*4 - 2*3 = -2
+
+    var inv_m1 = matriks_invers(m1);
+    tulis("   Invers(M1)     = " + teks(matriks_ke_array(inv_m1)));
+
+    var transp_m1 = matriks_transpose(m1);
+    tulis("   Transpose(M1)  = " + teks(matriks_ke_array(transp_m1)));
+
+    // Perkalian Matriks M1 x Inv(M1) harus menghasilkan Matriks Identitas [[1, 0], [0, 1]]
+    var identitas = matriks_kali(m1, inv_m1);
+    tulis("   M1 * Invers(M1) = " + teks(matriks_ke_array(identitas)));
+
+    // Matriks 3x3
+    tulis("\n   Matriks M2 (3x3):");
+    var m2 = matriks_dari_array([
+        [2, 1, 1],
+        [1, 3, 2],
+        [1, 0, 0]
+    ]);
+    tulis("   M2 = " + teks(matriks_ke_array(m2)));
+    tulis("   Determinan(M2) = " + teks(matriks_determinan(m2)));
+    var inv_m2 = matriks_invers(m2);
+    tulis("   Invers(M2)     = " + teks(matriks_ke_array(inv_m2)));
+
+    tulis("\n=== SELESAI CONTOH 53 ===");
+}
+
+utama();

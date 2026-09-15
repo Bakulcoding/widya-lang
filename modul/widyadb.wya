@@ -1,0 +1,230 @@
+struktur TabelRelasional {
+    nama_tabel,
+    kolom,
+    baris_data,
+    indeks_pk,
+
+    fungsi inisialisasi(nama, daftar_kolom) {
+        ini.nama_tabel = nama;
+        ini.kolom = daftar_kolom;
+        ini.baris_data = [];
+        ini.indeks_pk = {};
+    }
+
+    fungsi sisip(data_record) {
+        misal id = data_record["id"];
+        jika ada_kunci(ini.indeks_pk, ke_teks(id)) {
+            kembalikan Err("Galat SQL: Kunci Utama (Primary Key) " + ke_teks(id) + " sudah ada!");
+        }
+        tambah(ini.baris_data, data_record);
+        ini.indeks_pk[ke_teks(id)] = panjang(ini.baris_data) - 1;
+        kembalikan Ok(benar);
+    }
+
+    fungsi pilih_di_mana(fungsi_predikat) {
+        kembalikan saring(ini.baris_data, fungsi_predikat);
+    }
+
+    fungsi perbarui_berdasarkan_id(id, data_baru) {
+        misal key = ke_teks(id);
+        jika bukan ada_kunci(ini.indeks_pk, key) {
+            kembalikan Err("Galat: Data dengan ID " + key + " tidak ditemukan");
+        }
+        misal idx = ini.indeks_pk[key];
+        ini.baris_data[idx] = data_baru;
+        kembalikan Ok(benar);
+    }
+}
+
+struktur KoleksiDokumen {
+    nama_koleksi,
+    dokumen,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_koleksi = nama;
+        ini.dokumen = [];
+    }
+
+    fungsi sisip_satu(doc) {
+        jika bukan ada_kunci(doc, "_id") {
+            doc["_id"] = "doc_" + ke_teks(waktu()) + "_" + ke_teks(panjang(ini.dokumen) + 1);
+        }
+        tambah(ini.dokumen, doc);
+        kembalikan Ok(doc["_id"]);
+    }
+
+    fungsi cari(kunci, nilai_target) {
+        kembalikan saring(ini.dokumen, fungsi(item) {
+            jika ada_kunci(item, kunci) {
+                kembalikan item[kunci] == nilai_target;
+            }
+            kembalikan salah;
+        });
+    }
+
+    fungsi agregasi_total(kunci_angka) {
+        kembalikan lipat(ini.dokumen, 0, fungsi(acc, item) {
+            jika ada_kunci(item, kunci_angka) {
+                kembalikan acc + item[kunci_angka];
+            }
+            kembalikan acc;
+        });
+    }
+}
+
+struktur WidyaDB {
+    nama_db,
+    geo,
+    rel,
+    nosql,
+
+    fungsi inisialisasi(nama_db) {
+        misal rtree = IndeksRTree(16);
+        misal proj = ProyeksiCRS("EPSG:4326", "EPSG:3857");
+        misal wal = LogWAL(nama_db + "_rel");
+        misal vektor = BasisDataVektor(128);
+        misal kv = PenyimpananKV();
+        misal ts = DeretWaktu(nama_db + "_ts");
+        misal lsm = BukaLSM(nama_db + "_lsm");
+        misal bplus = PohonBPlus(32);
+
+        ini.nama_db = nama_db;
+        ini.geo = {
+            "parser": ParserGeoJSON,
+            "rtree": rtree,
+            "proyeksi": proj,
+            "geohash_enkode": geohash_enkode,
+            "geohash_dekode": geohash_dekode,
+            "titik_dalam_poligon": spasial_titik_dalam_poligon,
+            "hitung_luas_poligon": spasial_hitung_luas_poligon,
+            "hitung_panjang_garis": spasial_hitung_panjang_garis,
+            "geojson_ke_wkt": geojson_ke_wkt,
+            "wkt_ke_geojson": wkt_ke_geojson,
+            "rtree_sisip": rtree_sisip,
+            "rtree_kueri_kotak": rtree_kueri_kotak,
+            "crs_transformasi": crs_transformasi_koordinat
+        };
+        ini.rel = {
+            "tabel": {},
+            "wal": wal,
+            "bplus": bplus,
+            "kolumnar": {}
+        };
+        ini.nosql = {
+            "dokumen": {},
+            "vektor": vektor,
+            "kv": kv,
+            "ts": ts,
+            "lsm": lsm
+        };
+    }
+}
+
+fungsi spasial_join_atribut(db, list_id_geom, nama_tabel_relasional, kolom_fk) {
+    misal hasil = [];
+    jika bukan ada_kunci(db.rel.tabel, nama_tabel_relasional) {
+        kembalikan hasil;
+    }
+    misal tbl = db.rel.tabel[nama_tabel_relasional];
+    untuk geom_id dalam list_id_geom {
+        misal baris_cocok = tbl.pilih_di_mana(fungsi(baris) {
+            jika ada_kunci(baris, kolom_fk) {
+                kembalikan ke_teks(baris[kolom_fk]) == ke_teks(geom_id);
+            }
+            kembalikan salah;
+        });
+        untuk b dalam baris_cocok {
+            tambah(hasil, {
+                "id_geom": geom_id,
+                "atribut": b
+            });
+        }
+    }
+    kembalikan hasil;
+}
+
+fungsi widydb_simpan_ke_disk(db, path) {
+    misal state = {
+        "_engine": "WidyaDB v1.0",
+        "nama_db": db.nama_db,
+        "rel": {
+            "tabel": {},
+            "wal": db.rel.wal
+        },
+        "nosql": {
+            "dokumen": {},
+            "vektor": db.nosql.vektor,
+            "kv": db.nosql.kv,
+            "ts": db.nosql.ts,
+            "lsm": db.nosql.lsm
+        }
+    };
+    untuk nama_tbl dalam kunci_kamus(db.rel.tabel) {
+        misal t = db.rel.tabel[nama_tbl];
+        state.rel.tabel[nama_tbl] = {
+            "nama_tabel": t.nama_tabel,
+            "kolom": t.kolom,
+            "baris_data": t.baris_data,
+            "indeks_pk": t.indeks_pk
+        };
+    }
+    untuk nama_kol dalam kunci_kamus(db.rel.kolumnar) {
+        jika bukan ada_kunci(state.rel, "kolumnar") {
+            state.rel["kolumnar"] = {};
+        }
+        state.rel.kolumnar[nama_kol] = db.rel.kolumnar[nama_kol];
+    }
+    untuk nama_dok dalam kunci_kamus(db.nosql.dokumen) {
+        misal d = db.nosql.dokumen[nama_dok];
+        state.nosql.dokumen[nama_dok] = {
+            "nama_koleksi": d.nama_koleksi,
+            "dokumen": d.dokumen
+        };
+    }
+    misal json_str = ke_json(state, 2);
+    tulis_berkas(path, json_str);
+    kembalikan benar;
+}
+
+fungsi widydb_muat_dari_disk(path) {
+    misal json_str = baca_berkas(path);
+    misal state = dari_json(json_str);
+    misal db = WidyaDB(state.nama_db);
+    untuk nama_tbl dalam kunci_kamus(state.rel.tabel) {
+        misal t_data = state.rel.tabel[nama_tbl];
+        misal t_baru = TabelRelasional(t_data.nama_tabel, t_data.kolom);
+        t_baru.baris_data = t_data.baris_data;
+        t_baru.indeks_pk = t_data.indeks_pk;
+        db.rel.tabel[nama_tbl] = t_baru;
+    }
+    jika ada_kunci(state.rel, "kolumnar") {
+        untuk nama_kol dalam kunci_kamus(state.rel.kolumnar) {
+            db.rel.kolumnar[nama_kol] = state.rel.kolumnar[nama_kol];
+        }
+    }
+    untuk nama_dok dalam kunci_kamus(state.nosql.dokumen) {
+        misal d_data = state.nosql.dokumen[nama_dok];
+        misal d_baru = KoleksiDokumen(d_data.nama_koleksi);
+        d_baru.dokumen = d_data.dokumen;
+        db.nosql.dokumen[nama_dok] = d_baru;
+    }
+    db.nosql.vektor = state.nosql.vektor;
+    db.nosql.kv = state.nosql.kv;
+    db.nosql.ts = state.nosql.ts;
+    db.nosql.lsm = state.nosql.lsm;
+    kembalikan db;
+}
+
+cetak("===============================================================");
+cetak("🗄️  WIDYADB UNIFIED MODULE INITIALIZED");
+cetak("===============================================================");
+
+misal db_test = WidyaDB("test_self");
+misal lulus = benar;
+jika db_test.geo == nihil { lulus = salah; }
+jika db_test.rel == nihil { lulus = salah; }
+jika db_test.nosql == nihil { lulus = salah; }
+jika lulus {
+    cetak("[OK] WidyaDB init self-test");
+}
+kembalikan lulus;

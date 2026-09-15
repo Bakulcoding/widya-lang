@@ -1,0 +1,74 @@
+// Contoh 161: Rekam Medis FHIR, Otomotif CAN/UDS, Otomasi SCADA, W3C DID, dan Finansial ISO 20022
+impor "modul/standar_kesehatan_hl7_fhir.wya";
+impor "modul/otomotif_canbus_uds.wya";
+impor "modul/scada_opcua_modbus_tcp.wya";
+impor "modul/identitas_terdesentralisasi_did.wya";
+impor "modul/fintech_iso20022_xml.wya";
+
+cetak("==================================================================");
+cetak("🏥 WIDYA GLOBAL STANDARDS: FHIR, CAN/UDS, SCADA, DID & ISO 20022  ");
+cetak("==================================================================");
+
+// 1. Rekam Medis Elektronik HL7 FHIR
+cetak("\n[1] Interoperabilitas Rekam Medis Elektronik HL7 FHIR:");
+var pasien = buat_fhir_patient("P001", "Dr. Budi Pratama", "1985-04-12", "male");
+var detak_jantung = buat_fhir_observation("OBS001", "P001", "8867-4", "Heart Rate", 72, "beats/minute");
+var bundle_medis = buat_fhir_bundle("BUNDLE_MED_991", [pasien, detak_jantung]);
+var fhir_res = fhir_validasi_rekam_medis(bundle_medis);
+cetak("  - Status Bundle Medis:", fhir_res["pesan"]);
+cetak("  - Total Resource Terdaftar:", fhir_res["total_entri"]);
+
+// 2. Otomotif & Diagnostik ECU CAN Bus / UDS
+cetak("\n[2] Otomotif ECU CAN Bus & UDS Diagnostic Service (ISO 14229):");
+var uds_req = uds_build_service_request(34, Ada(1), [1, 2]); // 0x22 ReadDataByIdentifier
+cetak("  - UDS Request Frame CAN ID:", uds_req["can_id"], "| DLC:", uds_req["dlc"]);
+
+// Simulasi Positive Response ECU
+var can_resp = buat_can_frame(2024, salah, [98, 1, 2, 85, 90]); // 0x62 (0x22 + 0x40)
+var diag_res = uds_parse_diagnostic_response(can_resp);
+cetak("  - Status Respon Diagnostik:", diag_res["status"]);
+cetak("  - Nilai Data Parameter ECU:", diag_res["payload"]);
+
+// 3. Otomasi Industri SCADA OPC-UA & Modbus TCP
+cetak("\n[3] Otomasi SCADA Industri (Modbus TCP & OPC-UA):");
+var mb_req = buat_modbus_tcp_request(101, 1, 3, 40001, 2);
+var mb_resp = parse_modbus_tcp_response(mb_req, [1450, 230]); // 14.5 Bar, 23.0 C
+cetak("  - Modbus Read Status:", mb_resp["status"]);
+cetak("  - Telemetri Sensor PLC Register:", mb_resp["nilai_register"]);
+
+var opc_val = parse_opcua_data_value("ns=2;s=TurbinGas_Rpm", 3600.0, 0);
+cetak("  - OPC-UA Node Telemetri:", opc_val["node"], "-> Nilai:", opc_val["value"], "RPM [Kualitas:", opc_val["kualitas"] + "]");
+
+// 4. Identitas Digital Terdesentralisasi W3C DID & Verifiable Credentials
+cetak("\n[4] W3C DID & Verifiable Credentials (VC):");
+var issuer_did = "did:widya:kemenkes_ri";
+var holder_did = "did:widya:dokter_ahmad_farhan";
+var secret_key_issuer = "kunci_rahasia_otoritas_penerbit_2026";
+
+var vc = terbitkan_verifiable_credential(issuer_did, holder_did, {
+    "izin_praktik": "SIP-DOKTER-SPESIALIS-991",
+    "spesialisasi": "Kardiologi & Bedah Jantung",
+    "status_aktif": benar
+}, secret_key_issuer);
+
+cetak("  - ID Kredensial:", vc["id"]);
+var verif_vc = verifikasi_verifiable_credential(vc, secret_key_issuer);
+cetak("  - Hasil Verifikasi Kriptografis VC:", verif_vc["status"]);
+
+// 5. Transfer Antarbank Global ISO 20022 (SWIFT MX / BI-FAST pacs.008)
+cetak("\n[5] Standar Finansial Global ISO 20022 pacs.008:");
+var pacs008 = buat_iso20022_pacs008_transfer(
+    "MSG202609150001",
+    "E2E99812837192",
+    25000000.0,
+    "538192019283",
+    "PT Teknologi Nusantara",
+    "882910293812",
+    "PT Widya Cloud Global"
+);
+
+var val_pacs = iso20022_validasi_pacs008(pacs008);
+cetak("  - Status Validasi Dokumen ISO 20022:", val_pacs["status"]);
+cetak("  - Nominal Transfer:", val_pacs["mata_uang"], val_pacs["nominal"]);
+
+cetak("\n=== SELURUH STANDAR GLOBAL DUNIA TERATASI SECARA PARIPURNA ===");
