@@ -307,7 +307,7 @@ fungsi _hsm_sign(hsm, handle, data_hash) {
 }
 fungsi _hsm_verify(hsm, handle, data_hash, sig) {
     var expected = _hsm_sign(hsm, handle, data_hash);
-    jika expected == sig { kembalikan benar } lainya { kembalikan salah };
+    jika expected == sig { kembalikan benar } lainnya { kembalikan salah };
 }
 var _hsm = _hsm_buat(0, "WidyaHSM");
 var _login = _hsm_login_so(_hsm, "12345678");

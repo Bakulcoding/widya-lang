@@ -35,8 +35,8 @@ jika nilai >= 90 {
 }
 ```
 
-> ⚠️ **Catatan Penting tentang `lainya`**:
-> Keyword `lainya` (setara else) **TERSEDIA** tapi untuk pola inline satu baris terkadang parser tidak mengenalinya jika tidak ada spasi yang tepat.
+> ⚠️ **Catatan Penting tentang `lainnya`**:
+> Keyword `lainnya` (setara else, alias resmi: `selain_itu` atau `else`) **TERSEDIA** tapi untuk pola inline satu baris terkadang parser tidak mengenalinya jika tidak ada spasi yang tepat.
 >
 > ✅ **Pattern yang SELALU bekerja** (disarankan):
 > ```widya
