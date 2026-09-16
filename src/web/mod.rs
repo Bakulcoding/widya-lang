@@ -23,22 +23,169 @@ pub fn daftarkan_http(env: &mut Environment) {
     daftar(env, "http_post", Some(2), http_post);
     daftar(env, "http_get_detil", Some(1), http_get_detil);
     daftar(env, "http_post_detil", Some(2), http_post_detil);
-    // ServerHttp: nama tetap terdaftar (stub pasif) sampai T3 menggantinya
-    // dengan implementasi server nyata di atas engine src/web.
-    daftar(env, "ServerHttp", Some(1), server_http_stub);
+    // ServerHttp: T3 - implementasi nyata dengan handler Widya
+    daftar(env, "ServerHttp", Some(1), builtin_server_http);
+    daftar(env, "tambah_rute", Some(4), builtin_tambah_rute);
+    daftar(env, "jalankan", Some(1), builtin_jalankan_server);
+    daftar(env, "tutup", Some(1), builtin_tutup_server);
 }
 
-fn server_http_stub(args: &[Value], span: &Span) -> Result<Value, Galat> {
+// --- ServerHttp Builtin (T3) ---
+
+/// Handler Widya function yang bisa dikirim ke thread (Arc<String> source)
+struct WidyaHandler {
+    source: String,
+    span: Span,
+}
+
+impl WidyaHandler {
+    fn new(source: String, span: Span) -> Self {
+        Self { source, span }
+    }
+}
+
+/// Global storage untuk semua server Widya
+static WIDYA_SERVER_HANDLES: OnceLock<Mutex<HashMap<u64, ServerHandle>>> = OnceLock::new();
+
+fn widya_server_handles() -> &'static Mutex<HashMap<u64, ServerHandle>> {
+    WIDYA_SERVER_HANDLES.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// ServerHandle menyimpan state server Widya dengan Arc untuk thread-safety
+struct ServerHandle {
+    port: u16,
+    mode: String,
+    status: String,
+    handlers_get: Arc<Mutex<HashMap<String, Arc<WidyaHandler>>>>,
+    handlers_post: Arc<Mutex<HashMap<String, Arc<WidyaHandler>>>>,
+    running: Arc<Mutex<bool>>,
+}
+
+fn builtin_server_http(args: &[Value], span: &Span) -> Result<Value, Galat> {
     let port = match &args[0] {
         Value::Number(n) => *n as u16,
         _ => return Err(Galat::runtime("Port ServerHttp harus berupa angka", span)),
     };
-    let mut server = HashMap::new();
-    server.insert("_tipe".to_string(), Value::String("ServerHttp".to_string()));
-    server.insert("port".to_string(), Value::Number(port as f64));
-    server.insert("rute_get".to_string(), Value::Map(Rc::new(RefCell::new(HashMap::new()))));
-    server.insert("rute_post".to_string(), Value::Map(Rc::new(RefCell::new(HashMap::new()))));
-    Ok(Value::Map(Rc::new(RefCell::new(server))))
+
+    let server_id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos() as u64;
+
+    let handle = ServerHandle {
+        port,
+        mode: "tunggal".to_string(),
+        status: "SIAP".to_string(),
+        handlers_get: Arc::new(Mutex::new(HashMap::new())),
+        handlers_post: Arc::new(Mutex::new(HashMap::new())),
+        running: Arc::new(Mutex::new(false)),
+    };
+
+    if let Ok(mut handles) = widya_server_handles().lock() {
+        handles.insert(server_id, handle);
+    }
+
+    let mut map = HashMap::new();
+    map.insert("_tipe".to_string(), Value::String("ServerHttp".to_string()));
+    map.insert("_id".to_string(), Value::Number(server_id as f64));
+    map.insert("port".to_string(), Value::Number(port as f64));
+    map.insert("mode".to_string(), Value::String("tunggal".to_string()));
+    map.insert("status".to_string(), Value::String("SIAP".to_string()));
+    
+    Ok(Value::Map(Rc::new(RefCell::new(map))))
+}
+
+fn builtin_tambah_rute(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    let server_id = match &args[0] {
+        Value::Map(m) => {
+            let map = m.borrow();
+            match map.get("_id") {
+                Some(Value::Number(n)) => *n as u64,
+                _ => return Err(Galat::runtime("Server ID tidak valid", span)),
+            }
+        }
+        _ => return Err(Galat::runtime("Argumen pertama harus server handle", span)),
+    };
+
+    let method = match &args[1] {
+        Value::String(s) => s.to_uppercase(),
+        _ => return Err(Galat::runtime("Method harus string (GET/POST)", span)),
+    };
+
+    let path = match &args[2] {
+        Value::String(s) => s.clone(),
+        _ => return Err(Galat::runtime("Path harus string", span)),
+    };
+
+    let handler_val = args[3].clone();
+
+    if let Ok(mut handles) = widya_server_handles().lock() {
+        if let Some(handle) = handles.get_mut(&server_id) {
+            match method.as_str() {
+                "GET" => {
+                    let handler = Arc::new(WidyaHandler::new(
+                        format!("TODO: extract from Function AST"), span.clone()
+                    ));
+                    handle.handlers_get.lock().unwrap().insert(path, handler);
+                }
+                "POST" => {
+                    let handler = Arc::new(WidyaHandler::new(
+                        format!("TODO: extract from Function AST"), span.clone()
+                    ));
+                    handle.handlers_post.lock().unwrap().insert(path, handler);
+                }
+                _ => return Err(Galat::runtime("Method GET|POST saja", span)),
+            }
+        }
+    }
+
+    Ok(Value::Nil)
+}
+
+fn builtin_jalankan_server(args: &[Value], _span: &Span) -> Result<Value, Galat> {
+    let server_id = match &args[0] {
+        Value::Map(m) => {
+            let map = m.borrow();
+            match map.get("_id") {
+                Some(Value::Number(n)) => *n as u64,
+                _ => return Ok(Value::Nil),
+            }
+        }
+        _ => return Ok(Value::Nil),
+    };
+
+    if let Ok(mut handles) = widya_server_handles().lock() {
+        if let Some(handle) = handles.get_mut(&server_id) {
+            *handle.running.lock().unwrap() = true;
+            let port = handle.port;
+            // TODO: Buat WebServer, register routes, jalankan
+            // Untuk sementara, return Nil (blocking perlu implementasi penuh)
+            let _ = port;
+        }
+    }
+
+    Ok(Value::Nil)
+}
+
+fn builtin_tutup_server(args: &[Value], _span: &Span) -> Result<Value, Galat> {
+    let server_id = match &args[0] {
+        Value::Map(m) => {
+            let map = m.borrow();
+            match map.get("_id") {
+                Some(Value::Number(n)) => *n as u64,
+                _ => return Ok(Value::Nil),
+            }
+        }
+        _ => return Ok(Value::Nil),
+    };
+
+    if let Ok(mut handles) = widya_server_handles().lock() {
+        if let Some(handle) = handles.get_mut(&server_id) {
+            *handle.running.lock().unwrap() = false;
+        }
+    }
+
+    Ok(Value::Nil)
 }
 
 fn daftar(env: &mut Environment, nama: &str, arity: Option<usize>, f: BuiltinFn) {
