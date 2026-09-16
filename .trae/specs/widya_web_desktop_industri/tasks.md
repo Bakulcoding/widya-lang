@@ -17,7 +17,7 @@
 ---
 
 ## Task 1: HTTP Client Asli (TLS/header/timeout/JSON/binary)
-- **Status**: `done`
+- **Status**: `done` (commit 4916a64 + 513daec)
 - **Priority**: high
 - **Depends On**: None
 - **Description**:
@@ -40,7 +40,7 @@
 ---
 
 ## Task 2: Ekstraksi Engine HTTP Studio -> Modul `src/web/`
-- **Status**: `done`
+- **Status**: `done` (commit 4916a64 + 513daec)
 - **Priority**: high
 - **Depends On**: None (paralel dgn T1), selesai SEBELUM T3
 - **Description**:

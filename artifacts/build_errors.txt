@@ -1,0 +1,99 @@
+﻿cargo :    Compiling widya v0.1.0 (C:\widya-lang)
+At line:1 char:24
++ & { cd c:\widya-lang ; cargo build --release 2>&1 | Out-File artifact ...
++                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling wi...(C:\widya-lang) 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error[E0282]: type annotations needed for `Vec<_>`
+    --> src\studio.rs:1169:9
+     |
+1169 |     let mut failed = Vec::new();
+     |         ^^^^^^^^^^   ---------- type must be known at this point
+     |
+help: consider giving `failed` an explicit type, where the type for type 
+parameter `T` is specified
+     |
+1169 |     let mut failed: Vec<T> = Vec::new();
+     |                   ++++++++
+
+error[E0308]: mismatched types
+    --> src\studio.rs:1473:9
+     |
+1473 |         format!("Baris {} dijalankan", baris_target)
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, 
+found `String`
+     |
+     = note: this error originates in the macro `format` (in Nightly builds, 
+run with -Z macro-backtrace for more info)
+
+error[E0716]: temporary value dropped while borrowed
+   --> src\studio.rs:930:64
+    |
+930 |     let dir = v.get("dir").and_then(|s| 
+s.as_str()).unwrap_or(&get_workspace());
+    |                                                                
+^^^^^^^^^^^^^^^ - temporary value is freed at the end of this statement
+    |                                                                |
+    |                                                                creates a 
+temporary value which is freed while still in use
+...
+933 |     if let Ok(entries) = fs::read_dir(dir) {
+    |                                       --- borrow later used here
+    |
+help: consider using a `let` binding to create a longer lived value
+    |
+930 ~     let binding = get_workspace();
+931 ~     let dir = v.get("dir").and_then(|s| s.as_str()).unwrap_or(&binding);
+    |
+
+error[E0716]: temporary value dropped while borrowed
+   --> src\studio.rs:960:64
+    |
+960 |     let dir = v.get("dir").and_then(|s| 
+s.as_str()).unwrap_or(&get_workspace());
+    |                                                                
+^^^^^^^^^^^^^^^ - temporary value is freed at the end of this statement
+    |                                                                |
+    |                                                                creates a 
+temporary value which is freed while still in use
+...
+963 |     hasher.update(format!("{}{}{:?}", pesan, dir, 
+std::time::SystemTime::now()));
+    |                                              --- borrow later used here
+    |
+help: consider using a `let` binding to create a longer lived value
+    |
+960 ~     let binding = get_workspace();
+961 ~     let dir = v.get("dir").and_then(|s| s.as_str()).unwrap_or(&binding);
+    |
+
+warning: value assigned to `file_content` is never read
+    --> src\studio.rs:1062:28
+     |
+1062 |     let mut file_content = String::new();
+     |                            ^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by 
+default
+
+error[E0502]: cannot borrow `rs` as immutable because it is also borrowed as 
+mutable
+    --> src\studio.rs:1198:57
+     |
+1198 |         if rs.history.len() > 100 { 
+rs.history.drain(0..rs.history.len()-100); }
+     |                                     --         -----    ^^ immutable 
+borrow occurs here
+     |                                     |          |
+     |                                     |          mutable borrow later 
+used by call
+     |                                     mutable borrow occurs here
+
+Some errors have detailed explanations: E0282, E0308, E0502, E0716.
+For more information about an error, try `rustc --explain E0282`.
+warning: `widya` (lib) generated 1 warning
+error: could not compile `widya` (lib) due to 5 previous errors; 1 warning 
+emitted
