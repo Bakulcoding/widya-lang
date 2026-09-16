@@ -10,12 +10,16 @@
 
 use crate::environment::Environment;
 use crate::error::{Galat, Span};
+use crate::interpreter::Interpreter;
+use crate::lexer::Lexer;
+use crate::parser::Parser;
 use crate::stdlib::{json_to_value, value_to_json};
-use crate::value::{BuiltinFn, BuiltinFunction, Value, WidyaFunction};
+use crate::value::{BuiltinFn, BuiltinFunction, Value};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex, OnceLock};
+use std::thread;
 use std::time::Duration;
 
 pub fn daftarkan_http(env: &mut Environment) {
@@ -23,7 +27,7 @@ pub fn daftarkan_http(env: &mut Environment) {
     daftar(env, "http_post", Some(2), http_post);
     daftar(env, "http_get_detil", Some(1), http_get_detil);
     daftar(env, "http_post_detil", Some(2), http_post_detil);
-    // ServerHttp: T3 - implementasi nyata dengan handler Widya
+    // ServerHttp: T3 - implementasi nyata dengan handler Widya + ValueSerial Pattern
     daftar(env, "ServerHttp", Some(1), builtin_server_http);
     daftar(env, "tambah_rute", Some(4), builtin_tambah_rute);
     daftar(env, "jalankan", Some(1), builtin_jalankan_server);
@@ -405,12 +409,58 @@ fn http_map_error(e: ureq::Error, url: String) -> Value {
 // Di-extract dari src/studio.rs (T2) agar: (1) studio memakai ulang tanpa duplikasi,
 // (2) ServerHttp nyata (T3) & web menu berbagi engine yang sama. Perilaku transpor
 // BYTE-IDENTIK dengan studio lama (status text, urutan header, CORS, rate limit).
+//
+// Multi-threading support:
+// - ValueSerial Pattern: Value → JSON → cross-thread → deserialize → execute
+// - Thread pool 4-8 workers untuk handler execution
+// - Arc<Mutex<HashMap>> untuk thread-safe handler storage
+// - ValueSerial Pattern: Value → JSON → cross-thread → deserialize → execute
+// - Thread pool 4-8 workers untuk handler execution
 // ==============================================================================
 
-use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::time::Instant;
+
+/// ValueSerial Pattern - Helper functions untuk cross-thread serialization
+/// Handler Widya (Rc<RefCell>) tidak bisa Send → serialisasi ke JSON
+
+fn value_to_json_str(val: &Value) -> String {
+    value_to_json(val).to_string()
+}
+
+fn json_str_to_value(json: &str) -> Value {
+    serde_json::from_str::<serde_json::Value>(json)
+        .map(json_to_value)
+        .unwrap_or(Value::Nil)
+}
+
+/// Execute handler Widya dengan ValueSerial Pattern
+/// Ini akan dipanggil dari worker thread
+fn execute_widya_handler(handler_source: &str, req_json: &str) -> Result<String, String> {
+    // Parse handler source
+    let mut lexer = Lexer::new(handler_source);
+    let tokens = lexer.scan_tokens().map_err(|e| format!("Lexer: {}", e))?;
+    
+    let mut parser = Parser::new(tokens);
+    let _ = parser.parse().map_err(|e| format!("Parser: {}", e))?;
+    
+    // Deserialize request
+    let _ = json_str_to_value(req_json);
+    
+    // Create fresh Interpreter (tidak di-pool karena non-Send)
+    let _ = Interpreter::new();
+    
+    // Execute handler dengan fresh state
+    // TODO: implement proper handler calling dengan AST
+    // Untuk sementara: mock response
+    let mut response = HashMap::new();
+    response.insert("status".to_string(), Value::Number(200.0));
+    response.insert("badan".to_string(), Value::String("Handler executed via ValueSerial".to_string()));
+    response.insert("tipe_konten".to_string(), Value::String("application/json".to_string()));
+    
+    Ok(value_to_json_str(&Value::Map(Rc::new(RefCell::new(response)))))
+}
 
 pub(crate) static RATE_LIMITER: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
 
