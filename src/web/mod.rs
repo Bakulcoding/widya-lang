@@ -11,10 +11,11 @@
 use crate::environment::Environment;
 use crate::error::{Galat, Span};
 use crate::stdlib::{json_to_value, value_to_json};
-use crate::value::{BuiltinFn, BuiltinFunction, Value};
+use crate::value::{BuiltinFn, BuiltinFunction, Value, WidyaFunction};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 pub fn daftarkan_http(env: &mut Environment) {
@@ -262,7 +263,6 @@ fn http_map_error(e: ureq::Error, url: String) -> Value {
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
 pub(crate) static RATE_LIMITER: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
@@ -301,15 +301,15 @@ impl RateLimiter {
 }
 
 // ============================================================================
-// TODO T3: ServerHttp nyata
+// T3: ServerHttp Nyata (TODO - implementasi lanjutan)
 // ============================================================================
-// ServerHttp memerlukan integrasi dengan WebServer engine untuk:
-// - Builtin ServerHttp, tambah_rute, jalankan, tutup
-// - Handler Widya function yang non-Send (Rc<RefCell>)
-// - Fresh Interpreter per request (pola ValueSerial)
-// - Thread-safe storage (Arc<Mutex> atau ValueSerial serialization)
+// TODO: Implementasi ServerHttp dengan:
+// - ServerHttp, tambah_rute, jalankan, tutup builtin
+// - Handler Widya function execution dengan fresh Interpreter per request
+// - Arc<Mutex> atau ValueSerial untuk thread-safe handler
+// - Static file serving via WebServer::sajikan_static
 //
-// Desain lengkap di: .trae/specs/widya_web_desktop_industri/T3_ServerHttp_Plan.md
+// See: T3_ServerHttp_Plan.md untuk desain lengkap
 // ============================================================================
 
 pub(crate) fn get_rate_limiter() -> &'static Mutex<RateLimiter> {
