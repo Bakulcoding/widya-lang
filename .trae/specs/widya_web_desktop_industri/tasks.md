@@ -59,7 +59,7 @@
 ---
 
 ## Task 3: ServerHttp Nyata + Routing Widya
-- **Status**: `pending`
+- **Status**: `in_progress` (dalam development, butuh desain matang untuk thread-safe handler)
 - **Priority**: high
 - **Depends On**: T2 (wajib `src/web/` ada)
 - **Description**:
