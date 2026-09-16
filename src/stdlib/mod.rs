@@ -187,10 +187,8 @@ pub fn register_stdlib(env: &mut Environment) {
     register_fn(env, "DaftarGulir", Some(1), builtin_ui_daftar_gulir);
     register_fn(env, "render_html", Some(1), builtin_ui_render_html);
 
-    // WidyaHttp (Microservices & REST API Server Framework)
-    register_fn(env, "ServerHttp", Some(1), builtin_http_server);
-    register_fn(env, "http_get", Some(1), builtin_http_get);
-    register_fn(env, "http_post", Some(2), builtin_http_post);
+    // WidyaHttp (Microservices & REST API Server Framework - implementasi nyata di src/web)
+    crate::web::daftarkan_http(env);
 
     // WidyaAI (Tensor, Matrix & Machine Learning Compute Engine)
     register_fn(env, "Matriks", Some(1), builtin_ai_matriks);
@@ -2380,7 +2378,7 @@ fn builtin_saluran_terima(args: &[Value], span: &Span) -> Result<Value, Galat> {
     }
 }
 
-fn value_to_json(val: &Value) -> serde_json::Value {
+pub(crate) fn value_to_json(val: &Value) -> serde_json::Value {
     match val {
         Value::Nil => serde_json::Value::Null,
         Value::Bool(b) => serde_json::Value::Bool(*b),
@@ -2417,7 +2415,7 @@ fn value_to_json(val: &Value) -> serde_json::Value {
     }
 }
 
-fn json_to_value(json: serde_json::Value) -> Value {
+pub(crate) fn json_to_value(json: serde_json::Value) -> Value {
     match json {
         serde_json::Value::Null => Value::Nil,
         serde_json::Value::Bool(b) => Value::Bool(b),
@@ -3325,53 +3323,6 @@ fn render_widget_html(w: &Value) -> String {
 fn builtin_ui_render_html(args: &[Value], _span: &Span) -> Result<Value, Galat> {
     let html = render_widget_html(&args[0]);
     Ok(Value::String(html))
-}
-
-// ==============================================================================
-// WidyaHttp: Microservices & REST API Framework
-// ==============================================================================
-fn builtin_http_server(args: &[Value], span: &Span) -> Result<Value, Galat> {
-    let port = match &args[0] {
-        Value::Number(n) => *n as u16,
-        _ => return Err(Galat::runtime("Port server HTTP harus berupa angka", span)),
-    };
-
-    let mut server = HashMap::new();
-    server.insert("_tipe".to_string(), Value::String("ServerHttp".to_string()));
-    server.insert("port".to_string(), Value::Number(port as f64));
-    server.insert("rute_get".to_string(), Value::Map(Rc::new(RefCell::new(HashMap::new()))));
-    server.insert("rute_post".to_string(), Value::Map(Rc::new(RefCell::new(HashMap::new()))));
-    Ok(Value::Map(Rc::new(RefCell::new(server))))
-}
-
-fn builtin_http_get(args: &[Value], span: &Span) -> Result<Value, Galat> {
-    let url = match &args[0] {
-        Value::String(s) => s.clone(),
-        _ => return Err(Galat::runtime("URL http_get harus berupa string teks", span)),
-    };
-
-    // Simulasi respons HTTP terintegrasi
-    let mut resp = HashMap::new();
-    resp.insert("status".to_string(), Value::Number(200.0));
-    resp.insert("url".to_string(), Value::String(url));
-    resp.insert("sukses".to_string(), Value::Bool(true));
-    resp.insert("badan".to_string(), Value::String("{\"status\": \"sukses\", \"pesan\": \"Data berhasil diambil\"}".to_string()));
-    Ok(Value::Map(Rc::new(RefCell::new(resp))))
-}
-
-fn builtin_http_post(args: &[Value], span: &Span) -> Result<Value, Galat> {
-    let url = match &args[0] {
-        Value::String(s) => s.clone(),
-        _ => return Err(Galat::runtime("URL http_post harus berupa string teks", span)),
-    };
-    let payload = args[1].clone();
-
-    let mut resp = HashMap::new();
-    resp.insert("status".to_string(), Value::Number(201.0));
-    resp.insert("url".to_string(), Value::String(url));
-    resp.insert("sukses".to_string(), Value::Bool(true));
-    resp.insert("data_terkirim".to_string(), payload);
-    Ok(Value::Map(Rc::new(RefCell::new(resp))))
 }
 
 // ==============================================================================
@@ -13201,9 +13152,9 @@ fn avl_min_value_node(node: &AvlNode) -> AvlNode {
 fn avl_delete_rec(root: Option<Box<AvlNode>>, key: &str) -> Option<Box<AvlNode>> {
     let mut node = root?;
 
-    if key < &node.key {
+    if key < node.key.as_str() {
         node.left = avl_delete_rec(node.left.take(), key);
-    } else if key > &node.key {
+    } else if key > node.key.as_str() {
         node.right = avl_delete_rec(node.right.take(), key);
     } else {
         if node.left.is_none() {

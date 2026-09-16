@@ -1,3 +1,5 @@
+#![recursion_limit = "512"]
+
 pub mod ast;
 pub mod compiler;
 pub mod environment;
@@ -18,6 +20,7 @@ pub mod gpu;
 pub mod ebpf;
 pub mod borrow_checker;
 pub mod tools;
+pub mod web;
 
 use borrow_checker::BorrowChecker;
 use error::Galat;

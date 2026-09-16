@@ -4,50 +4,16 @@ use crate::lsp::WidyaLsp;
 use crate::parser::Parser;
 use crate::compiler::NativeCompiler;
 use crate::stdlib::{ambil_keluaran_tertangkan, mulai_sink_aliran, mulai_tangkap_keluaran};
-use std::collections::{HashMap, VecDeque};
+use crate::web::{Respon, WebServer};
+use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpStream;
 use std::path::PathBuf;
 use std::sync::{mpsc, Mutex, OnceLock};
-use std::time::{Instant, Duration};
 
-static RATE_LIMITER: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
 static REPL_STATE: OnceLock<Mutex<ReplState>> = OnceLock::new();
 static WORKSPACE_DIR: OnceLock<Mutex<String>> = OnceLock::new();
-
-struct RateLimiter {
-    requests: VecDeque<Instant>,
-    limit: usize,
-    window: Duration,
-}
-
-impl RateLimiter {
-    fn new(limit: usize, window_secs: u64) -> Self {
-        Self {
-            requests: VecDeque::new(),
-            limit,
-            window: Duration::from_secs(window_secs),
-        }
-    }
-
-    fn check(&mut self) -> bool {
-        let now = Instant::now();
-        while let Some(&front) = self.requests.front() {
-            if now.duration_since(front) > self.window {
-                self.requests.pop_front();
-            } else {
-                break;
-            }
-        }
-        if self.requests.len() < self.limit {
-            self.requests.push_back(now);
-            true
-        } else {
-            false
-        }
-    }
-}
 
 struct ReplState {
     interpreter: Interpreter,
@@ -68,10 +34,6 @@ impl ReplState {
 unsafe impl Send for ReplState {}
 unsafe impl Sync for ReplState {}
 
-fn get_rate_limiter() -> &'static Mutex<RateLimiter> {
-    RATE_LIMITER.get_or_init(|| Mutex::new(RateLimiter::new(120, 60)))
-}
-
 fn get_repl_state() -> &'static Mutex<ReplState> {
     REPL_STATE.get_or_init(|| Mutex::new(ReplState::new()))
 }
@@ -88,45 +50,6 @@ fn set_workspace(dir: &str) {
     }
 }
 
-fn json_response(status: u16, body: &str) -> String {
-    let status_text = match status {
-        200 => "200 OK",
-        201 => "201 CREATED",
-        400 => "400 BAD REQUEST",
-        404 => "404 NOT FOUND",
-        429 => "429 TOO MANY REQUESTS",
-        500 => "500 INTERNAL SERVER ERROR",
-        _ => "200 OK",
-    };
-    format!(
-        "HTTP/1.1 {}\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: {}\r\nAccess-Control-Allow-Origin: *\r\n\r\n{}",
-        status_text,
-        body.len(),
-        body
-    )
-}
-
-fn ok_response(body: &str) -> String { json_response(200, body) }
-fn err_404(body: &str) -> String { json_response(404, body) }
-fn err_429() -> String {
-    let body = serde_json::json!({
-        "sukses": false,
-        "galat": "Rate limit terlampaui. Maksimal 120 permintaan per menit.",
-        "rate_limit": 120,
-        "window_detik": 60
-    }).to_string();
-    json_response(429, &body)
-}
-fn err_500(body: &str) -> String { json_response(500, body) }
-
-fn check_rate() -> bool {
-    if let Ok(mut rl) = get_rate_limiter().lock() {
-        rl.check()
-    } else {
-        true
-    }
-}
-
 fn safe_join(base: &str, name: &str) -> Option<PathBuf> {
     let base_path = PathBuf::from(base);
     let candidate = base_path.join(name);
@@ -138,15 +61,15 @@ fn safe_join(base: &str, name: &str) -> Option<PathBuf> {
 }
 
 pub fn jalankan_studio(port: u16) {
-    let listener = match TcpListener::bind(format!("127.0.0.1:{}", port)) {
-        Ok(l) => l,
+    let mut ws = match WebServer::new(port) {
+        Ok(w) => w,
         Err(e) => {
             eprintln!("Gagal mengikat port {}: {}", port, e);
             return;
         }
     };
 
-    let _ = get_rate_limiter();
+    let _ = crate::web::get_rate_limiter();
     let _ = get_repl_state();
     let _ = fs::create_dir_all(get_workspace());
     let _ = fs::create_dir_all("target/widya_compile");
@@ -162,221 +85,123 @@ pub fn jalankan_studio(port: u16) {
         .args(["/C", "start", &format!("http://127.0.0.1:{}", port)])
         .spawn();
 
-    for stream in listener.incoming() {
-        if let Ok(stream) = stream {
-            std::thread::spawn(move || handle_koneksi(stream));
+    ws.tanpa_rate_limit("GET", "/");
+    ws.tanpa_rate_limit("GET", "/index.html");
+
+    ws.registrasi_rute("GET", "/", |_req| Respon::Html(render_ide_html()));
+    ws.registrasi_rute("GET", "/index.html", |_req| Respon::Html(render_ide_html()));
+    ws.registrasi_rute("POST", "/api/run", |req| Respon::Json(handle_api_run(&req.badan)));
+    ws.registrasi_rute("POST", "/api/run/stream", |req| {
+        let badan = req.badan.clone();
+        Respon::Alir(Box::new(move |stream| handle_sse_run(&badan, stream)))
+    });
+    ws.registrasi_rute("POST", "/api/check", |req| Respon::Json(handle_api_check(&req.badan)));
+    ws.registrasi_rute("GET", "/api/contoh", |_req| Respon::Json(handle_api_list_contoh()));
+    ws.registrasi_rute("GET", "/api/rate/status", |_req| {
+        Respon::Json(crate::web::rate_status_json())
+    });
+    ws.registrasi_rute("POST", "/api/file/simpan", |req| {
+        Respon::Json(handle_api_file_simpan(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/file/baca", |req| {
+        Respon::Json(handle_api_file_baca(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/file/hapus", |req| {
+        Respon::Json(handle_api_file_hapus(&req.badan))
+    });
+    ws.registrasi_rute("GET", "/api/file/list", |_req| {
+        Respon::Json(handle_api_file_list())
+    });
+    ws.registrasi_rute("POST", "/api/search", |req| Respon::Json(handle_api_search(&req.badan)));
+    ws.registrasi_rute("POST", "/api/folder/buat", |req| {
+        Respon::Json(handle_api_folder_buat(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/workspace/set", |req| {
+        let v: serde_json::Value = serde_json::from_str(&req.badan).unwrap_or(serde_json::json!({}));
+        let dir = v.get("dir").and_then(|s| s.as_str()).unwrap_or("workspace");
+        set_workspace(dir);
+        let _ = fs::create_dir_all(dir);
+        Respon::Json(serde_json::json!({"sukses": true, "workspace": dir}).to_string())
+    });
+    ws.registrasi_rute("GET", "/api/modul", |_req| Respon::Json(handle_api_modul_kategori()));
+    ws.registrasi_rute("GET", "/api/snippets", |_req| Respon::Json(handle_api_snippets()));
+    ws.registrasi_rute("GET", "/api/dashboard", |_req| Respon::Json(handle_api_dashboard()));
+    ws.registrasi_rute("POST", "/api/git/status", |req| {
+        Respon::Json(handle_api_git_status(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/git/commit", |req| {
+        Respon::Json(handle_api_git_commit(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/git/log", |req| {
+        Respon::Json(handle_api_git_log(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/proyek/init", |req| {
+        Respon::Json(handle_api_proyek_init(&req.badan))
+    });
+    ws.registrasi_rute("GET", "/api/compile/targets", |_req| {
+        Respon::Json(crate::compile_targets_json())
+    });
+    ws.registrasi_rute("POST", "/api/compile/native", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "native"))
+    });
+    ws.registrasi_rute("POST", "/api/compile/rust", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "rust"))
+    });
+    ws.registrasi_rute("POST", "/api/compile/llvm", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "llvm"))
+    });
+    ws.registrasi_rute("POST", "/api/compile/wasm", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "wasm"))
+    });
+    ws.registrasi_rute("POST", "/api/compile/wgsl", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "wgsl"))
+    });
+    ws.registrasi_rute("POST", "/api/compile/ebpf", |req| {
+        Respon::Json(handle_api_compile_target(&req.badan, "ebpf"))
+    });
+    ws.registrasi_rute("POST", "/api/cargo/test", |req| {
+        Respon::Json(handle_api_cargo_test(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/repl/eval", |req| {
+        Respon::Json(handle_api_repl_eval(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/repl/reset", |_req| {
+        if let Ok(mut rs) = get_repl_state().lock() {
+            *rs = ReplState::new();
+            Respon::Json(serde_json::json!({"sukses": true, "pesan": "REPL state direset"}).to_string())
+        } else {
+            Respon::Status(
+                500,
+                serde_json::json!({"sukses": false, "galat": "State REPL tidak bisa dikunci"}).to_string(),
+            )
         }
-    }
-}
+    });
+    ws.registrasi_rute("GET", "/api/repl/vars", |_req| {
+        let vars = if let Ok(rs) = get_repl_state().lock() {
+            rs.variables.clone()
+        } else {
+            HashMap::new()
+        };
+        Respon::Json(serde_json::json!({"sukses": true, "variabel": vars}).to_string())
+    });
+    ws.registrasi_rute("POST", "/api/format", |req| Respon::Json(handle_api_format(&req.badan)));
+    ws.registrasi_rute("POST", "/api/doc/generate", |req| {
+        Respon::Json(handle_api_doc_generate(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/debug/breakpoints", |req| {
+        Respon::Json(handle_api_debug_breakpoints(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/debug/step", |req| {
+        Respon::Json(handle_api_debug_step(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/debug/snapshot", |req| {
+        Respon::Json(handle_api_debug_snapshot(&req.badan))
+    });
+    ws.registrasi_rute("POST", "/api/ai/autocomplete", |req| {
+        Respon::Json(handle_api_ai_autocomplete(&req.badan))
+    });
 
-fn handle_koneksi(mut stream: TcpStream) {
-    let mut buffer = [0; 262144];
-    if let Ok(bytes_read) = stream.read(&mut buffer) {
-                let request = String::from_utf8_lossy(&buffer[..bytes_read]);
-
-                let need_rate = !request.starts_with("GET / ") && !request.starts_with("GET /index.html");
-                if need_rate && !check_rate() {
-                    let _ = stream.write_all(err_429().as_bytes());
-                    return;
-                }
-
-                let method = request.lines().next().unwrap_or("").split_whitespace().next().unwrap_or("");
-                let path_full = request.lines().next().unwrap_or("").split_whitespace().nth(1).unwrap_or("/");
-                let path_clean = path_full.split('?').next().unwrap_or("/");
-
-                let mut dispatched = false;
-
-                if (method == "GET" && path_clean == "/") || (method == "GET" && path_clean == "/index.html") {
-                    let html = render_ide_html();
-                    let response = format!(
-                        "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nAccess-Control-Allow-Origin: *\r\n\r\n{}",
-                        html.len(),
-                        html
-                    );
-                    let _ = stream.write_all(response.as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/run" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_run(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/run/stream" {
-                    let body = extract_body(&request);
-                    handle_sse_run(&body, &mut stream);
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/check" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_check(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/contoh" {
-                    let _ = stream.write_all(ok_response(&handle_api_list_contoh()).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/rate/status" {
-                    let info = if let Ok(rl) = get_rate_limiter().lock() {
-                        serde_json::json!({
-                            "sukses": true,
-                            "limit": rl.limit,
-                            "window_detik": rl.window.as_secs(),
-                            "current_count": rl.requests.len(),
-                            "sisa": rl.limit.saturating_sub(rl.requests.len())
-                        }).to_string()
-                    } else {
-                        serde_json::json!({"sukses": false}).to_string()
-                    };
-                    let _ = stream.write_all(ok_response(&info).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/file/simpan" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_file_simpan(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/file/baca" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_file_baca(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/file/hapus" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_file_hapus(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/file/list" {
-                    let resp = handle_api_file_list();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/search" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_search(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/folder/buat" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_folder_buat(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/workspace/set" {
-                    let body = extract_body(&request);
-                    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::json!({}));
-                    let dir = v.get("dir").and_then(|s| s.as_str()).unwrap_or("workspace");
-                    set_workspace(dir);
-                    let _ = fs::create_dir_all(dir);
-                    let resp = serde_json::json!({"sukses": true, "workspace": dir}).to_string();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/modul" {
-                    let resp = handle_api_modul_kategori();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/snippets" {
-                    let resp = handle_api_snippets();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/dashboard" {
-                    let resp = handle_api_dashboard();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/git/status" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_git_status(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/git/commit" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_git_commit(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/git/log" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_git_log(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/proyek/init" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_proyek_init(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/compile/targets" {
-                    let resp = crate::compile_targets_json();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/native" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "native")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/rust" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "rust")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/llvm" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "llvm")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/wasm" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "wasm")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/wgsl" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "wgsl")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/compile/ebpf" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_compile_target(&body, "ebpf")).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/cargo/test" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_cargo_test(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/repl/eval" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_repl_eval(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/repl/reset" {
-                    let resp = if let Ok(mut rs) = get_repl_state().lock() {
-                        *rs = ReplState::new();
-                        ok_response(&serde_json::json!({"sukses": true, "pesan": "REPL state direset"}).to_string())
-                    } else {
-                        err_500(&serde_json::json!({"sukses": false, "galat": "State REPL tidak bisa dikunci"}).to_string())
-                    };
-                    let _ = stream.write_all(resp.as_bytes());
-                    dispatched = true;
-                } else if method == "GET" && path_clean == "/api/repl/vars" {
-                    let vars = if let Ok(rs) = get_repl_state().lock() {
-                        rs.variables.clone()
-                    } else {
-                        HashMap::new()
-                    };
-                    let resp = serde_json::json!({"sukses": true, "variabel": vars}).to_string();
-                    let _ = stream.write_all(ok_response(&resp).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/format" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_format(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/doc/generate" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_doc_generate(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/debug/breakpoints" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_debug_breakpoints(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/debug/step" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_debug_step(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/debug/snapshot" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_debug_snapshot(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "POST" && path_clean == "/api/ai/autocomplete" {
-                    let body = extract_body(&request);
-                    let _ = stream.write_all(ok_response(&handle_api_ai_autocomplete(&body)).as_bytes());
-                    dispatched = true;
-                } else if method == "OPTIONS" {
-                    let cors = "HTTP/1.1 204 NO CONTENT\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET, POST, OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\nContent-Length: 0\r\n\r\n";
-                    let _ = stream.write_all(cors.as_bytes());
-                    dispatched = true;
-                }
-
-                if !dispatched {
-                    let not_found = serde_json::json!({
-                        "sukses": false,
-                        "galat": format!("Endpoint tidak ditemukan: {} {}", method, path_clean)
-                    }).to_string();
-                    let _ = stream.write_all(err_404(&not_found).as_bytes());
-                }
-            }
+    ws.jalankan();
 }
 
 pub fn jalankan_lsp() {
@@ -386,14 +211,6 @@ pub fn jalankan_lsp() {
     let mut buffer = String::new();
     while let Ok(n) = handle.read_to_string(&mut buffer) {
         if n == 0 { break; }
-    }
-}
-
-fn extract_body(req: &str) -> String {
-    if let Some(pos) = req.find("\r\n\r\n") {
-        req[(pos + 4)..].to_string()
-    } else {
-        String::new()
     }
 }
 
@@ -975,7 +792,7 @@ fn handle_api_dashboard() -> String {
     let modul_count = fs::read_dir("modul").map(|d| d.flatten().count()).unwrap_or(0);
     let compile_count = fs::read_dir("target/widya_compile").map(|d| d.flatten().count()).unwrap_or(0);
 
-    let rl_info = if let Ok(rl) = get_rate_limiter().lock() {
+    let rl_info = if let Ok(rl) = crate::web::get_rate_limiter().lock() {
         serde_json::json!({"limit": rl.limit, "terpakai": rl.requests.len(), "sisa": rl.limit.saturating_sub(rl.requests.len())})
     } else { serde_json::json!({}) };
 

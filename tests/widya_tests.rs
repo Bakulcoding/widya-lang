@@ -493,7 +493,26 @@ fn test_asinkron_dan_tunggu_hasil() {
 
 #[test]
 fn test_widya_ai_http_dan_game() {
-    let kode = r#"
+    // Sajikan server HTTP nyata sementara di dalam test.
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    std::thread::spawn(move || {
+        if let Some(mut stream) = listener.incoming().flatten().next() {
+            use std::io::{Read, Write};
+            let mut buf = [0u8; 4096];
+            let _ = stream.read(&mut buf);
+            let badan = "{\"pesan\": \"halo widya\"}";
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                badan.len(),
+                badan
+            );
+            let _ = stream.write_all(resp.as_bytes());
+        }
+    });
+
+    let kode = format!(
+        r#"
         // 1. AI Tensor Compute
         misal m1 = Matriks([[1, 2], [3, 4]]);
         misal m2 = Matriks([[5, 6], [7, 8]]);
@@ -501,9 +520,9 @@ fn test_widya_ai_http_dan_game() {
         misal sig = sigmoid(0.0);
         misal rel = relu(-10.0);
 
-        // 2. HTTP Engine
-        misal srv = ServerHttp(3000);
-        misal resp = http_get("http://localhost:3000/api");
+        // 2. HTTP Client Nyata (T1: ureq) ke server sungguhan di atas
+        misal resp = http_get_detil("http://127.0.0.1:{port}/api");
+        misal data = resp.badan_json;
 
         // 3. Game Engine
         misal g = KanvasGame("Game Uji", 640, 480);
@@ -512,20 +531,22 @@ fn test_widya_ai_http_dan_game() {
         pastikan(kali.data[0][0] == 19, "Perkalian matriks baris 0 kolom 0 harus 19");
         pastikan(sig == 0.5, "Sigmoid 0 harus 0.5");
         pastikan(rel == 0.0, "ReLU -10 harus 0.0");
-        pastikan(srv.port == 3000, "Port server harus 3000");
+        pastikan(resp.sukses == benar, "HTTP client harus sukses (server nyata)");
         pastikan(resp.status == 200, "HTTP Status harus 200");
+        pastikan(data.pesan == "halo widya", "JSON body dari server nyata harus terbaca");
         pastikan(panjang(html) > 100, "Render game html harus valid");
 
-        kembalikan [kali.data[0][0], sig, rel, srv.port, resp.status];
-    "#;
-    let hasil = jalankan(kode).unwrap();
+        kembalikan [kali.data[0][0], sig, rel, resp.status, data.pesan];
+    "#
+    );
+    let hasil = jalankan(&kode).unwrap();
     if let Value::Array(arr) = hasil {
         let items = arr.borrow();
         assert_eq!(items[0], Value::Number(19.0));
         assert_eq!(items[1], Value::Number(0.5));
         assert_eq!(items[2], Value::Number(0.0));
-        assert_eq!(items[3], Value::Number(3000.0));
-        assert_eq!(items[4], Value::Number(200.0));
+        assert_eq!(items[3], Value::Number(200.0));
+        assert_eq!(items[4], Value::String("halo widya".to_string()));
     } else {
         panic!("Hasil harus berupa daftar");
     }
