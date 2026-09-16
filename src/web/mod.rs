@@ -5,8 +5,13 @@
 // WebSocket). Modul terpisah dari megafile stdlib agar type-check cepat & bersih.
 //
 // HTTP Client: ureq 2 (rustls TLS) - waktu tunggu, header, JSON, body string.
+// WebSocket: RFC 6455 (sha1+base64) - handshake, frame encoding, ping/pong.
+// ServerHttp: handler Widya dengan ValueSerial Pattern untuk multi-thread.
 // Semua fungsi mengembalikan Value::Map, tidak pernah panic.
 // ==============================================================================
+
+pub mod ws;
+pub use ws::daftarkan_websocket;
 
 use crate::environment::Environment;
 use crate::error::{Galat, Span};

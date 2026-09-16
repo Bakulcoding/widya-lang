@@ -189,6 +189,7 @@ pub fn register_stdlib(env: &mut Environment) {
 
     // WidyaHttp (Microservices & REST API Server Framework - implementasi nyata di src/web)
     crate::web::daftarkan_http(env);
+    crate::web::daftarkan_websocket(env);
 
     // WidyaAI (Tensor, Matrix & Machine Learning Compute Engine)
     register_fn(env, "Matriks", Some(1), builtin_ai_matriks);
