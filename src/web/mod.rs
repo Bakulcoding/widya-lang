@@ -18,7 +18,7 @@ use crate::value::{BuiltinFn, BuiltinFunction, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock,mpsc};
 use std::thread;
 use std::time::Duration;
 
@@ -123,18 +123,26 @@ fn builtin_tambah_rute(args: &[Value], span: &Span) -> Result<Value, Galat> {
 
     let handler_val = args[3].clone();
 
+    let handler_json = match handler_val {
+        Value::Function(_) => {
+            value_to_json_str(&handler_val)
+        }
+        Value::Builtin(_) => return Err(Galat::runtime("Builtin function tidak bisa sebagai handler HTTP", span)),
+        _ => return Err(Galat::runtime("Handler harus berupa fungsi Widya", span)),
+    };
+
     if let Ok(mut handles) = widya_server_handles().lock() {
         if let Some(handle) = handles.get_mut(&server_id) {
             match method.as_str() {
                 "GET" => {
                     let handler = Arc::new(WidyaHandler::new(
-                        format!("TODO: extract from Function AST"), span.clone()
+                        handler_json, span.clone()
                     ));
                     handle.handlers_get.lock().unwrap().insert(path, handler);
                 }
                 "POST" => {
                     let handler = Arc::new(WidyaHandler::new(
-                        format!("TODO: extract from Function AST"), span.clone()
+                        handler_json, span.clone()
                     ));
                     handle.handlers_post.lock().unwrap().insert(path, handler);
                 }
@@ -158,13 +166,91 @@ fn builtin_jalankan_server(args: &[Value], _span: &Span) -> Result<Value, Galat>
         _ => return Ok(Value::Nil),
     };
 
-    if let Ok(mut handles) = widya_server_handles().lock() {
-        if let Some(handle) = handles.get_mut(&server_id) {
-            *handle.running.lock().unwrap() = true;
+    if let Ok(handles) = widya_server_handles().lock() {
+        if let Some(handle) = handles.get(&server_id) {
             let port = handle.port;
-            // TODO: Buat WebServer, register routes, jalankan
-            // Untuk sementara, return Nil (blocking perlu implementasi penuh)
-            let _ = port;
+            let handlers_get = Arc::clone(&handle.handlers_get);
+            let handlers_post = Arc::clone(&handle.handlers_post);
+            
+            thread::spawn(move || {
+                let pool = Arc::new(WorkerPool::new(4));
+                
+                let mut server = match WebServer::new(port) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("Failed to bind to port {}: {}", port, e);
+                        return;
+                    }
+                };
+                
+                let routes_get = handlers_get.lock().unwrap().clone();
+                
+                for (path, handler) in routes_get {
+                    let handler_source = handler.source.clone();
+                    let pool_clone = Arc::clone(&pool);
+                    
+                    server.registrasi_rute("GET", &path, move |info| {
+                        let req_value = Value::Map(Rc::new(RefCell::new(HashMap::from([
+                            ("method".to_string(), Value::String(info.method.clone())),
+                            ("path".to_string(), Value::String(info.path.clone())),
+                            ("query".to_string(), Value::String(info.query.clone().unwrap_or_default())),
+                            ("header".to_string(), Value::String(info.header.clone())),
+                            ("badan".to_string(), Value::String(info.badan.clone())),
+                        ]))));
+                        
+                        let req_json = value_to_json_str(&req_value);
+                        
+                        match pool_clone.execute(handler_source.clone(), req_json) {
+                            Ok(response_json) => {
+                                Respon::Json(response_json)
+                            }
+                            Err(e) => {
+                                let mut map = HashMap::new();
+                                map.insert("sukses".to_string(), Value::Bool(false));
+                                map.insert("galat".to_string(), Value::String(e));
+                                Respon::Json(value_to_json_str(&Value::Map(Rc::new(RefCell::new(map)))))
+                            }
+                        }
+                    });
+                }
+                
+                let routes_post = handlers_post.lock().unwrap().clone();
+                
+                for (path, handler) in routes_post {
+                    let handler_source = handler.source.clone();
+                    let pool_clone = Arc::clone(&pool);
+                    
+                    server.registrasi_rute("POST", &path, move |info| {
+                        let req_value = Value::Map(Rc::new(RefCell::new(HashMap::from([
+                            ("method".to_string(), Value::String(info.method.clone())),
+                            ("path".to_string(), Value::String(info.path.clone())),
+                            ("query".to_string(), Value::String(info.query.clone().unwrap_or_default())),
+                            ("header".to_string(), Value::String(info.header.clone())),
+                            ("badan".to_string(), Value::String(info.badan.clone())),
+                        ]))));
+                        
+                        let req_json = value_to_json_str(&req_value);
+                        
+                        match pool_clone.execute(handler_source.clone(), req_json) {
+                            Ok(response_json) => {
+                                Respon::Json(response_json)
+                            }
+                            Err(e) => {
+                                let mut map = HashMap::new();
+                                map.insert("sukses".to_string(), Value::Bool(false));
+                                map.insert("galat".to_string(), Value::String(e));
+                                Respon::Json(value_to_json_str(&Value::Map(Rc::new(RefCell::new(map)))))
+                            }
+                        }
+                    });
+                }
+                
+                server.jalankan();
+            });
+            
+            if let Some(h) = handles.get(&server_id) {
+                *h.running.lock().unwrap() = true;
+            }
         }
     }
 
@@ -436,30 +522,126 @@ fn json_str_to_value(json: &str) -> Value {
 }
 
 /// Execute handler Widya dengan ValueSerial Pattern
-/// Ini akan dipanggil dari worker thread
-fn execute_widya_handler(handler_source: &str, req_json: &str) -> Result<String, String> {
-    // Parse handler source
-    let mut lexer = Lexer::new(handler_source);
-    let tokens = lexer.scan_tokens().map_err(|e| format!("Lexer: {}", e))?;
+/// Ini akan dipanggil dari worker thread dengan fresh Interpreter
+fn execute_widya_handler(handler_json: &str, req_json: &str) -> Result<String, String> {
+    let handler_value = json_str_to_value(handler_json);
+    let req_value = json_str_to_value(req_json);
     
-    let mut parser = Parser::new(tokens);
-    let _ = parser.parse().map_err(|e| format!("Parser: {}", e))?;
+    let mut interpreter = Interpreter::new();
     
-    // Deserialize request
-    let _ = json_str_to_value(req_json);
+    interpreter
+        .environment
+        .borrow_mut()
+        .define("req".to_string(), req_value, true);
     
-    // Create fresh Interpreter (tidak di-pool karena non-Send)
-    let _ = Interpreter::new();
+    match handler_value {
+        Value::Function(func) => {
+            let func = func.as_ref();
+            
+            interpreter.environment.borrow_mut().define(
+                "temp_handler".to_string(),
+                Value::Function(Rc::new(func.clone())),
+                true,
+            );
+            
+            let call_expr = format!("temp_handler(req)");
+            let mut lexer = Lexer::new(&call_expr);
+            let tokens = lexer.scan_tokens().map_err(|e| format!("Lexer: {}", e))?;
+            let mut parser = Parser::new(tokens);
+            let program = parser.parse().map_err(|e| format!("Parser: {}", e))?;
+            
+            match interpreter.interpret(&program) {
+                Ok(result) => Ok(value_to_json_str(&result)),
+                Err(e) => Err(format!("Handler execution: {}", e)),
+            }
+        }
+        _ => Err("Invalid handler type".to_string()),
+    }
+}
+
+/// Thread pool untuk handler execution - ValueSerial Pattern
+struct WorkerPool {
+    sender: Arc<mpsc::Sender<Message>>,
+    workers: Vec<thread::JoinHandle<()>>,
+}
+
+impl Clone for WorkerPool {
+    fn clone(&self) -> Self {
+        WorkerPool {
+            sender: Arc::clone(&self.sender),
+            workers: Vec::new(),
+        }
+    }
+}
+
+enum Message {
+    NewJob(Job),
+    Terminate,
+}
+
+struct Job {
+    handler_source: String,
+    req_json: String,
+    response_tx: mpsc::Sender<Result<String, String>>,
+}
+
+struct Worker {
+    _id: usize,
+    thread: Option<thread::JoinHandle<()>>,
+}
+
+impl WorkerPool {
+    fn new(size: usize) -> Self {
+        let (sender, receiver) = mpsc::channel();
+        let sender = Arc::new(sender);
+        let receiver = Arc::new(Mutex::new(receiver));
+        let mut workers = Vec::new();
+        
+        for _id in 0..size {
+            let receiver = Arc::clone(&receiver);
+            let sender_clone = Arc::clone(&sender);
+            let thread = thread::spawn(move || loop {
+                let message = {
+                    let lock = receiver.lock().unwrap();
+                    lock.recv().unwrap_or(Message::Terminate)
+                };
+                
+                match message {
+                    Message::NewJob(job) => {
+                        let result = execute_widya_handler(&job.handler_source, &job.req_json);
+                        let _ = job.response_tx.send(result);
+                    }
+                    Message::Terminate => break,
+                }
+            });
+            workers.push(thread);
+        }
+        
+        WorkerPool { sender, workers }
+    }
     
-    // Execute handler dengan fresh state
-    // TODO: implement proper handler calling dengan AST
-    // Untuk sementara: mock response
-    let mut response = HashMap::new();
-    response.insert("status".to_string(), Value::Number(200.0));
-    response.insert("badan".to_string(), Value::String("Handler executed via ValueSerial".to_string()));
-    response.insert("tipe_konten".to_string(), Value::String("application/json".to_string()));
-    
-    Ok(value_to_json_str(&Value::Map(Rc::new(RefCell::new(response)))))
+    fn execute(&self, handler_source: String, req_json: String) -> Result<String, String> {
+        let (tx, rx) = mpsc::channel();
+        let job = Job {
+            handler_source,
+            req_json,
+            response_tx: tx,
+        };
+        
+        self.sender.send(Message::NewJob(job)).map_err(|_| "Pool sender error".to_string())?;
+        rx.recv().map_err(|_| "Pool receiver error".to_string())?
+    }
+}
+
+impl Drop for WorkerPool {
+    fn drop(&mut self) {
+        for _ in 0..self.workers.len() {
+            let _ = self.sender.send(Message::Terminate);
+        }
+        for thread in self.workers.drain(..) {
+            let _ = thread.join();
+        }
+    }
 }
 
 pub(crate) static RATE_LIMITER: OnceLock<Mutex<RateLimiter>> = OnceLock::new();
@@ -683,6 +865,59 @@ impl WebServer {
         }
     }
 }
+
+// ============================================================================
+// ValueSerial Thread Pool - T3 multi-threading support
+// ============================================================================
+
+struct WorkItem {
+    handler_source: String,
+    req_json: String,
+    response_tx: std::sync::mpsc::Sender<String>,
+}
+
+fn execute_handler_widya(handler_source: &str, req_json: &str) -> Result<String, String> {
+    // Parse handler source ke AST
+    let mut lexer = Lexer::new(handler_source);
+    let tokens = lexer.scan_tokens().map_err(|e| format!("Lexer: {}", e))?;
+    
+    let mut parser = Parser::new(tokens);
+    let _ = parser.parse().map_err(|e| format!("Parser: {}", e))?;
+    
+    // Deserialize request JSON
+    let _ = serde_json::from_str::<serde_json::Value>(req_json)
+        .map(json_to_value)
+        .map_err(|e| format!("Deserialize: {}", e))?;
+    
+    // Create fresh Interpreter (tidak di-pool karena non-Send)
+    let _ = Interpreter::new();
+    
+    // Mock response untuk sementara
+    let mut response = HashMap::new();
+    response.insert("status".to_string(), Value::Number(200.0));
+    response.insert("badan".to_string(), Value::String("Handler executed".to_string()));
+    
+    Ok(value_to_json(&Value::Map(Rc::new(RefCell::new(response)))).to_string())
+}
+
+fn worker_thread(rx: Arc<Mutex<std::sync::mpsc::Receiver<WorkItem>>>) {
+    while let Ok(item) = rx.lock().unwrap().recv() {
+        let result = execute_handler_widya(&item.handler_source, &item.req_json);
+        let _ = item.response_tx.send(match result {
+            Ok(s) => s,
+            Err(e) => {
+                let mut map = HashMap::new();
+                map.insert("status".to_string(), Value::Number(500.0));
+                map.insert("badan".to_string(), Value::String(e));
+                value_to_json(&Value::Map(Rc::new(RefCell::new(map)))).to_string()
+            }
+        });
+    }
+}
+
+// ============================================================================
+// layani_koneksi - Handler request (single-threaded untuk saat ini)
+// ============================================================================
 
 fn layani_koneksi(
     mut stream: TcpStream,
