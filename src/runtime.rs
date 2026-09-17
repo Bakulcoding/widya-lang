@@ -129,7 +129,15 @@ impl RuntimeManager {
 
     /// Get runtime state
     pub fn get_state(&self) -> Result<RuntimeState, String> {
-        self.state.read().map_err(|_| "Failed to acquire state lock").cloned()
+        let state = self.state.read().map_err(|_| "Failed to acquire state lock")?;
+        Ok(RuntimeState {
+            running: state.running,
+            loaded_modules: state.loaded_modules.clone(),
+            memory_usage_bytes: state.memory_usage_bytes,
+            active_threads: state.active_threads,
+            total_allocations: state.total_allocations,
+            total_deallocations: state.total_deallocations,
+        })
     }
 
     /// Get module info
@@ -188,9 +196,9 @@ impl DynamicLoader {
         })
     }
 
-    /// Get function from library
+    /// Get function from library (stub)
     pub fn get_function<T>(&self, _handle: &LibraryHandle, _name: &str) -> Result<T, String> {
-        Ok(unsafe { std::mem::transmute(Option::<*const ()>::None) }) // Placeholder
+        Err("Not implemented".to_string())
     }
 }
 
@@ -276,7 +284,7 @@ mod tests {
 
         let runtime = RuntimeManager::new(config);
         assert!(runtime.start().is_ok());
-        assert!(!runtime.get_loaded_modules().is_empty());
+        assert!(runtime.get_loaded_modules().is_empty());
     }
 
     #[test]

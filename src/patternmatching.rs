@@ -146,6 +146,38 @@ impl ADTUtils {
         matches!(pattern, Pattern::Wildcard(_) | Pattern::Variable(_, _))
     }
     
+    /// Get bound variables from pattern
+    pub fn bound_variables(pattern: &Pattern) -> Vec<String> {
+        let mut vars = Vec::new();
+        Self::collect_variables(pattern, &mut vars);
+        vars
+    }
+    
+    fn collect_variables(pattern: &Pattern, vars: &mut Vec<String>) {
+        match pattern {
+            Pattern::Variable(name, _) => vars.push(name.clone()),
+            Pattern::Constructor { subpatterns, .. } => {
+                for subpattern in subpatterns {
+                    Self::collect_variables(subpattern, vars);
+                }
+            }
+            Pattern::Tuple(patterns, _) => {
+                for pattern in patterns {
+                    Self::collect_variables(pattern, vars);
+                }
+            }
+            Pattern::Or(patterns, _) => {
+                if let Some(first) = patterns.first() {
+                    Self::collect_variables(first, vars);
+                }
+            }
+            Pattern::TypeAnnotation { pattern, .. } => {
+                Self::collect_variables(pattern, vars);
+            }
+            _ => {}
+        }
+    }
+    
     /// Create Result type string
     pub fn result_type(ok_type: String, err_type: String) -> String {
         format!("Hasil[{}, {}]", ok_type, err_type)
