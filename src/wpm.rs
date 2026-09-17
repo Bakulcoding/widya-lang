@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{Write, Read};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 

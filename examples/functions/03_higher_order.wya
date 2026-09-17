@@ -1,0 +1,39 @@
+/// Higher-order functions - fungsi sebagai parameter
+
+// Fungsi yang menerima fungsi lain sebagai parameter
+fungsi apply_operation(a, b, operasi) {
+    kembalikan operasi(a, b)
+}
+
+// Fungsi operasi
+fungsi tambah(x, y) {
+    kembalikan x + y
+}
+
+fungsi kali(x, y) {
+    kembalikan x * y
+}
+
+// Menggunakan higher-order function
+var hasil1 = apply_operation(5, 3, tambah)
+cetak("5 + 3 =", hasil1)
+
+var hasil2 = apply_operation(5, 3, kali)
+cetak("5 * 3 =", hasil2)
+
+// Fungsi map sederhana
+fungsi map_array(arr, transform) {
+    var result = []
+    untuk i dalam rentang(0, panjang(arr)) {
+        push(result, transform(arr[i]))
+    }
+    kembalikan result
+}
+
+fungsi double(x) {
+    kembalikan x * 2
+}
+
+var numbers = [1, 2, 3, 4, 5]
+var doubled = map_array(numbers, double)
+cetak("\nArray doubled:", doubled)

@@ -1,0 +1,34 @@
+/// Demonstrasi closure - fungsi dalam fungsi
+
+fungsi pembuat_counter() {
+    var count = 0
+    
+    fungsi increment() {
+        count = count + 1
+        kembalikan count
+    }
+    
+    kembalikan increment
+}
+
+// Membuat counter
+var counter1 = pembuat_counter()
+cetak("Counter 1:", counter1())  // 1
+cetak("Counter 1:", counter1())  // 2
+cetak("Counter 1:", counter1())  // 3
+
+// Pembuat pengali
+fungsi pembuat_pengali(faktor) {
+    fungsi kali(nilai) {
+        kembalikan nilai * faktor
+    }
+    kembalikan kali
+}
+
+var kali_dua = pembuat_pengali(2)
+var kali_tiga = pembuat_pengali(3)
+
+cetak("\n=== Pengali ===")
+cetak("5 * 2 =", kali_dua(5))     // 10
+cetak("5 * 3 =", kali_tiga(5))    // 15
+cetak("10 * 2 =", kali_dua(10))   // 20

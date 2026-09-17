@@ -1,0 +1,27 @@
+/// Operasi dengan map/dictionary
+
+// Membuat map
+var orang = {
+    "nama": "Budi Santoso",
+    "umur": 30,
+    "kota": "Jakarta",
+    "bekerja": benar
+}
+
+// Mengakses nilai
+cetak("Nama:", orang["nama"])
+cetak("Umur:", orang["umur"], "tahun")
+cetak("Kota:", orang["kota"])
+
+// Map data produk
+var produk = {
+    "nama": "Laptop",
+    "harga": 15000000,
+    "stok": 10,
+    "kategori": "Elektronik"
+}
+
+cetak("\n=== Info Produk ===")
+cetak("Produk:", produk["nama"])
+cetak("Harga: Rp", produk["harga"])
+cetak("Stok:", produk["stok"], "unit")

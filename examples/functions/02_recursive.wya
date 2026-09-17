@@ -1,0 +1,26 @@
+/// Fungsi rekursif untuk menghitung faktorial
+
+fungsi faktorial(n) {
+    jika n <= 1 {
+        kembalikan 1
+    }
+    kembalikan n * faktorial(n - 1)
+}
+
+// Menghitung faktorial
+cetak("Faktorial 5 =", faktorial(5))    // 120
+cetak("Faktorial 6 =", faktorial(6))    // 720
+cetak("Faktorial 7 =", faktorial(7))    // 5040
+
+// Fungsi rekursif Fibonacci
+fungsi fibonacci(n) {
+    jika n <= 1 {
+        kembalikan n
+    }
+    kembalikan fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+cetak("\n=== Fibonacci ===")
+untuk i dalam rentang(0, 10) {
+    cetak("fib(", i, ") =", fibonacci(i))
+}

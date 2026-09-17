@@ -214,7 +214,7 @@ fn builtin_ws_terima(args: &[Value], span: &Span) -> Result<Value, Galat> {
         _ => return Err(Galat::runtime("Argumen pertama harus ServerWebSocket object", span)),
     };
     
-    let server_id = match server_obj.borrow().get("_id") {
+    let _server_id = match server_obj.borrow().get("_id") {
         Some(Value::Number(n)) => *n as u64,
         _ => return Err(Galat::runtime("Invalid ServerWebSocket object", span)),
     };
@@ -268,12 +268,12 @@ fn builtin_ws_kirim(args: &[Value], span: &Span) -> Result<Value, Galat> {
         _ => return Err(Galat::runtime("Argumen pertama harus WebSocket client object", span)),
     };
     
-    let client_id = match client_obj.borrow().get("client_id") {
+    let _client_id = match client_obj.borrow().get("client_id") {
         Some(Value::Number(n)) => *n as u64,
         _ => return Err(Galat::runtime("Invalid client object", span)),
     };
     
-    let message = match &args[1] {
+    let _message = match &args[1] {
         Value::String(s) => s,
         _ => return Err(Galat::runtime("Pesan harus berupa teks string", span)),
     };
@@ -284,13 +284,13 @@ fn builtin_ws_kirim(args: &[Value], span: &Span) -> Result<Value, Galat> {
     };
     
     // Encode WebSocket frame based on type
-    let opcode = match tipe {
+    let _opcode = match tipe {
         "teks" => 0x01, // TEXT frame
         "biner" => 0x02, // BINARY frame
         _ => return Err(Galat::runtime("Tipe harus 'teks' atau 'biner'", span)),
     };
     
-    let mask = true; // Always mask client-to-server frames
+    let _mask = true; // Always mask client-to-server frames
     
     // TODO: Actually send the encoded frame
     // For now, just simulate success

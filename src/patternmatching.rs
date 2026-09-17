@@ -70,9 +70,9 @@ impl PatternMatcher {
                 Ok(bindings)
             }
             
-            Pattern::Literal(lit, _) => Ok(HashMap::new()),
+            Pattern::Literal(_lit, _) => Ok(HashMap::new()),
             
-            Pattern::Constructor { name, variant, subpatterns, span } => {
+            Pattern::Constructor { name: _, variant: _, subpatterns, span: _ } => {
                 let mut all_bindings = HashMap::new();
                 for subpattern in subpatterns {
                     let bindings = self.match_pattern("value", subpattern)?;

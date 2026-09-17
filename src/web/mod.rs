@@ -604,7 +604,7 @@ impl WorkerPool {
         
         for _id in 0..size {
             let receiver = Arc::clone(&receiver);
-            let sender_clone = Arc::clone(&sender);
+            let _sender_clone = Arc::clone(&sender);
             let thread = thread::spawn(move || loop {
                 let message = {
                     let lock = receiver.lock().unwrap();

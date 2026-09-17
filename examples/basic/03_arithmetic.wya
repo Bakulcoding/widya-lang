@@ -1,0 +1,20 @@
+/// Operasi aritmatika dasar
+
+var a = 10
+var b = 3
+
+// Operasi dasar
+cetak("Penjumlahan:", a + b)      // 13
+cetak("Pengurangan:", a - b)      // 7
+cetak("Perkalian:", a * b)        // 30
+cetak("Pembagian:", a / b)        // 3.333...
+cetak("Modulo:", a % b)           // 1
+
+// Operasi kompleks
+var hasil = (a + b) * 2
+cetak("(10 + 3) * 2 =", hasil)    // 26
+
+// Increment
+var counter = 0
+counter = counter + 1
+cetak("Counter:", counter)        // 1

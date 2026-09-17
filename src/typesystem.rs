@@ -1,7 +1,6 @@
 //! Advanced Type System for Widya-Lang
 //! Implementation of generic types, type parameters, and algebraic data types
 
-use std::collections::HashMap;
 use std::fmt;
 
 /// Advanced type system for Widya-Lang

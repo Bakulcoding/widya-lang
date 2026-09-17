@@ -2,11 +2,11 @@
 //! Provides Hot Reload, Memory Management, and Dynamic Loading
 
 use std::collections::HashMap;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 
 /// Runtime configuration
@@ -177,7 +177,7 @@ impl HotReloadWatcher {
     }
 
     /// Check for file changes
-    pub fn check_changes(&self, path: &Path, last_hash: &str) -> Result<bool, String> {
+    pub fn check_changes(&self, _path: &Path, _last_hash: &str) -> Result<bool, String> {
         // In production, this would compare actual file hash
         Ok(false) // Placeholder
     }

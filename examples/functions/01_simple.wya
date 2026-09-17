@@ -1,0 +1,31 @@
+/// Demonstrasi fungsi sederhana
+
+// Fungsi tanpa parameter
+fungsi sapa() {
+    cetak("Halo dari fungsi!")
+}
+
+// Fungsi dengan parameter
+fungsi sapa_nama(nama) {
+    cetak("Halo,", nama)
+}
+
+// Fungsi dengan return value
+fungsi tambah(a, b) {
+    kembalikan a + b
+}
+
+// Fungsi untuk menghitung luas persegi panjang
+fungsi luas_persegi_panjang(panjang, lebar) {
+    kembalikan panjang * lebar
+}
+
+// Memanggil fungsi
+sapa()
+sapa_nama("Budi")
+
+var hasil = tambah(5, 3)
+cetak("5 + 3 =", hasil)
+
+var luas = luas_persegi_panjang(10, 5)
+cetak("Luas persegi panjang:", luas, "cm²")

@@ -1,0 +1,23 @@
+/// Pernyataan kondisional if-else
+
+var nilai = 85
+
+jika nilai >= 90 {
+    cetak("Nilai: A - Sangat Baik!")
+} kalau_tidak_jika nilai >= 80 {
+    cetak("Nilai: B - Baik!")
+} kalau_tidak_jika nilai >= 70 {
+    cetak("Nilai: C - Cukup")
+} kalau_tidak_jika nilai >= 60 {
+    cetak("Nilai: D - Kurang")
+} kalau_tidak {
+    cetak("Nilai: E - Gagal")
+}
+
+// Kondisi sederhana
+var umur = 20
+jika umur >= 18 {
+    cetak("Sudah dewasa")
+} kalau_tidak {
+    cetak("Belum dewasa")
+}

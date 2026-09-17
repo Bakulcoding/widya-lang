@@ -21,7 +21,7 @@ impl PatternParser {
 
 /// Helper function to check if we're parsing a generic type
 pub fn is_generic_type(type_name: &str) -> bool {
-    type_name.chars().next().map_or(false, |c| c.is_uppercase())
+    type_name.chars().next().is_some_and(|c| c.is_uppercase())
 }
 
 /// Helper function to parse type parameter name
