@@ -1,0 +1,11 @@
+[paket]
+nama = "ProyekUji"
+versi = "0.1.0"
+penulis = ["Pengembang Widya"]
+edisi = "2026"
+deskripsi = "Proyek Aplikasi Widya-Lang Tangguh"
+
+[dependensi]
+# Tambahkan dependensi modul di sini
+# widyachain = "1.0.0"
+# widyadocs = "0.5.0"

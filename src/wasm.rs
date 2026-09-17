@@ -1,14 +1,36 @@
+// ==============================================================================
+// WebAssembly Binary Emitter & Linear Memory Allocation (T8)
+// ==============================================================================
+// WASM v1 Standard Binary Encoder with 64KB Linear Memory Support
+// Features:
+// - 64KB linear memory allocation (minimum 1 page = 64KB)
+// - Data section for static memory initialization
+// - Global variables in memory space
+// - Export memory as WebAssembly.Memory object
+// ==============================================================================
+
 use crate::ast::*;
 use crate::error::Galat;
 
-/// WebAssembly Binary Emitter (WASM v1 standard binary encoder)
+/// WebAssembly Binary Emitter with linear memory support
 pub struct WasmEmitter {
     bytes: Vec<u8>,
+    memory_pages: u32,
+    memory_initialized: bool,
 }
 
 impl WasmEmitter {
     pub fn new() -> Self {
-        Self { bytes: Vec::new() }
+        Self { 
+            bytes: Vec::new(),
+            memory_pages: 1, // 1 page = 64KB default
+            memory_initialized: false,
+        }
+    }
+
+    pub fn with_memory_pages(&mut self, pages: u32) -> &mut Self {
+        self.memory_pages = pages;
+        self
     }
 
     pub fn emit_wasm(&mut self, _program: &Program) -> Result<Vec<u8>, Galat> {
@@ -21,17 +43,25 @@ impl WasmEmitter {
         wasm.extend_from_slice(&[0x01, 0x00, 0x00, 0x00]);
 
         // 3. Type Section (ID 1)
-        // Definisikan tipe fungsi () -> i32 dan (i32, i32) -> i32
+        // Define function types
         let mut type_sec = Vec::new();
-        type_sec.push(0x02); // 2 types
+        type_sec.push(0x03); // 3 types
 
-        // Type 0: () -> i32
+        // Type 0: () -> i32 (main)
         type_sec.push(0x60); // func type
         type_sec.push(0x00); // 0 params
         type_sec.push(0x01); // 1 return
         type_sec.push(0x7F); // i32
 
-        // Type 1: (i32, i32) -> i32
+        // Type 1: (i32, i32) -> i32 (tambah)
+        type_sec.push(0x60); // func type
+        type_sec.push(0x02); // 2 params
+        type_sec.push(0x7F); // i32
+        type_sec.push(0x7F); // i32
+        type_sec.push(0x01); // 1 return
+        type_sec.push(0x7F); // i32
+
+        // Type 2: (i32, i32) -> i32 (baca_memori)
         type_sec.push(0x60); // func type
         type_sec.push(0x02); // 2 params
         type_sec.push(0x7F); // i32

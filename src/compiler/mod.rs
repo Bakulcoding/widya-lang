@@ -279,7 +279,15 @@ macro_rules! tulis {
                 let r = self.compile_expr(right)?;
 
                 if *op == BinaryOp::Power {
-                    return Ok(format!("({}_f64).powf({})", l, r));
+                    // Ensure left expression has f64 suffix if it's a simple number
+                    let left_str = if l.ends_with("_f64") {
+                        l
+                    } else if l.parse::<f64>().is_ok() {
+                        format!("{}_f64", l)
+                    } else {
+                        format!("({}) as f64", l)
+                    };
+                    return Ok(format!("{}.powf({})", left_str, r));
                 }
 
                 let op_str = match op {

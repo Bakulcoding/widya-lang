@@ -1,0 +1,240 @@
+# docker-compose.yml untuk Widya-Lang Cluster Deployment
+# Multi-node distributed database cluster dengan failover & replication
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Widya-Lang Database Cluster
+  # ============================================================================
+  
+  widya-db-1:
+    image: widya-lang:latest
+    container_name: widya-db-1
+    environment:
+      - NODE_ID=db-1
+      - HOST=0.0.0.0
+      - PORT=5432
+      - CLUSTER_NODES=db-1,db-2,db-3
+      - REPLICATION_FACTOR=3
+      - CONSENSUS_TIMEOUT=1500
+      - LOG_LEVEL=info
+    ports:
+      - "5432:5432"
+    volumes:
+      - widya-db-1-data:/var/lib/widya
+      - ./config:/etc/widya
+    networks:
+      - widya-cluster
+    healthcheck:
+      test: ["CMD", "./widya", "--health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  widya-db-2:
+    image: widya-lang:latest
+    container_name: widya-db-2
+    environment:
+      - NODE_ID=db-2
+      - HOST=0.0.0.0
+      - PORT=5432
+      - CLUSTER_NODES=db-1,db-2,db-3
+      - REPLICATION_FACTOR=3
+      - CONSENSUS_TIMEOUT=1500
+      - LOG_LEVEL=info
+    ports:
+      - "5433:5432"
+    volumes:
+      - widya-db-2-data:/var/lib/widya
+      - ./config:/etc/widya
+    networks:
+      - widya-cluster
+    healthcheck:
+      test: ["CMD", "./widya", "--health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      widya-db-1:
+        condition: service_healthy
+
+  widya-db-3:
+    image: widya-lang:latest
+    container_name: widya-db-3
+    environment:
+      - NODE_ID=db-3
+      - HOST=0.0.0.0
+      - PORT=5432
+      - CLUSTER_NODES=db-1,db-2,db-3
+      - REPLICATION_FACTOR=3
+      - CONSENSUS_TIMEOUT=1500
+      - LOG_LEVEL=info
+    ports:
+      - "5434:5432"
+    volumes:
+      - widya-db-3-data:/var/lib/widya
+      - ./config:/etc/widya
+    networks:
+      - widya-cluster
+    healthcheck:
+      test: ["CMD", "./widya", "--health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      widya-db-2:
+        condition: service_healthy
+
+  # ============================================================================
+  # widya-db Proxy & Load Balancer
+  # ============================================================================
+  
+  widya-proxy:
+    image: widya-lang:latest
+    container_name: widya-proxy
+    command: ["proxy", "--port=5430", "--upstream=db-1:5432,db-2:5432,db-3:5432"]
+    ports:
+      - "5430:5430"
+    networks:
+      - widya-cluster
+    depends_on:
+      widya-db-1:
+        condition: service_healthy
+      widya-db-2:
+        condition: service_healthy
+      widya-db-3:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================================================
+  # Widya-Lang Application (Single Instance)
+  # ============================================================================
+  
+  widya-app:
+    image: widya-lang:latest
+    container_name: widya-app
+    command: ["run", "app.wya"]
+    environment:
+      - DATABASE_URL=widya-db-1:5432
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+      - APP_ENV=production
+    volumes:
+      - ./apps:/app
+    networks:
+      - widya-cluster
+    ports:
+      - "3000:3000"
+    depends_on:
+      widya-db-1:
+        condition: service_healthy
+      widya-db-2:
+        condition: service_healthy
+      widya-db-3:
+        condition: service_healthy
+      widya-proxy:
+        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ============================================================================
+  # Redis Cache Layer (untuk session & caching)
+  # ============================================================================
+  
+  redis:
+    image: redis:7-alpine
+    container_name: widya-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - widya-cluster
+    volumes:
+      - redis-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# ============================================================================
+# Networks Configuration
+# ============================================================================
+networks:
+  widya-cluster:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+
+# ============================================================================
+# Volumes Configuration
+# ============================================================================
+volumes:
+  widya-db-1-data:
+    driver: local
+  widya-db-2-data:
+    driver: local
+  widya-db-3-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ============================================================================
+# Deployment Commands
+# ============================================================================
+# Start cluster:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f
+#
+# Scale application:
+#   docker-compose up -d --scale widya-app=3
+#
+# Stop cluster:
+#   docker-compose down
+#
+# Stop with volumes:
+#   docker-compose down -v
+#
+# Check cluster health:
+#   docker-compose ps
+#
+# Run in production mode:
+#   docker-compose -f docker-compose.prod.yml up -d

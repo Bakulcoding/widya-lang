@@ -1,0 +1,12 @@
+// ==========================================================
+// Berkas Utama Proyek: ProyekUji
+// Dibuat secara otomatis oleh Widya Package Manager (WPM)
+// ==========================================================
+
+fungsi utama() {
+    cetak("🇮🇩 Halo dari Proyek ProyekUji", "!");
+    misal status = Ok("Aplikasi Berhasil Berjalan");
+    cetak("Status Proyek:", buka(status));
+}
+
+utama();
