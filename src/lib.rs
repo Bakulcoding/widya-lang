@@ -24,6 +24,7 @@ pub mod web;
 pub mod typesystem;
 pub mod patternmatching;
 pub mod typeclasses;
+pub mod typeparser;
 
 use borrow_checker::BorrowChecker;
 use error::Galat;
