@@ -21,6 +21,9 @@ pub mod ebpf;
 pub mod borrow_checker;
 pub mod tools;
 pub mod web;
+pub mod typesystem;
+pub mod patternmatching;
+pub mod typeclasses;
 
 use borrow_checker::BorrowChecker;
 use error::Galat;

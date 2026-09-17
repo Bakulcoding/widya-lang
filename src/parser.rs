@@ -86,12 +86,12 @@ impl Parser {
             }
         } else if self.match_token(&[TokenType::Struktur]) {
             self.struct_declaration(attributes)
+        } else if self.match_token(&[TokenType::Enum]) {
+            self.enum_declaration(attributes)
         } else if self.match_token(&[TokenType::Sifat]) {
             self.trait_declaration()
         } else if self.match_token(&[TokenType::Terapkan]) {
             self.impl_declaration()
-        } else if self.match_token(&[TokenType::Enum]) {
-            self.enum_declaration(attributes)
         } else if self.match_token(&[TokenType::Eksternal]) {
             self.external_block()
         } else if self.match_token(&[TokenType::Impor]) {
