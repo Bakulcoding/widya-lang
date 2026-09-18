@@ -1,0 +1,26 @@
+// ==========================================
+// KURIKULUM TINGKAT SMP - LATIHAN 3
+// Algoritma Pengurutan Nilai (Bubble Sort)
+// ==========================================
+
+fungsi urutkan_data(data: [Int]) -> [Int] {
+    misal n = 5;
+    misal hasil = data;
+    
+    untuk i dalam 0..n {
+        untuk j dalam 0..(n - 1) {
+            jika hasil[j] > hasil[j + 1] {
+                misal temp = hasil[j];
+                hasil[j] = hasil[j + 1];
+                hasil[j + 1] = temp;
+            }
+        }
+    }
+    kembalikan hasil;
+}
+
+misal angka_acak = [45, 12, 89, 23, 7];
+cetak("Data Sebelum Diurutkan:", angka_acak);
+
+misal angka_terurut = urutkan_data(angka_acak);
+cetak("Data Setelah Diurutkan :", angka_terurut);

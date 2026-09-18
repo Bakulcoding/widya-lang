@@ -1,0 +1,29 @@
+// ==========================================
+// KURIKULUM TINGKAT SMA/SMK - LATIHAN 1
+// Sistem Tipe Hindley-Milner & Generic Functions
+// ==========================================
+
+// Fungsi Generic yang bekerja untuk sembarang tipe data T
+fungsi ganti_posisi<T>(a: T, b: T) -> (T, T) {
+    kembalikan (b, a);
+}
+
+fungsi identitas<T>(nilai: T) -> T {
+    kembalikan nilai;
+}
+
+// Kompiler menginferensi tipe secara otomatis dan aman (Compile-time Type Safety)
+misal angka1 = 100;
+misal angka2 = 200;
+misal (hasil_a, hasil_b) = ganti_posisi(angka1, angka2);
+
+cetak("Tukar Angka :");
+cetak("Awal  : a =", angka1, ", b =", angka2);
+cetak("Hasil : a =", hasil_a, ", b =", hasil_b);
+
+cetak("--------------------------------------------");
+misal kata1 = "Widya";
+misal kata2 = "Nusantara";
+misal (str_a, str_b) = ganti_posisi(kata1, kata2);
+cetak("Tukar String:");
+cetak("Hasil : str_a =", str_a, ", str_b =", str_b);

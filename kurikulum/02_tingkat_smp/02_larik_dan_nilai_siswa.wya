@@ -1,0 +1,35 @@
+// ==========================================
+// KURIKULUM TINGKAT SMP - LATIHAN 2
+// Struktur Data Larik (Array) & Perhitungan Statistik
+// ==========================================
+
+misal daftar_nilai = [80, 92, 75, 88, 95, 60];
+
+cetak("📊 Data Nilai Ujian Siswa 📊");
+cetak("Daftar Nilai:", daftar_nilai);
+
+misal total = 0;
+misal nilai_tertinggi = daftar_nilai[0];
+misal nilai_terendah = daftar_nilai[0];
+
+untuk nilai dalam daftar_nilai {
+    total = total + nilai;
+    
+    jika nilai > nilai_tertinggi {
+        nilai_tertinggi = nilai;
+    }
+    
+    jika nilai < nilai_terendah {
+        nilai_terendah = nilai;
+    }
+}
+
+misal jumlah_siswa = 6;
+misal rata_rata = total / jumlah_siswa;
+
+cetak("--------------------------------");
+cetak("Jumlah Siswa     :", jumlah_siswa);
+cetak("Total Seluruh    :", total);
+cetak("Rata-rata Kelas  :", rata_rata);
+cetak("Nilai Tertinggi  :", nilai_tertinggi);
+cetak("Nilai Terendah   :", nilai_terendah);

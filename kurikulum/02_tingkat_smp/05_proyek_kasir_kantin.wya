@@ -1,0 +1,44 @@
+// ==========================================
+// KURIKULUM TINGKAT SMP - PROYEK AKHIR
+// Sistem Kasir Kantin Sekolah Sederhana
+// ==========================================
+
+fungsi hitung_diskon(total: Int, member: String) -> Int {
+    jika member == "guru" {
+        kembalikan total * 15 / 100; // Diskon 15%
+    } lainnya jika member == "siswa" {
+        kembalikan total * 10 / 100; // Diskon 10%
+    } lainnya {
+        kembalikan 0;
+    }
+}
+
+cetak("============================================");
+cetak("🏪 SISTEM KASIR KANTIN WIDYA JUARA 🏪");
+cetak("============================================");
+
+misal nama_pelanggan = "Ahmad (Siswa)";
+misal tipe_member = "siswa";
+
+misal harga_nasi_goreng = 12000;
+misal harga_es_teh = 3000;
+misal jumlah_nasi = 2;
+misal jumlah_es = 2;
+
+misal subtotal = (harga_nasi_goreng * jumlah_nasi) + (harga_es_teh * jumlah_es);
+misal potongan = hitung_diskon(subtotal, tipe_member);
+misal total_bayar = subtotal - potongan;
+misal uang_dibayar = 50000;
+misal kembalian = uang_dibayar - total_bayar;
+
+cetak("Pelanggan    :", nama_pelanggan);
+cetak("Nasi Goreng  : 2 x Rp 12.000 = Rp", harga_nasi_goreng * jumlah_nasi);
+cetak("Es Teh Manis : 2 x Rp  3.000 = Rp", harga_es_teh * jumlah_es);
+cetak("--------------------------------------------");
+cetak("Subtotal     : Rp", subtotal);
+cetak("Diskon Member: Rp", potongan);
+cetak("Total Tagihan: Rp", total_bayar);
+cetak("Uang Tunai   : Rp", uang_dibayar);
+cetak("Kembalian    : Rp", kembalian);
+cetak("============================================");
+cetak("Terima kasih telah berbelanja di Kantin Widya!");

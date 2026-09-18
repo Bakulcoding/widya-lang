@@ -1,0 +1,15 @@
+// ==========================================
+// KURIKULUM TINGKAT SD - LATIHAN 1
+// Menampilkan Pesan dan Perkenalan Diri
+// ==========================================
+
+cetak("====================================");
+cetak("🎉 Selamat Datang di Dunia Coding Widya-Lang! 🎉");
+cetak("====================================");
+
+cetak("Halo teman-teman!");
+cetak("Nama saya: Budi");
+cetak("Umur saya: 10 tahun");
+cetak("Cita-cita saya: Menjadi Programmer Hebat!");
+
+cetak("Belajar coding dengan bahasa Indonesia sangat seru!");

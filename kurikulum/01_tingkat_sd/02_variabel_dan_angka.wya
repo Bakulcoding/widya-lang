@@ -1,0 +1,22 @@
+// ==========================================
+// KURIKULUM TINGKAT SD - LATIHAN 2
+// Variabel & Berhitung Matematika Sederhana
+// ==========================================
+
+// Kotak penyimpan nama dan umur
+misal nama_teman = "Siti";
+misal uang_saku = 15000;
+misal harga_roti = 5000;
+misal harga_susu = 4000;
+
+// Menghitung total belanjaan
+misal total_belanja = harga_roti + harga_susu;
+misal sisa_uang = uang_saku - total_belanja;
+
+cetak("Nama Pembeli:", nama_teman);
+cetak("Uang Saku Awal: Rp", uang_saku);
+cetak("Harga Roti: Rp", harga_roti);
+cetak("Harga Susu: Rp", harga_susu);
+cetak("--------------------------------");
+cetak("Total yang Dibeli: Rp", total_belanja);
+cetak("Sisa Uang Tabungan: Rp", sisa_uang);

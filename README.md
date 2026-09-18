@@ -8,7 +8,7 @@
 [![Tests](https://img.shields.io/badge/tests-111%20passed%20(100%25)-success.svg)](#pengujian)
 [![Self-Hosting](https://img.shields.io/badge/self--hosting-100%25%20stage--2-purple.svg)](#full-self-hosting)
 
-[Buku Panduan Lengkap](PANDUAN.md) • [Web Playground](https://bakulcoding.github.io/widya-lang/www/) • [Ekstensi VS Code](editors/vscode/) • [Contoh Kode](contoh/)
+[Buku Panduan Lengkap](PANDUAN.md) • [Kurikulum Sekolah (SD-SMA)](kurikulum/) • [Web Playground](https://bakulcoding.github.io/widya-lang/www/) • [Ekstensi VS Code](editors/vscode/) • [Contoh Kode](contoh/)
 
 </div>
 
@@ -186,6 +186,7 @@ widya-lang/
 ├── editors/                # Ekstensi resmi editor VS Code
 │   └── vscode/             # TextMate Grammar, LSP client, DAP contribution
 ├── www/                    # Website resmi & Interactive WebAssembly Playground
+├── kurikulum/              # Kurikulum resmi jenjang SD, SMP, & SMA/SMK
 ├── tests/                  # 111 Unit & Integration Test Suites
 ├── contoh/                 # Kumpulan contoh aplikasi resmi
 └── PANDUAN.md              # Buku panduan 18 bab lengkap

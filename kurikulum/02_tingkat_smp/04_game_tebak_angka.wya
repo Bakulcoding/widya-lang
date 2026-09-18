@@ -1,0 +1,27 @@
+// ==========================================
+// KURIKULUM TINGKAT SMP - LATIHAN 4
+// Game Logika Tebak Angka Rahasia
+// ==========================================
+
+cetak("🎮 Selamat Datang di Game Tebak Angka! 🎮");
+cetak("Komputer telah memilih angka rahasia antara 1 sampai 50.");
+
+misal angka_rahasia = 34;
+misal daftar_tebakan = [10, 45, 25, 34];
+misal kesempatan = 1;
+
+untuk tebakan dalam daftar_tebakan {
+    cetak("Percobaan ke-", kesempatan, "Tebakan:", tebakan);
+    
+    jika tebakan == angka_rahasia {
+        cetak("🎯 BINGO! Tebakan kamu BENAR!");
+        berhenti;
+    } lainnya jika tebakan < angka_rahasia {
+        cetak("🔼 Terlalu KECIL! Coba angka yang lebih besar.");
+    } lainnya {
+        cetak("🔽 Terlalu BESAR! Coba angka yang lebih kecil.");
+    }
+    
+    kesempatan = kesempatan + 1;
+    cetak("---");
+}

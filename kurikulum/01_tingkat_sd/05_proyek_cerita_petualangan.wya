@@ -1,0 +1,39 @@
+// ==========================================
+// KURIKULUM TINGKAT SD - PROYEK AKHIR
+// Game Cerita Petualangan Harta Karun
+// ==========================================
+
+cetak("============================================");
+cetak("🏰 PETUALANGAN MENCARI HARTA KARUN WIDYA 🏰");
+cetak("============================================");
+
+misal nama_pahlawan = "Ksatria Danu";
+misal pilihan_jalan = "kanan"; // Coba ganti dengan "kiri" atau "tengah"
+misal kunci_rahasia = 7;
+
+cetak("Halo Pahlawan", nama_pahlawan);
+cetak("Kamu tiba di sebuah persimpangan misterius di dalam gua.");
+cetak("Kamu memilih melangkah ke arah:", pilihan_jalan);
+cetak("--------------------------------------------");
+
+jika pilihan_jalan == "kiri" {
+    cetak("🦇 Kamu memasuki sarang kelelawar!");
+    cetak("Untung kamu membawa obor, kelelawar pun terbang menjauh.");
+    cetak("Kamu menemukan kantong berisi 50 koin emas! 💰");
+} lainnya jika pilihan_jalan == "kanan" {
+    cetak("🚪 Kamu menemukan Pintu Gerbang Emas!");
+    cetak("Pintu membutuhkan angka tebakan rahasia...");
+    
+    jika kunci_rahasia == 7 {
+        cetak("✨ KLIK! Kunci cocok!");
+        cetak("👑 Selamat! Kamu berhasil menemukan Mahkota Raja Widya!");
+    } lainnya {
+        cetak("❌ Kunci salah, pintu tetap terkunci.");
+    }
+} lainnya {
+    cetak("🌀 Kamu tersesat di jalan buntu yang berputar-putar!");
+    cetak("Mari coba lagi dari awal.");
+}
+
+cetak("--------------------------------------------");
+cetak("🎉 Tamat! Terima kasih telah bermain!");

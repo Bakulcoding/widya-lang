@@ -1,0 +1,26 @@
+// ==========================================
+// KURIKULUM TINGKAT SMP - LATIHAN 1
+// Fungsi, Parameter, dan Nilai Kembalian
+// ==========================================
+
+fungsi hitung_luas_segitiga(alas: Int, tinggi: Int) -> Int {
+    kembalikan (alas * tinggi) / 2;
+}
+
+fungsi konversi_celcius_ke_fahrenheit(c: Int) -> Int {
+    kembalikan (c * 9 / 5) + 32;
+}
+
+fungsi sapa_pengguna(nama: String, waktu: String) {
+    cetak("Selamat", waktu, nama, "! Selamat belajar koding.");
+}
+
+// Menggunakan fungsi di program utama
+sapa_pengguna("Rian", "Pagi");
+
+misal luas1 = hitung_luas_segitiga(10, 8);
+cetak("Luas Segitiga (alas=10, tinggi=8):", luas1, "cm2");
+
+misal suhu_c = 30;
+misal suhu_f = konversi_celcius_ke_fahrenheit(suhu_c);
+cetak("Suhu", suhu_c, "C sama dengan", suhu_f, "F");

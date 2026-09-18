@@ -1,0 +1,35 @@
+// ==========================================
+// KURIKULUM TINGKAT SMA/SMK - LATIHAN 3
+// Pencocokan Pola (Pattern Matching) & Aljabar Tipe Data (ADT)
+// ==========================================
+
+pilihan HasilOperasi {
+    Berhasil(String),
+    Peringatan(String),
+    Galat(Int, String)
+}
+
+fungsi tangani_status(hasil: HasilOperasi) {
+    cocokkan hasil {
+        HasilOperasi::Berhasil(pesan) => {
+            cetak("✅ [200 OK] Sukses:", pesan);
+        },
+        HasilOperasi::Peringatan(peringatan) => {
+            cetak("⚠️ [400 WARNING]:", peringatan);
+        },
+        HasilOperasi::Galat(kode, err) => {
+            cetak("❌ [ERROR", kode, "]:", err);
+        }
+    }
+}
+
+misal status1 = HasilOperasi::Berhasil("Pendaftaran akun siswa berhasil.");
+misal status2 = HasilOperasi::Peringatan("Password terlalu pendek, disarankan > 8 karakter.");
+misal status3 = HasilOperasi::Galat(404, "Data NIS siswa tidak ditemukan di database.");
+
+cetak("============================================");
+cetak("🔍 PENANGANAN STATUS SISTEM RESMI 🔍");
+cetak("============================================");
+tangani_status(status1);
+tangani_status(status2);
+tangani_status(status3);

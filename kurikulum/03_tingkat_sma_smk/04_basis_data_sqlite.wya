@@ -1,0 +1,33 @@
+// ==========================================
+// KURIKULUM TINGKAT SMA/SMK - LATIHAN 4
+// Integrasi Pustaka Standar Basis Data C FFI (SQLite3)
+// ==========================================
+
+gunakan stdlib::sqlite;
+
+fungsi inisialisasi_db() {
+    cetak("📦 Menghubungkan ke basis data SQLite 'sekolah.db'...");
+    
+    // Inisialisasi tabel siswa
+    misal query_tabel = "CREATE TABLE IF NOT EXISTS presensi (id INTEGER PRIMARY KEY, nis TEXT, status TEXT, tanggal TEXT);";
+    sqlite::eksekusi("sekolah.db", query_tabel);
+    
+    cetak("✅ Tabel 'presensi' berhasil disiapkan.");
+}
+
+fungsi catat_kehadiran(nis: String, status: String, tgl: String) {
+    misal query_insert = "INSERT INTO presensi (nis, status, tanggal) VALUES ('" + nis + "', '" + status + "', '" + tgl + "');";
+    sqlite::eksekusi("sekolah.db", query_insert);
+    cetak("📝 Kehadiran tercatat:", nis, "->", status, "(", tgl, ")");
+}
+
+cetak("============================================");
+cetak("🏫 SISTEM DATABASE PRESENSI SISWA 🏫");
+cetak("============================================");
+
+inisialisasi_db();
+catat_kehadiran("2026001", "HADIR", "2026-09-18");
+catat_kehadiran("2026002", "HADIR", "2026-09-18");
+catat_kehadiran("2026003", "SAKIT", "2026-09-18");
+cetak("============================================");
+cetak("Semua transaksi berhasil disimpan.");

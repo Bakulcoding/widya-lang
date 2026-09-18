@@ -1,0 +1,52 @@
+// ==========================================
+// KURIKULUM TINGKAT SMA/SMK - PROYEK AKHIR
+// REST API Server & Layanan Presensi Sekolah
+// ==========================================
+
+struktur PermintaanPresensi {
+    nis: String,
+    waktu: String,
+    lokasi_gps: String
+}
+
+fungsi validasi_keamanan_token(token: String) -> Bool {
+    // Validasi token otentikasi sederhana
+    jika token == "WIDYA_SECRET_SEKOLAH_2026" {
+        kembalikan benar;
+    } lainnya {
+        kembalikan salah;
+    }
+}
+
+fungsi proses_api_presensi(req: PermintaanPresensi, token: String) -> String {
+    jika !validasi_keamanan_token(token) {
+        kembalikan "{\"status\": 401, \"error\": \"Token autentikasi tidak valid\"}";
+    }
+    
+    cetak("📡 [API Request] Menerima data presensi:", req.nis, "pada", req.waktu, "di", req.lokasi_gps);
+    
+    // Logika simpan dan response JSON
+    kembalikan "{\"status\": 200, \"message\": \"Presensi berhasil dicatat untuk NIS " + req.nis + "\"}";
+}
+
+cetak("============================================");
+cetak("🚀 BACKEND API SERVICE PRESENSI SEKOLAH 🚀");
+cetak("============================================");
+
+misal data_masuk = PermintaanPresensi {
+    nis: "2026105",
+    waktu: "07:14:22",
+    lokasi_gps: "-6.200000, 106.816666"
+};
+
+// Simulasi Request 1: Token Benar
+misal token_auth = "WIDYA_SECRET_SEKOLAH_2026";
+misal respon1 = proses_api_presensi(data_masuk, token_auth);
+cetak("Respon API (Sukses):", respon1);
+
+cetak("--------------------------------------------");
+
+// Simulasi Request 2: Token Salah
+misal respon2 = proses_api_presensi(data_masuk, "TOKEN_PALSU");
+cetak("Respon API (Ditolak):", respon2);
+cetak("============================================");

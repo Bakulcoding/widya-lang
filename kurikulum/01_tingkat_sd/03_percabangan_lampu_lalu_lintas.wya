@@ -1,0 +1,30 @@
+// ==========================================
+// KURIKULUM TINGKAT SD - LATIHAN 3
+// Mengambil Keputusan (Percabangan Logika)
+// ==========================================
+
+misal warna_lampu = "hijau";
+
+cetak("🚦 Simulasi Lampu Lalu Lintas 🚦");
+cetak("Warna lampu saat ini:", warna_lampu);
+
+jika warna_lampu == "merah" {
+    cetak("🛑 Berhenti! Tunggu sampai lampu hijau.");
+} lainnya jika warna_lampu == "kuning" {
+    cetak("⚠️ Hati-hati! Bersiap-siap.");
+} lainnya jika warna_lampu == "hijau" {
+    cetak("🟢 Jalan terus dengan aman!");
+} lainnya {
+    cetak("❓ Warna lampu tidak dikenali.");
+}
+
+// Contoh kedua: Memeriksa nilai ujian
+misal nilai_matematika = 85;
+cetak("--------------------------------");
+cetak("Nilai Ujian:", nilai_matematika);
+
+jika nilai_matematika >= 75 {
+    cetak("🎉 Hore! Kamu Lulus dengan Hebat!");
+} lainnya {
+    cetak("💪 Tetap Semangat! Belajar lagi ya!");
+}

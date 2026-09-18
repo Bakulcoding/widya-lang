@@ -1,0 +1,42 @@
+// ==========================================
+// KURIKULUM TINGKAT SMA/SMK - LATIHAN 2
+// Struktur Data (Struct) & Sifat (Traits / Interface)
+// ==========================================
+
+sifat DapatDicetak {
+    fungsi format_tampilan(&diri) -> String;
+}
+
+struktur Siswa {
+    nis: String,
+    nama: String,
+    nilai_akhir: Int
+}
+
+implementasi DapatDicetak untuk Siswa {
+    fungsi format_tampilan(&diri) -> String {
+        jika diri.nilai_akhir >= 75 {
+            kembalikan "[LULUS] NIS: " + diri.nis + " - " + diri.nama + " (Nilai: " + diri.nilai_akhir + ")";
+        } lainnya {
+            kembalikan "[REMEDIAL] NIS: " + diri.nis + " - " + diri.nama + " (Nilai: " + diri.nilai_akhir + ")";
+        }
+    }
+}
+
+misal siswa1 = Siswa {
+    nis: "2026001",
+    nama: "Anisa Rahma",
+    nilai_akhir: 90
+};
+
+misal siswa2 = Siswa {
+    nis: "2026002",
+    nama: "Fajar Pratama",
+    nilai_akhir: 68
+};
+
+cetak("============================================");
+cetak("📋 DATA STATUS KELULUSAN SISWA 📋");
+cetak("============================================");
+cetak(siswa1.format_tampilan());
+cetak(siswa2.format_tampilan());

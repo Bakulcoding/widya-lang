@@ -1,0 +1,22 @@
+// ==========================================
+// KURIKULUM TINGKAT SD - LATIHAN 4
+// Perulangan (Pengulangan Tugas Otomatis)
+// ==========================================
+
+cetak("🚀 Peluncuran Roket Widya 🚀");
+cetak("Hitung mundur dimulai:");
+
+untuk detik dalam 1..6 {
+    cetak("Hitungan:", detik);
+}
+
+cetak("🚀 WUSSSHH! Roket meluncur ke angkasa!");
+
+cetak("--------------------------------");
+cetak("✨ Tabel Perkalian 5 ✨");
+misal angka = 5;
+
+untuk i dalam 1..6 {
+    misal hasil = angka * i;
+    cetak(angka, "x", i, "=", hasil);
+}
