@@ -64,18 +64,52 @@ cocokkan status {
 
 ## ⚡ Cara Instalasi & Menjalankan
 
-### 1. Kloning Repositori
+### 🐧 Di Linux (Ubuntu, Debian, Fedora, Arch, dll.)
 ```bash
+# 1. Kloning repositori
 git clone https://github.com/Bakulcoding/widya-lang.git
 cd widya-lang
+
+# 2. Jalankan skrip instalasi otomatis (memerlukan Rust/Cargo)
+chmod +x install.sh
+./install.sh
+
+# 3. Verifikasi instalasi
+widya --version
+```
+> *Alternatif manual:* Jalankan `cargo install --path .` untuk memasang biner `widya` langsung ke `~/.cargo/bin/widya`.
+
+---
+
+### 🍎 Di macOS (Apple Silicon M1/M2/M3 & Intel)
+```bash
+# 1. Kloning repositori
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
+
+# 2. Jalankan skrip instalasi otomatis
+chmod +x install.sh
+./install.sh
+
+# 3. Verifikasi instalasi
+widya --version
 ```
 
-### 2. Bangun Biner Kompiler (Host Stage-0)
-Pastikan Anda telah memasang toolchain Rust/Cargo, lalu jalankan:
-```bash
-cargo build --release
+---
+
+### 🪟 Di Windows (PowerShell / Command Prompt)
+```powershell
+# 1. Buka PowerShell dan kloning repositori
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
+
+# 2. Jalankan skrip instalasi otomatis Windows
+.\install.ps1
+
+# 3. Buka jendela terminal baru lalu verifikasi instalasi
+widya --version
 ```
-Biner executable `widya` akan tersedia di `target/release/widya` (atau `widya.exe` di Windows).
+> *Alternatif manual:* Jalankan `cargo build --release`, lalu tambahkan folder `target\release` ke variabel `PATH` lingkungan Windows Anda.
 
 ---
 

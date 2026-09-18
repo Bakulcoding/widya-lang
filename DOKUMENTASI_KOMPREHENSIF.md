@@ -38,7 +38,52 @@ Widya-Lang dirancang dengan kata kunci ekspresif berbahasa Indonesia dengan perf
 
 ## 2. Instalasi & Antarmuka CLI
 
-Setelah mengompilasi biner `widya`, perintah utama yang tersedia:
+### Langkah Instalasi Berdasarkan Sistem Operasi
+
+#### 🐧 Di Linux (Ubuntu, Debian, Fedora, Arch, CentOS, dll.)
+```bash
+# 1. Kloning repositori
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
+
+# 2. Berikan izin eksekusi dan jalankan instalasi
+chmod +x install.sh
+./install.sh
+
+# 3. Verifikasi ketersediaan biner di terminal
+widya --version
+```
+
+#### 🍎 Di macOS (Intel & Apple Silicon M-Series)
+```bash
+# 1. Kloning repositori
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
+
+# 2. Jalankan instalasi otomatis
+chmod +x install.sh
+./install.sh
+
+# 3. Verifikasi instalasi
+widya --version
+```
+
+#### 🪟 Di Windows (PowerShell)
+```powershell
+# 1. Kloning repositori
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
+
+# 2. Jalankan skrip PowerShell
+.\install.ps1
+
+# 3. Buka jendela PowerShell baru dan periksa versi
+widya --version
+```
+
+---
+
+### Perintah Utama Antarmuka CLI (`widya`)
 
 ```bash
 # Eksekusi berkas
