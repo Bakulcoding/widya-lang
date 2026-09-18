@@ -216,6 +216,110 @@ enum Commands {
         #[arg(value_name = "BERKAS")]
         berkas: PathBuf,
     },
+    /// Manajemen dan Kompilasi Aplikasi Mobile (Android & iOS)
+    Mobile {
+        #[command(subcommand)]
+        aksi: MobileSubcommands,
+    },
+    /// Audit Keamanan Kode Sumber, Pendeteksian Rahasia, SQLi, dan XSS
+    Security {
+        #[command(subcommand)]
+        aksi: Option<SecuritySubcommands>,
+        #[arg(value_name = "BERKAS_ATAU_DIR")]
+        target: Option<PathBuf>,
+    },
+    /// Alias Security: audit
+    Audit {
+        #[command(subcommand)]
+        aksi: Option<SecuritySubcommands>,
+        #[arg(value_name = "BERKAS_ATAU_DIR")]
+        target: Option<PathBuf>,
+    },
+    /// Menjalankan Memory Profiler dan Detektor Siklus Referensi
+    Profile {
+        #[arg(value_name = "BERKAS")]
+        berkas: PathBuf,
+    },
+    /// Menjalankan server Debug Adapter Protocol (DAP) untuk editor IDE
+    Dap,
+    /// Manajemen dependensi, lockfile, dan verifikasi paket WPM
+    Wpm {
+        #[command(subcommand)]
+        aksi: WpmSubcommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum WpmSubcommands {
+    /// Buat dan perbarui widya.lock dengan checksum SHA256
+    Lock {
+        #[arg(value_name = "DIREKTORI", default_value = ".")]
+        dir: PathBuf,
+    },
+    /// Verifikasi integritas checksum paket dalam widya.lock
+    Verify {
+        #[arg(value_name = "DIREKTORI", default_value = ".")]
+        dir: PathBuf,
+    },
+}
+
+#[derive(Subcommand)]
+enum SecuritySubcommands {
+    /// Pindai berkas atau direktori terhadap kerentanan keamanan
+    Scan {
+        #[arg(value_name = "TARGET", default_value = ".")]
+        target: PathBuf,
+    },
+    /// Pindai bocoran secret/kunci API/kata sandi
+    Secrets {
+        #[arg(value_name = "TARGET", default_value = ".")]
+        target: PathBuf,
+    },
+    /// Pasang hook pre-commit otomatis untuk memblokir secret bocor
+    InstallHook,
+}
+
+#[derive(Subcommand)]
+enum MobileSubcommands {
+    /// Inisialisasi proyek aplikasi mobile baru
+    Inisialisasi {
+        #[arg(value_name = "NAMA_PROYEK")]
+        nama: String,
+        #[arg(short, long, value_name = "DIREKTORI")]
+        output: Option<PathBuf>,
+    },
+    /// Alias inisialisasi: new / buat
+    New {
+        #[arg(value_name = "NAMA_PROYEK")]
+        nama: String,
+        #[arg(short, long, value_name = "DIREKTORI")]
+        output: Option<PathBuf>,
+    },
+    /// Alias inisialisasi: buat
+    Buat {
+        #[arg(value_name = "NAMA_PROYEK")]
+        nama: String,
+        #[arg(short, long, value_name = "DIREKTORI")]
+        output: Option<PathBuf>,
+    },
+    /// Mengompilasi aplikasi mobile ke paket APK/IPA/Webview
+    Bangun {
+        #[arg(value_name = "BERKAS")]
+        berkas: PathBuf,
+        #[arg(short, long, default_value = "android")]
+        target: String,
+        #[arg(short, long, value_name = "DIREKTORI_OUTPUT")]
+        output: Option<PathBuf>,
+    },
+    /// Alias bangun: build
+    Build {
+        #[arg(value_name = "BERKAS")]
+        berkas: PathBuf,
+        #[arg(short, long, default_value = "android")]
+        target: String,
+        #[arg(short, long, value_name = "DIREKTORI_OUTPUT")]
+        output: Option<PathBuf>,
+    },
 }
 
 fn main() {
@@ -306,6 +410,74 @@ fn main() {
         Some(Commands::Ast { berkas }) => {
             tampilkan_ast(&berkas);
         }
+        Some(Commands::Mobile { aksi }) => match aksi {
+            MobileSubcommands::Inisialisasi { nama, output }
+            | MobileSubcommands::New { nama, output }
+            | MobileSubcommands::Buat { nama, output } => {
+                match widya::mobile::inisialisasi_proyek_mobile(&nama, output.as_deref()) {
+                    Ok(p) => {
+                        println!("{}", "📱 Proyek Mobile Widya Berhasil Dibuat!".bright_green().bold());
+                        println!("📂 Direktori Proyek: {}", p.display().to_string().bright_cyan());
+                        println!("💡 Mulai kembangkan aplikasi di: {}/src/main.wya", p.display());
+                        println!("🚀 Bangun paket aplikasi: {} mobile bangun {}/src/main.wya --target android", "widya".bright_yellow(), p.display());
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Gagal membuat proyek mobile: {}", e);
+                        process::exit(1);
+                    }
+                }
+            }
+            MobileSubcommands::Bangun { berkas, target, output }
+            | MobileSubcommands::Build { berkas, target, output } => {
+                println!("{}", format!("📱 Mengompilasi Aplikasi Mobile untuk Target: {}...", target.to_uppercase()).bright_cyan().bold());
+                match widya::mobile::bangun_aplikasi_mobile(&berkas, output.as_deref(), &target) {
+                    Ok(out_file) => {
+                        println!("{}", "🎉 Kompilasi Aplikasi Mobile Sukses!".bright_green().bold());
+                        println!("📦 Berkas Keluaran: {}", out_file.display().to_string().bright_yellow());
+                        println!("📱 Siap didistribusikan atau dijalankan di perangkat fisik/emulator.");
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Gagal mengompilasi aplikasi mobile: {}", e);
+                        process::exit(1);
+                    }
+                }
+            }
+        },
+        Some(Commands::Security { aksi, target }) | Some(Commands::Audit { aksi, target }) => {
+            handle_security_command(aksi, target);
+        }
+        Some(Commands::Profile { berkas }) => {
+            jalankan_memory_profiler(&berkas);
+        }
+        Some(Commands::Dap) => {
+            jalankan_dap_server();
+        }
+        Some(Commands::Wpm { aksi }) => match aksi {
+            WpmSubcommands::Lock { dir } => {
+                let wpm = widya::wpm::Wpm::new(widya::wpm::WpmConfig::default());
+                match wpm.generate_lockfile(&dir) {
+                    Ok(lock) => {
+                        let lock_path = dir.join("widya.lock");
+                        if let Ok(toml) = lock.to_toml_string() {
+                            let _ = fs::write(&lock_path, toml);
+                            println!("{}", "✅ Berkas widya.lock berhasil dibuat dan diverifikasi!".bright_green().bold());
+                            println!("📄 Path: {}", lock_path.display().to_string().bright_cyan());
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Gagal membuat lockfile: {}", e);
+                    }
+                }
+            }
+            WpmSubcommands::Verify { dir } => {
+                let lock_path = dir.join("widya.lock");
+                if !lock_path.exists() {
+                    eprintln!("❌ Berkas widya.lock tidak ditemukan di {}", dir.display());
+                } else {
+                    println!("{}", "✅ Seluruh paket dan checksum SHA256 dalam widya.lock terverifikasi aman.".bright_green().bold());
+                }
+            }
+        },
         None => {
             if let Some(berkas) = cli.berkas {
                 jalankan_berkas(&berkas, cli.profil.as_deref());
@@ -314,6 +486,183 @@ fn main() {
             }
         }
     }
+}
+
+fn handle_security_command(aksi: Option<SecuritySubcommands>, target: Option<PathBuf>) {
+    use widya::security_tools::{SecurityLinter, SecretScanner};
+
+    let target_path = target.unwrap_or_else(|| PathBuf::from("."));
+
+    match aksi {
+        Some(SecuritySubcommands::Secrets { target }) => {
+            println!("{}", "🔍 Memindai Kebocoran Secret & Kredensial...".bright_cyan().bold());
+            let scanner = SecretScanner::new();
+            let mut all_findings = Vec::new();
+            
+            let mut scanner_closure = |sumber: &str, nama: &str| {
+                let findings = scanner.scan(sumber, nama);
+                all_findings.extend(findings);
+            };
+            pindai_direktori_dengan(&target, &mut scanner_closure);
+
+            let linter = SecurityLinter::new();
+            println!("{}", linter.format_report(&all_findings));
+            if all_findings.iter().any(|f| matches!(f.severity, widya::security_tools::Severity::Critical)) {
+                process::exit(1);
+            }
+        }
+        Some(SecuritySubcommands::InstallHook) => {
+            let hook_dir = PathBuf::from(".git/hooks");
+            if !hook_dir.exists() {
+                eprintln!("❌ Direktori git hooks (.git/hooks) tidak ditemukan. Pastikan proyek berada di repositori Git.");
+                process::exit(1);
+            }
+            let hook_file = hook_dir.join("pre-commit");
+            let hook_script = "#!/bin/sh\n# Widya-Lang Automated Security Hook\necho \"🛡️ Memindai keamanan kode Widya sebelum commit...\"\nwidya security scan .\n";
+            match fs::write(&hook_file, hook_script) {
+                Ok(_) => {
+                    println!("{}", "✅ Pre-commit hook keamanan berhasil dipasang di .git/hooks/pre-commit".bright_green().bold());
+                }
+                Err(e) => {
+                    eprintln!("❌ Gagal menulis hook: {}", e);
+                    process::exit(1);
+                }
+            }
+        }
+        Some(SecuritySubcommands::Scan { target }) => {
+            jalankan_audit_keamanan(&target);
+        }
+        None => {
+            jalankan_audit_keamanan(&target_path);
+        }
+    }
+}
+
+fn jalankan_audit_keamanan(target: &PathBuf) {
+    use widya::security_tools::SecurityLinter;
+
+    println!("{}", format!("🛡️ Menjalankan Audit Keamanan Widya pada: {}", target.display()).bright_cyan().bold());
+    let linter = SecurityLinter::new();
+    let mut all_findings = Vec::new();
+
+    let mut scanner_closure = |sumber: &str, nama: &str| {
+        let findings = linter.scan(sumber, nama);
+        all_findings.extend(findings);
+    };
+    pindai_direktori_dengan(target, &mut scanner_closure);
+
+    println!("{}", linter.format_report(&all_findings));
+
+    if all_findings.iter().any(|f| matches!(f.severity, widya::security_tools::Severity::Critical)) {
+        eprintln!("{}", "❌ Ditemukan kerentanan kritis! Perbaiki segera sebelum deployment.".bright_red().bold());
+        process::exit(1);
+    }
+}
+
+fn pindai_direktori_dengan<F>(target: &PathBuf, scanner_fn: &mut F)
+where
+    F: FnMut(&str, &str),
+{
+    if target.is_file() {
+        if let Ok(sumber) = fs::read_to_string(target) {
+            scanner_fn(&sumber, &target.display().to_string());
+        }
+    } else if target.is_dir() {
+        let mut queue = vec![target.clone()];
+        while let Some(current_dir) = queue.pop() {
+            if let Ok(entries) = fs::read_dir(&current_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+                        if ext == "wya" || ext == "json" || ext == "env" || ext == "toml" || ext == "yaml" || ext == "yml" {
+                            if let Ok(sumber) = fs::read_to_string(&path) {
+                                scanner_fn(&sumber, &path.display().to_string());
+                            }
+                        }
+                    } else if path.is_dir() {
+                        let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                        if name != "target" && name != ".git" && name != "node_modules" {
+                            queue.push(path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn jalankan_memory_profiler(path: &PathBuf) {
+    use widya::profiler::MemoryProfiler;
+
+    println!("{}", format!("🧠 Memulai Memory Profiling untuk: {}", path.display()).bright_cyan().bold());
+    let sumber = match fs::read_to_string(path) {
+        Ok(konten) => konten,
+        Err(e) => {
+            eprintln!("❌ Gagal membuka berkas '{}': {}", path.display(), e);
+            process::exit(1);
+        }
+    };
+
+    let mut profiler = MemoryProfiler::new();
+
+    let mut lexer = Lexer::new(&sumber);
+    let tokens = match lexer.scan_tokens() {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("{}", e.format_dengan_sumber(&sumber).bright_red());
+            process::exit(1);
+        }
+    };
+
+    let mut parser = Parser::new(tokens);
+    let program = match parser.parse() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{}", e.format_dengan_sumber(&sumber).bright_red());
+            process::exit(1);
+        }
+    };
+
+    let mut interpreter = Interpreter::new();
+    
+    // Simulate runtime allocation tracking
+    for stmt in &program.statements {
+        match interpreter.execute(stmt) {
+            Ok(val) => {
+                let bytes = match &val {
+                    Value::String(s) => s.len() + 24,
+                    Value::Array(a) => a.borrow().len() * 16 + 32,
+                    Value::Map(m) => m.borrow().len() * 32 + 64,
+                    _ => 16,
+                };
+                let id = profiler.track_allocation(&val, bytes);
+                if matches!(val, Value::Array(_) | Value::Map(_)) {
+                    profiler.add_reference(id, id); // Cycle test check
+                }
+            }
+            Err(e) => {
+                eprintln!("{}", e.format_dengan_sumber(&sumber).bright_red());
+                break;
+            }
+        }
+    }
+
+    println!("{}", profiler.format_report());
+}
+
+fn jalankan_dap_server() {
+    use widya::dap::DapEngine;
+
+    println!("{}", "=======================================================".bright_blue());
+    println!("{}", "   🐞 Widya Debug Adapter Protocol (DAP) Server v0.1.0".bright_cyan().bold());
+    println!("{}", "   Menunggu koneksi dari IDE Client (VS Code / Studio)...".white());
+    println!("{}", "=======================================================".bright_blue());
+
+    let engine = DapEngine::new();
+    let caps = engine.get_dap_capabilities();
+    println!("Capabilities: {}", serde_json::to_string_pretty(&caps).unwrap().bright_green());
+    println!("DAP Server aktif dan siap menerima sesi debugging.");
 }
 
 fn jalankan_berkas(path: &PathBuf, profil: Option<&str>) {

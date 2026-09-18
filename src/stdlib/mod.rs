@@ -96,6 +96,11 @@ pub fn register_stdlib(env: &mut Environment) {
     register_fn(env, "apakah_ok", Some(1), builtin_apakah_ok);
     register_fn(env, "apakah_err", Some(1), builtin_apakah_err);
     register_fn(env, "pastikan", None, builtin_pastikan);
+    register_fn(env, "pastikan_sama", None, builtin_pastikan_sama);
+    register_fn(env, "pastikan_beda", None, builtin_pastikan_beda);
+    register_fn(env, "pastikan_benar", None, builtin_pastikan_benar);
+    register_fn(env, "pastikan_salah", None, builtin_pastikan_salah);
+    register_fn(env, "pastikan_nihil", None, builtin_pastikan_nihil);
 
     // JSON Serialization
     register_fn(env, "ke_json", None, builtin_ke_json);
@@ -1980,6 +1985,65 @@ fn builtin_pastikan(args: &[Value], span: &Span) -> Result<Value, Galat> {
     }
     if !args[0].is_truthy() {
         let msg = args.get(1).map(|v| v.to_string_repr()).unwrap_or_else(|| "Penegasan (assertion) gagal!".to_string());
+        return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
+    }
+    Ok(Value::Bool(true))
+}
+
+fn builtin_pastikan_sama(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    if args.len() < 2 {
+        return Err(Galat::runtime("Fungsi 'pastikan_sama' memerlukan minimal 2 argumen: (ekspektasi, aktual)", span));
+    }
+    if args[0] != args[1] {
+        let msg = args.get(2).map(|v| v.to_string_repr()).unwrap_or_else(|| {
+            format!("Penegasan gagal! Diharapkan: {}, Ditemukan: {}", args[0].to_string_repr(), args[1].to_string_repr())
+        });
+        return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
+    }
+    Ok(Value::Bool(true))
+}
+
+fn builtin_pastikan_beda(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    if args.len() < 2 {
+        return Err(Galat::runtime("Fungsi 'pastikan_beda' memerlukan minimal 2 argumen: (nilai1, nilai2)", span));
+    }
+    if args[0] == args[1] {
+        let msg = args.get(2).map(|v| v.to_string_repr()).unwrap_or_else(|| {
+            format!("Penegasan gagal! Kedua nilai sama: {}", args[0].to_string_repr())
+        });
+        return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
+    }
+    Ok(Value::Bool(true))
+}
+
+fn builtin_pastikan_benar(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    if args.is_empty() {
+        return Err(Galat::runtime("Fungsi 'pastikan_benar' memerlukan nilai boolean", span));
+    }
+    if !args[0].is_truthy() {
+        let msg = args.get(1).map(|v| v.to_string_repr()).unwrap_or_else(|| "Diharapkan 'benar', ditemukan 'salah'".to_string());
+        return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
+    }
+    Ok(Value::Bool(true))
+}
+
+fn builtin_pastikan_salah(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    if args.is_empty() {
+        return Err(Galat::runtime("Fungsi 'pastikan_salah' memerlukan nilai boolean", span));
+    }
+    if args[0].is_truthy() {
+        let msg = args.get(1).map(|v| v.to_string_repr()).unwrap_or_else(|| "Diharapkan 'salah', ditemukan 'benar'".to_string());
+        return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
+    }
+    Ok(Value::Bool(true))
+}
+
+fn builtin_pastikan_nihil(args: &[Value], span: &Span) -> Result<Value, Galat> {
+    if args.is_empty() {
+        return Err(Galat::runtime("Fungsi 'pastikan_nihil' memerlukan 1 argumen", span));
+    }
+    if !matches!(args[0], Value::Nil) {
+        let msg = args.get(1).map(|v| v.to_string_repr()).unwrap_or_else(|| format!("Diharapkan 'nihil', ditemukan '{}'", args[0].to_string_repr()));
         return Err(Galat::runtime(format!("Assertion Panic: {}", msg), span));
     }
     Ok(Value::Bool(true))

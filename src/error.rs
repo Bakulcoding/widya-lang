@@ -46,6 +46,14 @@ impl Galat {
         }
     }
 
+    pub fn runtime_polos(pesan: impl Into<String>) -> Self {
+        Galat::Runtime {
+            pesan: pesan.into(),
+            baris: 1,
+            kolom: 1,
+        }
+    }
+
     pub fn format_dengan_sumber(&self, sumber: &str) -> String {
         match self {
             Galat::Sintaks { pesan, baris, kolom } => {
@@ -73,11 +81,34 @@ impl Galat {
 
         let lines: Vec<&str> = sumber.lines().collect();
         if baris > 0 && baris <= lines.len() {
-            let baris_teks = lines[baris - 1];
-            out.push_str(&format!("\n   {:4} | {}\n", baris, baris_teks));
-            let padding = " ".repeat(kolom.saturating_sub(1));
-            out.push_str(&format!("        | {}^\n", padding));
+            let start = baris.saturating_sub(2);
+            let end = (baris + 1).min(lines.len());
+            for i in start..end {
+                let curr_line = i + 1;
+                let line_str = lines[i];
+                if curr_line == baris {
+                    out.push_str(&format!("\n → {:4} | {}\n", curr_line, line_str));
+                    let padding = " ".repeat(kolom.saturating_sub(1));
+                    out.push_str(&format!("        | {}^\n", padding));
+                } else {
+                    out.push_str(&format!("   {:4} | {}\n", curr_line, line_str));
+                }
+            }
         }
+
+        // Smart suggestions based on message keywords
+        if pesan.contains("Harapkan") || pesan.contains("Expected") {
+            if pesan.contains("';'") {
+                out.push_str("\n 💡 Saran: Tambahkan tanda titik koma ';' di akhir pernyataan.\n");
+            } else if pesan.contains("')'") {
+                out.push_str("\n 💡 Saran: Tutup kurung buka dengan pasangannya ')'.\n");
+            } else if pesan.contains("'}'") {
+                out.push_str("\n 💡 Saran: Pastikan blok kode ditutup dengan tanda '}'.\n");
+            }
+        } else if pesan.contains("belum didefinisikan") || pesan.contains("Undefined") {
+            out.push_str("\n 💡 Saran: Deklarasikan variabel terlebih dahulu dengan 'misal nama = nilai;' sebelum digunakan.\n");
+        }
+
         out
     }
 }

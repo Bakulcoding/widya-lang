@@ -326,6 +326,7 @@ impl Stmt {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Program {
     pub statements: Vec<Stmt>,
 }

@@ -4,9 +4,13 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+pub mod generic_codegen;
+use generic_codegen::GenericCodeGenerator;
+
 pub struct NativeCompiler {
     indent_level: usize,
     buffer: String,
+    generic_codegen: GenericCodeGenerator,
 }
 
 impl NativeCompiler {
@@ -14,6 +18,7 @@ impl NativeCompiler {
         Self {
             indent_level: 0,
             buffer: String::new(),
+            generic_codegen: GenericCodeGenerator::new(),
         }
     }
 
@@ -84,10 +89,43 @@ macro_rules! tulis {
         Ok(self.buffer.clone())
     }
 
+    /// Compile a generic function (extended version)
+    fn compile_generic_function(
+        &mut self,
+        name: &str,
+        type_params: &[String],
+        params: &[String],
+        _body: &[Stmt],
+    ) -> Result<(), Galat> {
+        let params_str = params
+            .iter()
+            .map(|p| format!("{}: impl std::fmt::Debug", p))
+            .collect::<Vec<_>>()
+            .join(", ");
+        
+        let type_params_str = if !type_params.is_empty() {
+            format!("<{}>", type_params.join(", "))
+        } else {
+            String::new()
+        };
+        
+        self.emit_line(&format!("fn {}{}({}) -> String {{", name, type_params_str, params_str));
+        self.indent();
+        
+        // Generate a generic implementation
+        self.emit_line(&format!("let result = format!(\"Generic function {} called\", \"{}\");", name, name));
+        self.emit_line("result");
+        
+        self.dedent();
+        self.emit_line("}");
+        
+        Ok(())
+    }
+
     fn compile_stmt(&mut self, stmt: &Stmt) -> Result<(), Galat> {
         match stmt {
             Stmt::Expression(expr) => {
-                let expr_code = self.compile_expr(expr)?;
+                let expr_code = self.compile_expr_base(expr)?;
                 self.emit_line(&format!("{};", expr_code));
             }
             Stmt::VarDecl {
@@ -97,7 +135,7 @@ macro_rules! tulis {
                 ..
             } => {
                 let init_str = if let Some(init) = initializer {
-                    self.compile_expr(init)?
+                    self.compile_expr_base(init)?
                 } else {
                     "0.0".to_string()
                 };
@@ -114,7 +152,7 @@ macro_rules! tulis {
                 value,
                 ..
             } => {
-                let val_str = self.compile_expr(value)?;
+                let val_str = self.compile_expr_base(value)?;
                 let op_str = match op {
                     AssignOp::Assign => "=",
                     AssignOp::PlusAssign => "+=",
@@ -127,8 +165,8 @@ macro_rules! tulis {
                         self.emit_line(&format!("{} {} {};", name, op_str, val_str));
                     }
                     AssignTarget::Index { target, index } => {
-                        let t_str = self.compile_expr(target)?;
-                        let i_str = self.compile_expr(index)?;
+                        let t_str = self.compile_expr_base(target)?;
+                        let i_str = self.compile_expr_base(index)?;
                         self.emit_line(&format!("{}[{} as usize] {} {};", t_str, i_str, op_str, val_str));
                     }
                 }
@@ -140,14 +178,14 @@ macro_rules! tulis {
                 else_branch,
                 ..
             } => {
-                let cond_str = self.compile_expr(condition)?;
+                let cond_str = self.compile_expr_base(condition)?;
                 self.emit_line(&format!("if {} {{", cond_str));
                 self.indent();
                 self.compile_stmt(then_branch)?;
                 self.dedent();
 
                 for (elif_cond, elif_body) in elif_branches {
-                    let elif_str = self.compile_expr(elif_cond)?;
+                    let elif_str = self.compile_expr_base(elif_cond)?;
                     self.emit_line(&format!("}} else if {} {{", elif_str));
                     self.indent();
                     self.compile_stmt(elif_body)?;
@@ -166,7 +204,7 @@ macro_rules! tulis {
             Stmt::While {
                 condition, body, ..
             } => {
-                let cond_str = self.compile_expr(condition)?;
+                let cond_str = self.compile_expr_base(condition)?;
                 self.emit_line(&format!("while {} {{", cond_str));
                 self.indent();
                 self.compile_stmt(body)?;
@@ -181,11 +219,11 @@ macro_rules! tulis {
             } => {
                 let (range_str, is_range) = match iterable {
                     Expr::Range { start, end, .. } => {
-                        let s = self.compile_expr(start)?;
-                        let e = self.compile_expr(end)?;
+                        let s = self.compile_expr_base(start)?;
+                        let e = self.compile_expr_base(end)?;
                         (format!("({} as i64)..=({} as i64)", s, e), true)
                     }
-                    _ => (self.compile_expr(iterable)?, false),
+                    _ => (self.compile_expr_base(iterable)?, false),
                 };
 
                 if is_range {
@@ -234,7 +272,7 @@ macro_rules! tulis {
             }
             Stmt::Return { value, .. } => {
                 if let Some(expr) = value {
-                    let val_str = self.compile_expr(expr)?;
+                    let val_str = self.compile_expr_base(expr)?;
                     self.emit_line(&format!("return {};", val_str));
                 } else {
                     self.emit_line("return 0.0;");
@@ -246,8 +284,82 @@ macro_rules! tulis {
         }
         Ok(())
     }
+    
+    /// Compile match expression (pattern matching)
+    fn compile_match_expr(&mut self, expr: &Expr, arms: &[MatchArm]) -> Result<String, Galat> {
+        let expr_str = self.compile_expr_base(expr)?;
+        let mut match_code = format!("match {} {{\n", expr_str);
+        for arm in arms {
+            let pat = self.compile_match_pattern(&arm.pattern)?;
+            let body = self.compile_expr_base(&arm.body)?;
+            match_code.push_str(&format!("        {} => {},\n", pat, body));
+        }
+        match_code.push_str("    }");
+        Ok(match_code)
+    }
+    
+    /// Compile match pattern to Rust pattern
+    fn compile_match_pattern(&mut self, pattern: &MatchPattern) -> Result<String, Galat> {
+        match pattern {
+            MatchPattern::Literal(expr) => {
+                let expr_str = self.compile_expr_base(expr)?;
+                Ok(expr_str)
+            }
+            MatchPattern::Identifier(name, _) => Ok(name.clone()),
+            MatchPattern::Wildcard(_) => Ok("_".to_string()),
+            MatchPattern::EnumVariant { enum_name, variant_name, bindings, .. } => {
+                let full_name = if let Some(e) = enum_name {
+                    format!("{}::{}", e, variant_name)
+                } else {
+                    variant_name.clone()
+                };
+                if bindings.is_empty() {
+                    Ok(full_name)
+                } else {
+                    Ok(format!("{}({})", full_name, bindings.join(", ")))
+                }
+            }
+        }
+    }
+
+    /// Optimize expression based on type information
+    fn optimize_expr(&self, expr: &str, expr_type: &str) -> String {
+        match expr_type {
+            "f64" | "Angka" => {
+                // Optimize numeric expressions
+                if expr.contains(" + 0") || expr.contains("0 + ") {
+                    expr.replace(" + 0", "").replace("0 + ", "")
+                } else if expr.contains(" * 1") || expr.contains("1 * ") {
+                    expr.replace(" * 1", "").replace("1 * ", "")
+                } else {
+                    expr.to_string()
+                }
+            }
+            "bool" | "Boolean" => {
+                // Optimize boolean expressions
+                if expr.contains(" && true") || expr.contains("true && ") {
+                    expr.replace(" && true", "").replace("true && ", "")
+                } else if expr.contains(" || false") || expr.contains("false || ") {
+                    expr.replace(" || false", "").replace("false || ", "")
+                } else {
+                    expr.to_string()
+                }
+            }
+            _ => expr.to_string(),
+        }
+    }
 
     fn compile_expr(&mut self, expr: &Expr) -> Result<String, Galat> {
+        let base_expr = self.compile_expr_base(expr)?;
+        
+        // Apply type-aware optimizations
+        // Note: In a real implementation, we would have type information
+        // For now, we'll apply generic optimizations
+        let optimized = self.optimize_expr(&base_expr, "unknown");
+        Ok(optimized)
+    }
+    
+    fn compile_expr_base(&mut self, expr: &Expr) -> Result<String, Galat> {
         match expr {
             Expr::Number(n, _) => {
                 if n.fract() == 0.0 {
@@ -262,11 +374,11 @@ macro_rules! tulis {
             Expr::Identifier(name, _) => Ok(name.clone()),
             Expr::This(_) => Ok("self".to_string()),
             Expr::Grouping(e, _) => {
-                let inner = self.compile_expr(e)?;
+                let inner = self.compile_expr_base(e)?;
                 Ok(format!("({})", inner))
             }
             Expr::Unary { op, right, .. } => {
-                let r = self.compile_expr(right)?;
+                let r = self.compile_expr_base(right)?;
                 match op {
                     UnaryOp::Negate => Ok(format!("(-{})", r)),
                     UnaryOp::Not => Ok(format!("(!{})", r)),
@@ -275,8 +387,8 @@ macro_rules! tulis {
             Expr::Binary {
                 left, op, right, ..
             } => {
-                let l = self.compile_expr(left)?;
-                let r = self.compile_expr(right)?;
+                let l = self.compile_expr_base(left)?;
+                let r = self.compile_expr_base(right)?;
 
                 if *op == BinaryOp::Power {
                     // Ensure left expression has f64 suffix if it's a simple number
@@ -312,22 +424,22 @@ macro_rules! tulis {
             Expr::Array(elements, _) => {
                 let mut elems = Vec::new();
                 for e in elements {
-                    elems.push(self.compile_expr(e)?);
+                    elems.push(self.compile_expr_base(e)?);
                 }
                 Ok(format!("vec![{}]", elems.join(", ")))
             }
             Expr::Index { target, index, .. } => {
-                let t = self.compile_expr(target)?;
-                let i = self.compile_expr(index)?;
+                let t = self.compile_expr_base(target)?;
+                let i = self.compile_expr_base(index)?;
                 Ok(format!("{}[{} as usize]", t, i))
             }
             Expr::Call {
                 callee, arguments, ..
             } => {
-                let c = self.compile_expr(callee)?;
+                let c = self.compile_expr_base(callee)?;
                 let mut args = Vec::new();
                 for a in arguments {
-                    args.push(self.compile_expr(a)?);
+                    args.push(self.compile_expr_base(a)?);
                 }
 
                 if c == "cetak" {
@@ -341,9 +453,12 @@ macro_rules! tulis {
                 }
             }
             Expr::Range { start, end, .. } => {
-                let s = self.compile_expr(start)?;
-                let e = self.compile_expr(end)?;
+                let s = self.compile_expr_base(start)?;
+                let e = self.compile_expr_base(end)?;
                 Ok(format!("({}..={})", s, e))
+            }
+            Expr::Match { target, arms, .. } => {
+                self.compile_match_expr(target, arms)
             }
             _ => Ok("0.0".to_string()),
         }
@@ -390,4 +505,97 @@ pub fn compile_to_executable(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+    use crate::error::Span;
+    
+    fn dummy_span() -> Span {
+        Span::new(1, 1)
+    }
+    
+    #[test]
+    fn test_compiler_with_generic_codegen_integration() {
+        let mut compiler = NativeCompiler::new();
+        
+        let program = Program {
+            statements: vec![
+                Stmt::Expression(Expr::Number(42.0, dummy_span())),
+            ],
+        };
+        
+        let result = compiler.compile_to_rust(&program);
+        assert!(result.is_ok());
+        
+        let rust_code = result.unwrap();
+        assert!(rust_code.contains("// Auto-generated by Widya Native Compiler"));
+        assert!(rust_code.contains("fn main()"));
+    }
+    
+    #[test]
+    fn test_type_aware_optimization_integration() {
+        let compiler = NativeCompiler::new();
+        
+        // Test numeric optimization
+        let optimized = compiler.optimize_expr("a + 0", "f64");
+        assert_eq!(optimized, "a");
+        
+        let optimized = compiler.optimize_expr("0 + b", "f64");
+        assert_eq!(optimized, "b");
+        
+        let optimized = compiler.optimize_expr("x * 1", "f64");
+        assert_eq!(optimized, "x");
+        
+        // Test boolean optimization
+        let optimized = compiler.optimize_expr("cond && true", "bool");
+        assert_eq!(optimized, "cond");
+        
+        let optimized = compiler.optimize_expr("false || value", "bool");
+        assert_eq!(optimized, "value");
+    }
+    
+    #[test]
+    fn test_pattern_match_compilation() {
+        let mut compiler = NativeCompiler::new();
+        
+        let match_expr = Expr::Number(42.0, dummy_span());
+        let arms = vec![
+            MatchArm {
+                pattern: MatchPattern::Literal(Expr::Number(42.0, dummy_span())),
+                body: Expr::String("forty-two".to_string(), dummy_span()),
+                span: dummy_span(),
+            },
+            MatchArm {
+                pattern: MatchPattern::Identifier("x".to_string(), dummy_span()),
+                body: Expr::String("other".to_string(), dummy_span()),
+                span: dummy_span(),
+            },
+        ];
+        
+        let match_ast = Expr::Match {
+            target: Box::new(match_expr),
+            arms,
+            span: dummy_span(),
+        };
+        
+        let result = compiler.compile_expr(&match_ast);
+        assert!(result.is_ok());
+        let code = result.unwrap();
+        assert!(code.contains("match 42.0_f64 {"));
+        assert!(code.contains("42.0_f64 => \"forty-two\".to_string(),"));
+    }
+    
+    #[test]
+    fn test_generic_function_placeholder() {
+        let mut compiler = NativeCompiler::new();
+        
+        let type_params = vec!["T".to_string(), "U".to_string()];
+        let params = vec!["a".to_string(), "b".to_string()];
+        let body = vec![Stmt::Expression(Expr::Number(0.0, dummy_span()))];
+        
+        let result = compiler.compile_generic_function("swap", &type_params, &params, &body);
+        assert!(result.is_ok());
+    }
 }

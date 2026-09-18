@@ -5,13 +5,14 @@ use crate::value::Value;
 use colored::*;
 use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
+use std::time::Instant;
 
 pub fn start_repl() {
-    println!("{}", "================================================".bright_blue());
-    println!("{}", "   🇮🇩 Selamat Datang di Widya-Lang REPL v0.1.0".bright_cyan().bold());
-    println!("{}", "   Ketik kode Widya atau '.bantuan' untuk bantuan.".white());
+    println!("{}", "=========================================================".bright_blue());
+    println!("{}", "   🇮🇩 Selamat Datang di Widya-Lang Interactive REPL v0.1.0".bright_cyan().bold());
+    println!("{}", "   Ketik kode Widya atau '.bantuan' untuk perintah khusus.".white());
     println!("{}", "   Ketik '.keluar' atau tekan Ctrl+C untuk keluar.".white());
-    println!("{}", "================================================".bright_blue());
+    println!("{}", "=========================================================".bright_blue());
 
     let mut rl = match DefaultEditor::new() {
         Ok(editor) => editor,
@@ -24,6 +25,8 @@ pub fn start_repl() {
     let mut interpreter = Interpreter::new();
     let mut buffer = String::new();
     let mut open_braces: usize = 0;
+    let mut show_time = false;
+    let mut show_type = false;
 
     loop {
         let prompt = if buffer.is_empty() {
@@ -38,13 +41,29 @@ pub fn start_repl() {
 
                 if buffer.is_empty() {
                     if trimmed == ".keluar" || trimmed == "exit" || trimmed == "quit" {
-                        println!("{}", "Sampai jumpa! 👋".bright_green());
+                        println!("{}", "Sampai jumpa! 👋 Terima kasih telah menggunakan Widya-Lang.".bright_green());
                         break;
                     } else if trimmed == ".bantuan" || trimmed == "help" {
                         print_help();
                         continue;
                     } else if trimmed == ".bersih" || trimmed == "clear" {
                         print!("\x1B[2J\x1B[1;1H");
+                        continue;
+                    } else if trimmed == ".waktu" {
+                        show_time = !show_time;
+                        let status = if show_time { "diaktifkan".bright_green() } else { "dinonaktifkan".bright_red() };
+                        println!("⏱️  Pengukuran waktu eksekusi: {}", status);
+                        continue;
+                    } else if trimmed == ".tipe" {
+                        show_type = !show_type;
+                        let status = if show_type { "diaktifkan".bright_green() } else { "dinonaktifkan".bright_red() };
+                        println!("🏷️  Penampil tipe data ekspresi: {}", status);
+                        continue;
+                    } else if trimmed == ".lingkungan" || trimmed == ".vars" {
+                        print_environment(&interpreter);
+                        continue;
+                    } else if trimmed == ".contoh" {
+                        print_examples();
                         continue;
                     } else if trimmed.is_empty() {
                         continue;
@@ -74,6 +93,8 @@ pub fn start_repl() {
                 buffer.clear();
                 open_braces = 0;
 
+                let start_time = Instant::now();
+
                 let mut lexer = Lexer::new(&source);
                 let tokens = match lexer.scan_tokens() {
                     Ok(t) => t,
@@ -93,9 +114,23 @@ pub fn start_repl() {
                 };
 
                 match interpreter.interpret(&program) {
-                    Ok(Value::Nil) => {}
+                    Ok(Value::Nil) => {
+                        if show_time {
+                            let duration = start_time.elapsed();
+                            println!("{} {:?}", "⏱️  Waktu eksekusi:".bright_black(), duration);
+                        }
+                    }
                     Ok(val) => {
-                        println!("{} {}", "=>".bright_cyan().bold(), val.to_debug_repr().bright_yellow());
+                        let duration = start_time.elapsed();
+                        if show_type {
+                            let type_name = val.type_name();
+                            println!("{} {} {}", "=>".bright_cyan().bold(), val.to_debug_repr().bright_yellow(), format!("({})", type_name).bright_black());
+                        } else {
+                            println!("{} {}", "=>".bright_cyan().bold(), val.to_debug_repr().bright_yellow());
+                        }
+                        if show_time {
+                            println!("{} {:?}", "⏱️  Waktu eksekusi:".bright_black(), duration);
+                        }
                     }
                     Err(e) => {
                         eprintln!("{}", e.format_dengan_sumber(&source).bright_red());
@@ -106,7 +141,7 @@ pub fn start_repl() {
                 if !buffer.is_empty() {
                     buffer.clear();
                     open_braces = 0;
-                    println!("{}", "(dibatalkan)".yellow());
+                    println!("{}", "(masukan dibatalkan)".yellow());
                 } else {
                     println!("{}", "\nSampai jumpa! 👋".bright_green());
                     break;
@@ -124,14 +159,49 @@ pub fn start_repl() {
     }
 }
 
+fn print_environment(interpreter: &Interpreter) {
+    println!("\n{}", "--- Variabel & Lingkungan Aktif ---".bright_cyan().bold());
+    let bindings = interpreter.get_environment_bindings();
+    if bindings.is_empty() {
+        println!("{}", "  (Belum ada variabel atau fungsi lokal yang didefinisikan)".bright_black());
+    } else {
+        for (name, val) in bindings {
+            println!("  {} {} = {} {}", "•".bright_blue(), name.bright_yellow().bold(), val.to_debug_repr(), format!("({})", val.type_name()).bright_black());
+        }
+    }
+    println!();
+}
+
+fn print_examples() {
+    println!("\n{}", "--- Contoh Kode Widya-Lang ---".bright_cyan().bold());
+    println!("{}", "1. Deklarasi Variabel & List:".bright_yellow());
+    println!("   misal skor = [85, 90, 95]");
+    println!("   misal rata = skor.rata_rata()\n");
+
+    println!("{}", "2. Fungsi & Rekursi:".bright_yellow());
+    println!("   fungsi faktorial(n) {{");
+    println!("       jika n <= 1 {{ kembalikan 1 }}");
+    println!("       kembalikan n * faktorial(n - 1)");
+    println!("   }}");
+    println!("   faktorial(5)\n");
+
+    println!("{}", "3. Pencocokan Pola (Pola):".bright_yellow());
+    println!("   misal status = 200");
+    println!("   pola status {{");
+    println!("       200 => \"Berhasil!\",");
+    println!("       404 => \"Tidak Ditemukan\",");
+    println!("       _ => \"Status Lain\"");
+    println!("   }}\n");
+}
+
 fn print_help() {
-    println!("\n{}", "--- Bantuan Widya-Lang REPL ---".bright_cyan().bold());
-    println!("  {}  - Menampilkan menu bantuan ini", ".bantuan".bright_yellow());
-    println!("  {}   - Membersihkan layar terminal", ".bersih".bright_yellow());
-    println!("  {}   - Keluar dari sesi REPL", ".keluar".bright_yellow());
-    println!("\nContoh Sintaks Widya:");
-    println!("  misal nama = \"Widya\"");
-    println!("  cetak(\"Halo, \" + nama + \"!\")");
-    println!("  fungsi kuadrat(x) {{ kembalikan x * x }}");
-    println!("  kuadrat(5)\n");
+    println!("\n{}", "--- Bantuan Perintah Widya-Lang REPL ---".bright_cyan().bold());
+    println!("  {:<16} - Menampilkan menu bantuan ini", ".bantuan".bright_yellow());
+    println!("  {:<16} - Membersihkan layar terminal", ".bersih".bright_yellow());
+    println!("  {:<16} - Menampilkan contoh sintaks dan fitur", ".contoh".bright_yellow());
+    println!("  {:<16} - Menampilkan variabel dalam lingkungan sesi", ".lingkungan".bright_yellow());
+    println!("  {:<16} - Mengaktifkan/menonaktifkan info tipe ekspresi", ".tipe".bright_yellow());
+    println!("  {:<16} - Mengaktifkan/menonaktifkan timer eksekusi", ".waktu".bright_yellow());
+    println!("  {:<16} - Keluar dari sesi REPL", ".keluar".bright_yellow());
+    println!();
 }

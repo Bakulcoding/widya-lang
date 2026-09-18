@@ -1,0 +1,44 @@
+// Contoh 53: Pengujian dan Penegasan (Testing & Assertions)
+// Berkas ini dapat dijalankan menggunakan runner pengujian Widya:
+//   widya uji contoh/53_uji_dan_penegasan.wya
+// Atau:
+//   widya uji .
+
+fungsi tambah(a, b) {
+    kembalikan a + b;
+}
+
+fungsi kali(a, b) {
+    kembalikan a * b;
+}
+
+fungsi cek_genap(n) {
+    kembalikan (n % 2) == 0;
+}
+
+#[uji]
+fungsi uji_penambahan_dasar() {
+    misal hasil = tambah(15, 27);
+    pastikan_sama(hasil, 42);
+    pastikan_beda(hasil, 40);
+}
+
+#[uji]
+fungsi uji_perkalian_dan_kondisi() {
+    misal hasil = kali(6, 7);
+    pastikan_sama(hasil, 42);
+    pastikan_benar(hasil > 40);
+    pastikan_salah(hasil < 40);
+}
+
+#[uji]
+fungsi uji_fungsi_genap() {
+    pastikan_benar(cek_genap(10));
+    pastikan_salah(cek_genap(7));
+}
+
+#[uji]
+fungsi uji_penegasan_nihil() {
+    misal nilai_kosong = nihil;
+    pastikan_nihil(nilai_kosong);
+}

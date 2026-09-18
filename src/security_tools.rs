@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use regex::Regex;
-use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub enum Severity {
@@ -62,7 +61,7 @@ impl SecretScanner {
         
         patterns.insert(
             "AWS_SECRET_KEY".to_string(),
-            (Regex::new(r"aws_secret_access_key\s*=\s*['\"]?[A-Za-z0-9/+=]{40}['\"]?").unwrap(), Severity::Critical),
+            (Regex::new(r#"aws_secret_access_key\s*=\s*['"]?[A-Za-z0-9/+=]{40}['"]?"#).unwrap(), Severity::Critical),
         );
         
         patterns.insert(
@@ -82,7 +81,7 @@ impl SecretScanner {
         
         patterns.insert(
             "HARDCODED_PASSWORD".to_string(),
-            (Regex::new(r"password\s*=\s*['\"]([^'\"]{6,})['\"]").unwrap(), Severity::High),
+            (Regex::new(r#"password\s*=\s*['"]([^'"]{6,})['"]"#).unwrap(), Severity::High),
         );
         
         patterns.insert(
@@ -97,7 +96,7 @@ impl SecretScanner {
         
         patterns.insert(
             "API_KEY".to_string(),
-            (Regex::new(r"api[_-]?key\s*[:=]\s*['\"]?[a-zA-Z0-9_-]{32,}['\"]?").unwrap(), Severity::High),
+            (Regex::new(r#"api[_-]?key\s*[:=]\s*['"]?[a-zA-Z0-9_-]{32,}['"]?"#).unwrap(), Severity::High),
         );
         
         Self { patterns }
@@ -158,11 +157,11 @@ impl SqlInjectionChecker {
         let mut findings = Vec::new();
         
         let dangerous_patterns = vec![
-            (r"SELECT\s+\*\s+FROM\s+\w+\s+WHERE\s+\w+\s*=\s*['\"]?\$", "Potential SQL injection in SELECT"),
-            (r"INSERT\s+INTO\s+\w+.*VALUES.*\$", "Potential SQL injection in INSERT"),
-            (r"UPDATE\s+\w+\s+SET.*WHERE.*\$", "Potential SQL injection in UPDATE"),
-            (r"DELETE\s+FROM.*WHERE.*\$", "Potential SQL injection in DELETE"),
-            (r"String\s+query\s*=\s*\".*\+.*\"", "String concatenation in query construction"),
+            (r#"(?i)SELECT\s+.*\s+FROM\s+.*WHERE\s+.*\+"#, "Potential SQL injection: string concatenation in SELECT"),
+            (r#"(?i)INSERT\s+INTO\s+.*VALUES.*\+"#, "Potential SQL injection: string concatenation in INSERT"),
+            (r#"(?i)UPDATE\s+.*SET.*WHERE.*\+"#, "Potential SQL injection: string concatenation in UPDATE"),
+            (r#"(?i)DELETE\s+FROM.*WHERE.*\+"#, "Potential SQL injection: string concatenation in DELETE"),
+            (r#"(?i)query\s*=\s*".*\+.*""#, "String concatenation in query construction"),
         ];
         
         for (pattern_str, message) in dangerous_patterns {
@@ -201,9 +200,9 @@ impl XssChecker {
         let mut findings = Vec::new();
         
         let dangerous_patterns = vec![
-            (r"innerHTML\s*=\s*['\"]?user", "Potential XSS: direct assignment to innerHTML"),
-            (r"eval\s*\(\s*\$", "Potential XSS: use of eval"),
-            (r"document\.write\s*\(\s*\$", "Potential XSS: use of document.write"),
+            (r#"(?i)innerHTML\s*=\s*.*"# , "Potential XSS: direct assignment to innerHTML"),
+            (r#"(?i)eval\s*\(.*"# , "Potential XSS: use of eval"),
+            (r#"(?i)document\.write\s*\(.*"# , "Potential XSS: use of document.write"),
             (r#"<.*\{\{.*\}\}.*>"#, "Potential XSS: unescaped template variable"),
         ];
         
@@ -270,7 +269,7 @@ impl SecurityLinter {
         let mut output = String::new();
         
         output.push_str("\n🛡️ Security Scan Report\n");
-        output.push_str("═".repeat(50));
+        output.push_str(&"═".repeat(50));
         output.push('\n');
         
         if findings.is_empty() {

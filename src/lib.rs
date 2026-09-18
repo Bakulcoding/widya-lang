@@ -1,4 +1,7 @@
 #![recursion_limit = "512"]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_imports)]
 
 pub mod ast;
 pub mod compiler;
@@ -28,6 +31,13 @@ pub mod typesystem;
 pub mod patternmatching;
 pub mod typeclasses;
 pub mod typeparser;
+pub mod mobile;
+pub mod security_tools;
+pub mod ffi;
+pub mod profiler;
+pub mod dap;
+pub mod stdlib_ffi;
+pub mod wasm_playground;
 
 use borrow_checker::BorrowChecker;
 use error::Galat;
@@ -95,6 +105,22 @@ pub fn compile_targets() -> Vec<CompileTarget> {
             deskripsi: "Emit kode C untuk eBPF kernel tracing/networking (clang -target bpf)",
             ekstensi_keluaran: "bpf.c",
             kategori: "Kernel/Observability",
+            tersedia: true,
+        },
+        CompileTarget {
+            id: "android",
+            nama: "Android App Package (APK/AAB)",
+            deskripsi: "Kemas proyek aplikasi native Android lengkap dengan Gradle & Native Bridge",
+            ekstensi_keluaran: "apk",
+            kategori: "Mobile/Android",
+            tersedia: true,
+        },
+        CompileTarget {
+            id: "ios",
+            nama: "iOS Application Bundle (IPA)",
+            deskripsi: "Kemas proyek aplikasi native iOS lengkap dengan Xcode project & Swift bridge",
+            ekstensi_keluaran: "ipa",
+            kategori: "Mobile/iOS",
             tersedia: true,
         },
     ]

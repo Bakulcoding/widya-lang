@@ -27,6 +27,20 @@ impl Interpreter {
         }
     }
 
+    pub fn get_environment_bindings(&self) -> HashMap<String, Value> {
+        let mut bindings = HashMap::new();
+        let all_local = self.environment.borrow().get_all_local();
+        for (k, v) in all_local {
+            match v {
+                Value::Builtin(_) => {}
+                _ => {
+                    bindings.insert(k, v);
+                }
+            }
+        }
+        bindings
+    }
+
     pub fn interpret(&mut self, program: &Program) -> Result<Value, Galat> {
         let mut last_value = Value::Nil;
         for stmt in &program.statements {

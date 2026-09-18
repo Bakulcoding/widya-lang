@@ -72,7 +72,7 @@ impl Parser {
             if self.check_identifier() {
                 self.function_declaration(attributes)
             } else {
-                let expr = self.function_expression()?;
+                let expr = self.function_expression_with_keyword_consumed(self.previous().span.clone())?;
                 self.match_token(&[TokenType::Semicolon]);
                 Ok(Stmt::Expression(expr))
             }
@@ -80,7 +80,7 @@ impl Parser {
             if self.check_identifier() {
                 self.function_declaration(attributes)
             } else {
-                let expr = self.function_expression()?;
+                let expr = self.function_expression_with_keyword_consumed(self.previous().span.clone())?;
                 self.match_token(&[TokenType::Semicolon]);
                 Ok(Stmt::Expression(expr))
             }
@@ -135,6 +135,11 @@ impl Parser {
         let name_token = self.consume_identifier("Harapkan nama variabel setelah 'misal'/'tetap'")?;
         let name = name_token.lexeme.clone();
 
+        // Optional type annotation: misal x: Angka = 10;
+        if self.match_token(&[TokenType::Colon]) {
+            let _var_type = self.parse_type_annotation()?;
+        }
+
         let initializer = if self.match_token(&[TokenType::Assign]) {
             Some(self.expression()?)
         } else if is_const {
@@ -160,18 +165,40 @@ impl Parser {
         let name_token = self.consume_identifier("Harapkan nama fungsi")?;
         let name = name_token.lexeme.clone();
 
+        // Optional generic type parameters: <T, U: Sifat>
+        let _type_params = self.parse_optional_generic_params()?;
+
         self.consume(TokenType::LeftParen, "Harapkan '(' setelah nama fungsi")?;
         let mut params = Vec::new();
         if !self.check(&TokenType::RightParen) {
             loop {
                 let param = self.consume_identifier("Harapkan nama parameter fungsi")?;
                 params.push(param.lexeme.clone());
+                // Optional parameter type annotation: param: Tipe
+                if self.match_token(&[TokenType::Colon]) {
+                    self.parse_type_annotation()?;
+                }
                 if !self.match_token(&[TokenType::Comma]) {
                     break;
                 }
             }
         }
         self.consume(TokenType::RightParen, "Harapkan ')' setelah daftar parameter")?;
+
+        // Optional return type annotation: -> Tipe / Hasil<T, E>
+        if self.match_token(&[TokenType::Minus]) {
+            if self.match_token(&[TokenType::Greater]) {
+                let _ret_ty = self.parse_type_annotation()?;
+            } else {
+                self.current -= 1;
+            }
+        }
+
+        // Optional where clause: dimana T: Sifat, U: Sifat2
+        if self.check_identifier() && (self.peek().lexeme == "dimana" || self.peek().lexeme == "where") {
+            self.advance();
+            self.parse_where_clause()?;
+        }
 
         let body = self.block_statement_list()?;
         Ok(Stmt::FunctionDecl {
@@ -188,6 +215,9 @@ impl Parser {
         let name_token = self.consume_identifier("Harapkan nama struktur")?;
         let name = name_token.lexeme.clone();
 
+        // Optional generic type parameters: struktur Kantong<T: Sama>
+        let _type_params = self.parse_optional_generic_params()?;
+
         self.consume(TokenType::LeftBrace, "Harapkan '{' pada definisi struktur")?;
         let mut fields = Vec::new();
         let mut methods = Vec::new();
@@ -200,18 +230,29 @@ impl Parser {
             if self.match_token(&[TokenType::Fungsi]) {
                 let method_span = self.previous().span.clone();
                 let method_name = self.consume_identifier("Harapkan nama metode")?.lexeme;
+                let _method_type_params = self.parse_optional_generic_params()?;
                 self.consume(TokenType::LeftParen, "Harapkan '(' setelah nama metode")?;
                 let mut params = Vec::new();
                 if !self.check(&TokenType::RightParen) {
                     loop {
                         let param = self.consume_identifier("Harapkan nama parameter")?;
                         params.push(param.lexeme.clone());
+                        if self.match_token(&[TokenType::Colon]) {
+                            self.parse_type_annotation()?;
+                        }
                         if !self.match_token(&[TokenType::Comma]) {
                             break;
                         }
                     }
                 }
                 self.consume(TokenType::RightParen, "Harapkan ')'")?;
+                if self.match_token(&[TokenType::Minus]) {
+                    if self.match_token(&[TokenType::Greater]) {
+                        self.parse_type_annotation()?;
+                    } else {
+                        self.current -= 1;
+                    }
+                }
                 let body = self.block_statement_list()?;
                 methods.push(StructMethod {
                     name: method_name,
@@ -222,6 +263,10 @@ impl Parser {
             } else if self.check_identifier() {
                 let field_token = self.advance();
                 fields.push(field_token.lexeme);
+                // Optional field type annotation: field_name: Tipe
+                if self.match_token(&[TokenType::Colon]) {
+                    self.parse_type_annotation()?;
+                }
                 self.match_token(&[TokenType::Comma, TokenType::Semicolon]);
             } else {
                 return Err(Galat::sintaks(
@@ -246,6 +291,9 @@ impl Parser {
         let name_token = self.consume_identifier("Harapkan nama sifat (trait)")?;
         let name = name_token.lexeme;
 
+        // Optional generic type parameters: sifat Pembanding<T>
+        let _type_params = self.parse_optional_generic_params()?;
+
         self.consume(TokenType::LeftBrace, "Harapkan '{' pada definisi sifat")?;
         let mut methods = Vec::new();
 
@@ -257,18 +305,29 @@ impl Parser {
             self.consume(TokenType::Fungsi, "Harapkan kata kunci 'fungsi' dalam deklarasi sifat")?;
             let m_span = self.previous().span.clone();
             let m_name = self.consume_identifier("Harapkan nama metode pada sifat")?.lexeme;
+            let _m_type_params = self.parse_optional_generic_params()?;
             self.consume(TokenType::LeftParen, "Harapkan '(' setelah nama metode")?;
             let mut params = Vec::new();
             if !self.check(&TokenType::RightParen) {
                 loop {
                     let param = self.consume_identifier("Harapkan nama parameter")?;
                     params.push(param.lexeme);
+                    if self.match_token(&[TokenType::Colon]) {
+                        self.parse_type_annotation()?;
+                    }
                     if !self.match_token(&[TokenType::Comma]) {
                         break;
                     }
                 }
             }
             self.consume(TokenType::RightParen, "Harapkan ')'")?;
+            if self.match_token(&[TokenType::Minus]) {
+                if self.match_token(&[TokenType::Greater]) {
+                    self.parse_type_annotation()?;
+                } else {
+                    self.current -= 1;
+                }
+            }
             self.match_token(&[TokenType::Semicolon]);
             methods.push(TraitMethodSignature {
                 name: m_name,
@@ -287,10 +346,13 @@ impl Parser {
 
     fn impl_declaration(&mut self) -> Result<Stmt, Galat> {
         let span = self.previous().span.clone();
+        let _impl_type_params = self.parse_optional_generic_params()?;
         let first_id = self.consume_identifier("Harapkan nama sifat atau struktur setelah 'terapkan'")?.lexeme;
+        let _first_gen_args = self.parse_optional_generic_args()?;
 
         let (trait_name, target_name) = if self.match_token(&[TokenType::Untuk]) {
             let target_id = self.consume_identifier("Harapkan nama struktur target setelah 'untuk'")?.lexeme;
+            let _target_gen_args = self.parse_optional_generic_args()?;
             (Some(first_id), target_id)
         } else {
             (None, first_id)
@@ -307,18 +369,29 @@ impl Parser {
             self.consume(TokenType::Fungsi, "Harapkan kata kunci 'fungsi' dalam blok terapkan")?;
             let method_span = self.previous().span.clone();
             let method_name = self.consume_identifier("Harapkan nama metode")?.lexeme;
+            let _m_type_params = self.parse_optional_generic_params()?;
             self.consume(TokenType::LeftParen, "Harapkan '(' setelah nama metode")?;
             let mut params = Vec::new();
             if !self.check(&TokenType::RightParen) {
                 loop {
                     let param = self.consume_identifier("Harapkan nama parameter")?;
                     params.push(param.lexeme);
+                    if self.match_token(&[TokenType::Colon]) {
+                        self.parse_type_annotation()?;
+                    }
                     if !self.match_token(&[TokenType::Comma]) {
                         break;
                     }
                 }
             }
             self.consume(TokenType::RightParen, "Harapkan ')'")?;
+            if self.match_token(&[TokenType::Minus]) {
+                if self.match_token(&[TokenType::Greater]) {
+                    self.parse_type_annotation()?;
+                } else {
+                    self.current -= 1;
+                }
+            }
             let body = self.block_statement_list()?;
             methods.push(StructMethod {
                 name: method_name,
@@ -342,6 +415,9 @@ impl Parser {
         let name_token = self.consume_identifier("Harapkan nama enum setelah kata kunci 'enum'")?;
         let name = name_token.lexeme.clone();
 
+        // Optional generic type parameters: enum Hasil<T, E: Sama>
+        let _type_params = self.parse_optional_generic_params()?;
+
         self.consume(TokenType::LeftBrace, "Harapkan '{' pada definisi enum")?;
         let mut variants = Vec::new();
 
@@ -357,7 +433,15 @@ impl Parser {
             if self.match_token(&[TokenType::LeftParen]) {
                 if !self.check(&TokenType::RightParen) {
                     loop {
-                        let _field_name = self.consume_identifier("Harapkan nama field varian enum")?;
+                        // Allow type annotation or identifier with colon
+                        if self.check_identifier() {
+                            let _field_id = self.advance();
+                            if self.match_token(&[TokenType::Colon]) {
+                                self.parse_type_annotation()?;
+                            }
+                        } else {
+                            self.parse_type_annotation()?;
+                        }
                         fields_count += 1;
                         if !self.match_token(&[TokenType::Comma]) {
                             break;
@@ -482,11 +566,15 @@ impl Parser {
         let try_block = Box::new(self.block_or_single_statement()?);
 
         self.consume(TokenType::Tangkap, "Harapkan 'tangkap' setelah blok 'coba'")?;
+        let has_paren = self.match_token(&[TokenType::LeftParen]);
         let error_var = if self.check_identifier() {
             self.advance().lexeme
         } else {
             "galat".to_string()
         };
+        if has_paren {
+            self.consume(TokenType::RightParen, "Harapkan ')' setelah variabel galat")?;
+        }
 
         let catch_block = Box::new(self.block_or_single_statement()?);
         Ok(Stmt::TryCatch {
@@ -507,6 +595,10 @@ impl Parser {
     fn statement(&mut self) -> Result<Stmt, Galat> {
         if self.match_token(&[TokenType::Jika]) {
             self.if_statement()
+        } else if self.match_token(&[TokenType::Cocokkan]) {
+            let expr = self.match_expression_with_keyword_consumed(self.previous().span.clone())?;
+            self.match_token(&[TokenType::Semicolon]);
+            Ok(Stmt::Expression(expr))
         } else if self.match_token(&[TokenType::Selama]) {
             self.while_statement()
         } else if self.match_token(&[TokenType::Untuk]) {
@@ -559,7 +651,11 @@ impl Parser {
         let then_branch = Box::new(self.block_or_single_statement()?);
 
         let mut elif_branches = Vec::new();
-        while self.match_token(&[TokenType::Kalau]) {
+        while self.match_token(&[TokenType::Kalau]) || (self.check(&TokenType::Lainnya) && self.check_next_is_jika()) {
+            if self.check(&TokenType::Lainnya) {
+                self.advance(); // consume 'lainnya' / 'jika_tidak'
+                self.advance(); // consume 'jika'
+            }
             let elif_cond = self.expression()?;
             let elif_body = self.block_or_single_statement()?;
             elif_branches.push((elif_cond, elif_body));
@@ -1031,9 +1127,17 @@ impl Parser {
     }
 
     fn match_expression(&mut self) -> Result<Expr, Galat> {
-        let span = self.consume(TokenType::Cocokkan, "Harapkan 'cocokkan'")?.span;
+        let span = self.consume(TokenType::Cocokkan, "Harapkan 'cocokkan' atau 'cocok'")?.span;
+        self.match_expression_with_keyword_consumed(span)
+    }
+
+    fn match_expression_with_keyword_consumed(&mut self, span: crate::error::Span) -> Result<Expr, Galat> {
+        let has_paren = self.match_token(&[TokenType::LeftParen]);
         let target = self.expression()?;
-        self.consume(TokenType::LeftBrace, "Harapkan '{' setelah target ekspresi 'cocokkan'")?;
+        if has_paren {
+            self.consume(TokenType::RightParen, "Harapkan ')' setelah target ekspresi 'cocok'")?;
+        }
+        self.consume(TokenType::LeftBrace, "Harapkan '{' setelah target ekspresi 'cocok'")?;
 
         let mut arms = Vec::new();
         while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
@@ -1043,6 +1147,13 @@ impl Parser {
 
             let pattern_span = self.peek().span.clone();
             let pattern = self.match_pattern()?;
+
+            // Optional guard: pola jika kondisi => aksi
+            let _guard = if self.match_token(&[TokenType::Jika]) {
+                Some(self.expression()?)
+            } else {
+                None
+            };
 
             self.consume(TokenType::FatArrow, "Harapkan '=>' setelah pola cocokkan")?;
 
@@ -1072,7 +1183,7 @@ impl Parser {
             });
         }
 
-        self.consume(TokenType::RightBrace, "Harapkan '}' untuk menutup blok 'cocokkan'")?;
+        self.consume(TokenType::RightBrace, "Harapkan '}' untuk menutup blok 'cocok'")?;
         Ok(Expr::Match {
             target: Box::new(target),
             arms,
@@ -1114,6 +1225,27 @@ impl Parser {
                 let span = token.span.clone();
                 self.advance();
                 Ok(MatchPattern::Literal(Expr::Nil(span)))
+            }
+            TokenType::LeftParen => {
+                let span = token.span.clone();
+                self.advance();
+                let mut bindings = Vec::new();
+                if !self.check(&TokenType::RightParen) {
+                    loop {
+                        let id = self.consume_identifier("Harapkan variabel dalam pola tuple")?;
+                        bindings.push(id.lexeme);
+                        if !self.match_token(&[TokenType::Comma]) {
+                            break;
+                        }
+                    }
+                }
+                self.consume(TokenType::RightParen, "Harapkan ')' setelah pola tuple")?;
+                Ok(MatchPattern::EnumVariant {
+                    enum_name: None,
+                    variant_name: "Tuple".to_string(),
+                    bindings,
+                    span,
+                })
             }
             TokenType::Identifier(first_id) => {
                 let first_name = first_id.clone();
@@ -1219,7 +1351,11 @@ impl Parser {
     }
 
     fn function_expression(&mut self) -> Result<Expr, Galat> {
-        let span = self.consume(TokenType::Fungsi, "Harapkan 'fungsi'")?.span;
+        let span = self.advance().span.clone();
+        self.function_expression_with_keyword_consumed(span)
+    }
+
+    fn function_expression_with_keyword_consumed(&mut self, span: crate::error::Span) -> Result<Expr, Galat> {
         self.consume(TokenType::LeftParen, "Harapkan '(' setelah 'fungsi'")?;
         let mut params = Vec::new();
         if !self.check(&TokenType::RightParen) {
@@ -1236,10 +1372,135 @@ impl Parser {
         Ok(Expr::FunctionExpr { params, body, span })
     }
 
+    // --- Helpers for Generic Types and Type Annotations ---
+
+    /// Parse optional generic type parameters like `<T, U: Sama>`
+    fn parse_optional_generic_params(&mut self) -> Result<Vec<String>, Galat> {
+        if !self.match_token(&[TokenType::Less]) {
+            return Ok(Vec::new());
+        }
+
+        let mut params = Vec::new();
+        if !self.check(&TokenType::Greater) {
+            loop {
+                let param_token = self.consume_identifier("Harapkan nama parameter tipe generik")?;
+                let mut param_name = param_token.lexeme;
+                // Optional trait bound: T: Sifat + Sifat2
+                if self.match_token(&[TokenType::Colon]) {
+                    let mut bounds = Vec::new();
+                    loop {
+                        let bound = self.consume_identifier("Harapkan nama sifat pada batas tipe generik")?;
+                        bounds.push(bound.lexeme);
+                        if !self.match_token(&[TokenType::Plus]) {
+                            break;
+                        }
+                    }
+                    param_name = format!("{}: {}", param_name, bounds.join(" + "));
+                }
+                params.push(param_name);
+                if !self.match_token(&[TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        self.consume(TokenType::Greater, "Harapkan '>' untuk menutup parameter tipe generik")?;
+        Ok(params)
+    }
+
+    /// Parse optional generic arguments like `<Angka, String>`
+    fn parse_optional_generic_args(&mut self) -> Result<Vec<String>, Galat> {
+        if !self.match_token(&[TokenType::Less]) {
+            return Ok(Vec::new());
+        }
+
+        let mut args = Vec::new();
+        if !self.check(&TokenType::Greater) {
+            loop {
+                let arg = self.parse_type_annotation()?;
+                args.push(arg);
+                if !self.match_token(&[TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        self.consume(TokenType::Greater, "Harapkan '>' untuk menutup argumen tipe generik")?;
+        Ok(args)
+    }
+
+    /// Parse type annotation string recursively (e.g. `Angka`, `Daftar<String>`, `Hasil<T, Galat>`, `(Angka, String)`)
+    fn parse_type_annotation(&mut self) -> Result<String, Galat> {
+        if self.match_token(&[TokenType::LeftParen]) {
+            let mut tuple_types = Vec::new();
+            if !self.check(&TokenType::RightParen) {
+                loop {
+                    tuple_types.push(self.parse_type_annotation()?);
+                    if !self.match_token(&[TokenType::Comma]) {
+                        break;
+                    }
+                }
+            }
+            self.consume(TokenType::RightParen, "Harapkan ')' setelah tipe tuple")?;
+            return Ok(format!("({})", tuple_types.join(", ")));
+        }
+
+        if self.match_token(&[TokenType::LeftBracket]) {
+            let inner = self.parse_type_annotation()?;
+            self.consume(TokenType::RightBracket, "Harapkan ']' setelah tipe array")?;
+            return Ok(format!("[{}]", inner));
+        }
+
+        let type_token = self.peek().clone();
+        let base_token = if self.check_identifier() {
+            self.advance()
+        } else if matches!(
+            self.peek().token_type,
+            TokenType::Fungsi
+                | TokenType::Struktur
+                | TokenType::Enum
+                | TokenType::Sifat
+                | TokenType::Nihil
+                | TokenType::Benar
+                | TokenType::Salah
+        ) {
+            self.advance()
+        } else {
+            return Err(Galat::sintaks("Harapkan nama tipe", &type_token.span));
+        };
+        let mut type_str = base_token.lexeme;
+
+        if self.check(&TokenType::Less) {
+            let gen_args = self.parse_optional_generic_args()?;
+            type_str = format!("{}<{}>", type_str, gen_args.join(", "));
+        }
+
+        Ok(type_str)
+    }
+
+    /// Parse optional where clause: `dimana T: Sifat, U: Sifat2`
+    fn parse_where_clause(&mut self) -> Result<(), Galat> {
+        loop {
+            let _param = self.consume_identifier("Harapkan nama parameter tipe dalam klausa 'dimana'")?;
+            self.consume(TokenType::Colon, "Harapkan ':' setelah parameter tipe")?;
+            let _bound = self.consume_identifier("Harapkan nama sifat dalam batas klausa 'dimana'")?;
+            if !self.match_token(&[TokenType::Comma]) {
+                break;
+            }
+        }
+        Ok(())
+    }
+
     // --- Helpers ---
 
     fn check_identifier(&self) -> bool {
         matches!(self.peek().token_type, TokenType::Identifier(_))
+    }
+
+    fn check_next_is_jika(&self) -> bool {
+        if self.current + 1 < self.tokens.len() {
+            matches!(self.tokens[self.current + 1].token_type, TokenType::Jika)
+        } else {
+            false
+        }
     }
 
     fn consume_identifier(&mut self, err_msg: &str) -> Result<Token, Galat> {
@@ -1295,3 +1556,84 @@ impl Parser {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::Lexer;
+
+    fn parse_source(source: &str) -> Result<Program, Galat> {
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.scan_tokens()?;
+        let mut parser = Parser::new(tokens);
+        parser.parse()
+    }
+
+    #[test]
+    fn test_parse_generic_function() {
+        let code = "fungsi tukar<T, U>(a: T, b: U) -> T { kembalikan a; }";
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse generic function: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_generic_struct() {
+        let code = "struktur Kantong<T: Sama> { isi: T, fungsi ambil() -> T { kembalikan ini.isi; } }";
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse generic struct: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_generic_enum() {
+        let code = "enum Hasil<T, E> { Ok(T), Err(E) }";
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse generic enum: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_pattern_matching_expression() {
+        let code = r#"
+        misal pesan = cocok(nilai) {
+            0 => "nol",
+            1 => "satu",
+            Hasil::Ok(v) => "sukses",
+            _ => "lainnya",
+        };
+        "#;
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse pattern matching: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_pattern_matching_statement_with_guards() {
+        let code = r#"
+        cocok(nilai) {
+            x jika x > 100 => cetak("besar"),
+            _ => cetak("kecil"),
+        }
+        "#;
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse match statement: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_type_annotations_in_variables() {
+        let code = "misal x: Angka = 42; tetap nama: String = \"Widya\";";
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse type annotations: {:?}", program.err());
+    }
+
+    #[test]
+    fn test_parse_derived_traits_attribute() {
+        let code = r#"
+        #[turunkan(Tunjukkan, Sama)]
+        struktur Titik {
+            x: Angka,
+            y: Angka,
+        }
+        "#;
+        let program = parse_source(code);
+        assert!(program.is_ok(), "Gagal parse derived traits: {:?}", program.err());
+    }
+}
+
