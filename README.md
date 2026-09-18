@@ -24,16 +24,16 @@ Widya-Lang dirancang dengan arsitektur portabel standar POSIX dan Win32:
 ### 🐧 Di Linux & 🍎 Di macOS
 Cukup jalankan satu baris perintah di Terminal Anda:
 ```bash
-git clone https://github.com/widya-lang/widya.git
-cd widya
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
 chmod +x install.sh && ./install.sh
 ```
 
 ### 🪟 Di Windows
 Jalankan di PowerShell:
 ```powershell
-git clone https://github.com/widya-lang/widya.git
-cd widya
+git clone https://github.com/Bakulcoding/widya-lang.git
+cd widya-lang
 .\install.ps1
 ```
 
