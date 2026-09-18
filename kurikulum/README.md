@@ -35,6 +35,10 @@ Selamat datang di **Kurikulum Pembelajaran Widya-Lang**. Kurikulum ini dirancang
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+> 🌟 **Program Khusus Sekolah Menengah (SMA/SMK/MA 3 Tahun Penuh):**  
+> Bagi sekolah yang menerapkan program vokasi atau peminatan Informatika 3 Tahun penuh (6 Semester / 96 Pertemuan), silakan merujuk ke dokumen khusus:  
+> 👉 **[KURIKULUM_3_TAHUN_6_SEMESTER.md](KURIKULUM_3_TAHUN_6_SEMESTER.md)** (Rancangan silabus lengkap 6 semester dari dasar hingga siap kerja / industri).
+
 ---
 
 ## 🟢 Jenjang 1: Sekolah Dasar (SD / Madrasah Ibtidaiyah)
