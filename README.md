@@ -64,13 +64,36 @@ cocokkan status {
 
 ## ⚡ Cara Instalasi & Menjalankan
 
+### 📋 Prasyarat: Memasang Toolchain Rust (Langkah 0)
+
+Bagi Anda yang ingin mengompilasi dari kode sumber (*source code*), pastikan toolchain **Rust & Cargo** telah terpasang:
+
+- **Di Linux & macOS**:
+  Jalankan perintah resmi berikut di terminal:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source "$HOME/.cargo/env"
+  ```
+- **Di Windows**:
+  1. Unduh installer resmi **`rustup-init.exe`** dari [https://rustup.rs](https://rustup.rs) atau [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
+  2. Jalankan berkas `rustup-init.exe` dan ikuti petunjuk di layar (pilih opsi default `1`).
+  3. Pastikan juga memasang **C++ Build Tools** (Visual Studio Build Tools) jika diminta oleh installer Rust.
+
+*Verifikasi instalasi Rust:*
+```bash
+cargo --version
+rustc --version
+```
+
+---
+
 ### 🐧 Di Linux (Ubuntu, Debian, Fedora, Arch, dll.)
 ```bash
 # 1. Kloning repositori
 git clone https://github.com/Bakulcoding/widya-lang.git
 cd widya-lang
 
-# 2. Jalankan skrip instalasi otomatis (memerlukan Rust/Cargo)
+# 2. Jalankan skrip instalasi otomatis
 chmod +x install.sh
 ./install.sh
 
@@ -104,12 +127,12 @@ git clone https://github.com/Bakulcoding/widya-lang.git
 cd widya-lang
 
 # 2. Jalankan skrip instalasi otomatis Windows
-.\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 # 3. Buka jendela terminal baru lalu verifikasi instalasi
 widya --version
 ```
-> *Alternatif manual:* Jalankan `cargo build --release`, lalu tambahkan folder `target\release` ke variabel `PATH` lingkungan Windows Anda.
+> *Alternatif tanpa Rust (Langsung Pakai):* Anda juga bisa langsung mengunduh biner `widya.exe` siap pakai dari halaman [GitHub Releases](https://github.com/Bakulcoding/widya-lang/releases).
 
 ---
 

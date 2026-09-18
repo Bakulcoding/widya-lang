@@ -38,6 +38,20 @@ Widya-Lang dirancang dengan kata kunci ekspresif berbahasa Indonesia dengan perf
 
 ## 2. Instalasi & Antarmuka CLI
 
+### Prasyarat: Memasang Toolchain Rust
+
+Sebelum mengompilasi Widya-Lang dari kode sumber, pastikan sistem Anda telah memiliki Rust & Cargo:
+
+- **Linux & macOS**:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source "$HOME/.cargo/env"
+  ```
+- **Windows**:
+  Unduh dan jalankan installer resmi `rustup-init.exe` dari [https://rustup.rs](https://rustup.rs).
+
+---
+
 ### Langkah Instalasi Berdasarkan Sistem Operasi
 
 #### 🐧 Di Linux (Ubuntu, Debian, Fedora, Arch, CentOS, dll.)
