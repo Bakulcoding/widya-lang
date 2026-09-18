@@ -1,0 +1,20 @@
+// compiler_self_hosted/ast.widya
+// Definisi node Abstract Syntax Tree mandiri dalam Widya-Lang
+
+struktur NodeEkspresi {
+    jenis: String,
+    nilai_literal: String
+}
+
+struktur ProgramAST {
+    jumlah_pernyataan: Int,
+    status: String
+}
+
+fungsi buat_program_ast(jumlah: Int) -> ProgramAST {
+    misal ast = {
+        "jumlah_pernyataan": jumlah,
+        "status": "VALID"
+    };
+    kembalikan ast["status"];
+}

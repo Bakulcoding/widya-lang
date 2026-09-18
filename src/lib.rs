@@ -38,6 +38,7 @@ pub mod profiler;
 pub mod dap;
 pub mod stdlib_ffi;
 pub mod wasm_playground;
+pub mod bootstrap;
 
 use borrow_checker::BorrowChecker;
 use error::Galat;

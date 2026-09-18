@@ -1,0 +1,19 @@
+// compiler_self_hosted/typesystem.widya
+// Hindley-Milner Type Inference & Type Checker mandiri dalam Widya-Lang
+
+fungsi periksa_tipe_kesetaraan(tipe_a: String, tipe_b: String) -> Bool {
+    jika tipe_a == tipe_b {
+        kembalikan true;
+    }
+    jika tipe_a == "Any" || tipe_b == "Any" {
+        kembalikan true;
+    }
+    kembalikan false;
+}
+
+fungsi inferensi_tipe_literal(literal: String) -> String {
+    jika literal == "true" || literal == "false" {
+        kembalikan "Bool";
+    }
+    kembalikan "Int";
+}

@@ -1,0 +1,20 @@
+// compiler_self_hosted/token.widya
+// Definisi struktur Token dan TokenKind mandiri dalam Widya-Lang
+
+struktur Posisi {
+    baris: Int,
+    kolom: Int
+}
+
+struktur Token {
+    jenis: String,
+    nilai: String
+}
+
+fungsi buat_token(jenis: String, nilai: String) -> Token {
+    misal tok = {
+        "jenis": jenis,
+        "nilai": nilai
+    };
+    kembalikan tok["jenis"];
+}

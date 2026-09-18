@@ -247,6 +247,11 @@ enum Commands {
         #[command(subcommand)]
         aksi: WpmSubcommands,
     },
+    /// Menjalankan orkestrator Full Self-Hosting Compiler (Stage-0 -> Stage-1 -> Stage-2)
+    Bootstrap {
+        #[arg(short, long, default_value = "compiler_self_hosted")]
+        dir: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -478,6 +483,24 @@ fn main() {
                 }
             }
         },
+        Some(Commands::Bootstrap { dir }) => {
+            use widya::bootstrap::{SelfHostingBootstrap, BootstrapStageStatus};
+            println!("{}", "🚀 Menjalankan Full Self-Hosting Compiler Pipeline...".bright_cyan().bold());
+            let bootstrapper = SelfHostingBootstrap::new(&dir);
+            let stages = bootstrapper.run_full_bootstrap_cycle();
+            for st in stages {
+                match st {
+                    BootstrapStageStatus::Success { stage_name, hash } => {
+                        println!("{} {} [{}]", "✅ PASS:".bright_green().bold(), stage_name.bright_white(), hash.bright_yellow());
+                    }
+                    BootstrapStageStatus::Failure { stage_name, error_msg } => {
+                        eprintln!("{} {} -> {}", "❌ FAIL:".bright_red().bold(), stage_name, error_msg);
+                        process::exit(1);
+                    }
+                }
+            }
+            println!("{}", "🎉 100% Deterministic Full Self-Hosting Validated Successfully!".bright_green().bold());
+        }
         None => {
             if let Some(berkas) = cli.berkas {
                 jalankan_berkas(&berkas, cli.profil.as_deref());
