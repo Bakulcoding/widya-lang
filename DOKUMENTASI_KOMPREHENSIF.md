@@ -1,5 +1,5 @@
 # 📚 Buku Panduan Komprehensif Bahasa Pemrograman Widya-Lang
-**Versi: 0.1.0-Enterprise (Industrial & Production Grade)**  
+**Versi: 1.0.0-beta.1 (Public Beta Preview & Full Self-Hosting)**  
 *Bahasa Pemrograman Modern Berbasis Bahasa Indonesia untuk Sistem, Web, Mobile, AI, dan Skala Enterprise.*
 
 ---
@@ -14,13 +14,15 @@
 7. [Pengembangan Web & REST API](#7-pengembangan-web--rest-api)
 8. [Pengembangan Aplikasi Mobile (Android & iOS)](#8-pengembangan-aplikasi-mobile-android--ios)
 9. [C/Native Foreign Function Interface (FFI)](#9-cnative-foreign-function-interface-ffi)
-10. [Audit Keamanan & Pencegahan Kerentanan](#10-audit-keamanan--pencegahan-kerentanan)
-11. [Manajemen Memori & Profiler](#11-manajemen-memori--profiler)
-12. [Widya Package Manager (WPM) & Lockfile](#12-widya-package-manager-wpm--lockfile)
-13. [Perkakas Developer (LSP, DAP, REPL, Studio IDE)](#13-perkakas-developer-lsp-dap-repl-studio-ide)
-14. [Multi-Target Compilation (Native, WASM, GPU, eBPF)](#14-multi-target-compilation-native-wasm-gpu-ebpf)
-15. [Sub-Sistem Operasi & Kernel Primitives](#15-sub-sistem-operasi--kernel-primitives-srcos)
-16. [Distributed Database Engine](#16-distributed-database-engine-srcdb)
+10. [Pustaka Standar C FFI (SQLite3 & Kriptografi)](#10-pustaka-standar-c-ffi-sqlite3--kriptografi)
+11. [Audit Keamanan & Pencegahan Kerentanan](#11-audit-keamanan--pencegahan-kerentanan)
+12. [Manajemen Memori & Profiler](#12-manajemen-memori--profiler)
+13. [Widya Package Manager (WPM) & Lockfile](#13-widya-package-manager-wpm--lockfile)
+14. [Perkakas Developer (VS Code, LSP, DAP, REPL, Studio IDE, Web Playground)](#14-perkakas-developer-vs-code-lsp-dap-repl-studio-ide-web-playground)
+15. [Multi-Target Compilation (Native, WASM, GPU, eBPF)](#15-multi-target-compilation-native-wasm-gpu-ebpf)
+16. [Full Self-Hosting Compiler Pipeline](#16-full-self-hosting-compiler-pipeline)
+17. [Sub-Sistem Operasi & Kernel Primitives](#17-sub-sistem-operasi--kernel-primitives-srcos)
+18. [Distributed Database Engine](#18-distributed-database-engine-srcdb)
 
 ---
 
@@ -294,36 +296,77 @@ Distribusi Penggunaan Tipe Data:
 
 ---
 
-## 12. Widya Package Manager (WPM) & Lockfile
+## 10. Pustaka Standar C FFI (SQLite3 & Kriptografi)
 
-Manajemen dependensi dengan verifikasi checksum SHA256:
+Widya menyediakan binding pustaka C tingkat tinggi bawaan yang siap pakai:
 
-```bash
-# Inisialisasi proyek baru
-widya inisialisasi TokoOnline
+```widya
+// Integrasi Basis Data SQLite3
+misal db = Sqlite::buka("data.db");
+db.eksekusi("CREATE TABLE pengguna (id INTEGER, nama TEXT);");
+db.eksekusi("INSERT INTO pengguna VALUES (1, 'Budi');");
+misal hasil = db.kueri("SELECT * FROM pengguna;");
 
-# Menambah dependensi
-widya tambah widya-http
-
-# Membuat/memperbarui widya.lock
-widya wpm lock .
-
-# Memvalidasi integritas paket
-widya wpm verify .
+// Kriptografi & Token Keamanan
+misal hash = Kripto::sha256("rahasia");
+misal token = Kripto::buat_token("auth_session");
 ```
 
 ---
 
-## 13. Perkakas Developer (LSP, DAP, REPL, Studio IDE)
+## 11. Audit Keamanan & Pencegahan Kerentanan
 
-- **Language Server Protocol (LSP)**: Menyediakan auto-completion, hover docs, go-to-definition, dan diagnostics untuk VS Code.
-- **Debug Adapter Protocol (DAP)**: Mendukung breakpoint dan visual stepping debugger.
-- **Interactive REPL**: Dilengkapi `.waktu` (stopwatch eksekusi), `.tipe` (tipe ekspresi), dan `.lingkungan` (variabel aktif).
-- **Widya Studio**: IDE mandiri lokal berbasis GUI/Browser dengan editor, terminal terintegrasi, dan live canvas.
+Widya dilengkapi linter keamanan AST statis bawaan:
+
+```bash
+# Menjalankan pemindaian kerentanan pada proyek
+widya audit .
+widya security skrip.wya
+```
+- **Secret Scanner**: Mendeteksi kebocoran API Key (AWS, Stripe, GitHub, Private Keys).
+- **SQLi Detector**: Mencegah konkatenasi string tidak aman pada kueri basis data.
+- **XSS Detector**: Mendeteksi penyuntikan raw HTML tanpa sanitasi.
 
 ---
 
-## 14. Multi-Target Compilation
+## 12. Manajemen Memori & Profiler
+
+Widya menggabungkan **Safe Reference Counting** dan **Tarjan's Strongly Connected Components Cycle Detection** untuk mencegah kebocoran memori siklis:
+
+```bash
+# Memeriksa jejak alokasi heap dan pendeteksi siklus memori
+widya profile skrip.wya
+```
+
+---
+
+## 13. Widya Package Manager (WPM) & Lockfile
+
+Untuk menjamin keamanan rantai pasok (*supply chain integrity*), WPM menyediakan lockfile otomatis:
+
+```bash
+# Membuat berkas widya.lock dengan checksum SHA-256
+widya wpm lock
+
+# Memverifikasi integritas checksum pustaka
+widya wpm verify
+```
+
+---
+
+## 14. Perkakas Developer (VS Code, LSP, DAP, REPL, Studio IDE, Web Playground)
+
+Widya menyediakan ekosistem perkakas lengkap:
+- **VS Code Extension**: Dukungan resmi di direktori `editors/vscode/` (TextMate grammar, LSP, dan DAP).
+- **Language Server Protocol (LSP)**: `widya lsp` untuk auto-complete, diagnostics, hover, dan go-to definition.
+- **Debug Adapter Protocol (DAP)**: `widya dap` untuk breakpoint debugging visual dan stack trace inspect.
+- **Interactive WebAssembly Playground**: `www/index.html` dan `src/wasm_playground.rs` untuk mencoba Widya langsung di browser via WASM.
+- **Interactive REPL**: `widya repl` dilengkapi `.waktu` (stopwatch) dan `.tipe` (type inspect).
+- **Widya Studio**: IDE grafis lokal via `widya studio`.
+
+---
+
+## 15. Multi-Target Compilation
 
 Widya dapat dikompilasi ke berbagai target komputasi khusus:
 
@@ -343,7 +386,22 @@ widya llvm core.wya --output core.ll
 
 ---
 
-## 15. Sub-Sistem Operasi & Kernel Primitives (`src/os`)
+## 16. Full Self-Hosting Compiler Pipeline
+
+Widya-Lang kini **100% Full Self-Hosted** di mana seluruh modul kompiler ditulis dalam bahasa Widya (`compiler_self_hosted/`):
+- `token.widya` & `lexer.widya`: Scanner leksikal mandiri.
+- `ast.widya` & `parser.widya`: Parser gramatika rekursif.
+- `typesystem.widya`: Inferensi tipe Hindley-Milner murni.
+- `codegen.widya` & `main.widya`: Generator C-Emitter dan driver CLI.
+
+Menjalankan verifikasi bootstrap deterministik multi-tahap (Stage-0 -> Stage-1 -> Stage-2):
+```bash
+widya bootstrap
+```
+
+---
+
+## 17. Sub-Sistem Operasi & Kernel Primitives (`src/os`)
 
 Widya memiliki modul kernel POSIX & microkernel primitives bawaan untuk sistem embedded, bare-metal, dan OS runtime:
 
@@ -355,7 +413,7 @@ Widya memiliki modul kernel POSIX & microkernel primitives bawaan untuk sistem e
 
 ---
 
-## 16. Distributed Database Engine (`src/db`)
+## 18. Distributed Database Engine (`src/db`)
 
 Widya menyediakan mesin basis data terdistribusi ACID berkinerja tinggi:
 
