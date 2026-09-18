@@ -1,0 +1,53 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 64 - Komputasi Kedap-Radiasi TMR & Telemetri Standar CCSDS
+// Demonstrasi voting mayoritas 2-dari-3 mitigasi gangguan radiasi SEU kosmik dan pembentukan paket telemetri satelit standar CCSDS 131.0-B.
+
+tulis("=== [WIDYA DEEP SPACE] REDUNDANSI RADIASI TMR & TELEMETRI CCSDS ===");
+
+// 1. Triple Modular Redundancy (TMR Majority Voter & SEU Mitigation)
+tulis("--- SISTEM KOMPUTASI REDUNDAN TMR (KEDAP RADIASI KOSMIK) ---");
+var tmr = MesinRedundansiTMR();
+
+// Injeksi Gangguan Radiasi Ion Berat (Single-Event Upset / SEU) pada Core B
+tmr_injeksi_gangguan_radiasi_seu(tmr, "Core_B", 1.0);
+tulis("Simulasi SEU Radiasi Terinjeksi pada Register Core B.");
+
+// Eksekusi Instruksi Komputasi Trajektori Wahana Antariksa dengan Voting Mayoritas
+var kalkulasi = tmr_eksekusi_instruksi_voting(
+    tmr,
+    "HITUNG_VEKTOR_DELTA_V",
+    1248.55,  // Core A (Benar)
+    9999.99,  // Core B (Terkorupsi Radiasi SEU)
+    1248.55   // Core C (Benar)
+);
+
+tulis("Hasil Voting Mayoritas  : " + kalkulasi["hasil_voting_mayoritas"] + " m/s");
+tulis("Koreksi SEU Dilakukan   : " + kalkulasi["koreksi_dilakukan"]);
+tulis("Status Integritas TMR   : " + kalkulasi["status_integritas_tmr"]);
+
+// Ambil Status Kesehatan Tri-Core Processor
+var kesehatan = tmr_ambil_status_kesehatan_core(tmr);
+tulis("Status Core A           : " + kesehatan["core_a"]);
+tulis("Status Core B           : " + kesehatan["core_b"]);
+tulis("Status Core C           : " + kesehatan["core_c"]);
+tulis("Total Koreksi Voting    : " + kesehatan["total_koreksi_voting"]);
+tulis("Kelaikan Misi           : " + kesehatan["kelaikan_misi_antariksa"]);
+
+// 2. Standar Paket Telemetri Antariksa CCSDS (CCSDS Space Packet Protocol)
+tulis("\n--- ENKAPSULASI PAKET TELEMETRI ANTARIKSA CCSDS 131.0-B ---");
+var paket_ccsds = PaketTelemetriCCSDS(291.0, 42.0); // APID 0x0123 (291 dec), Sequence Count 42
+
+// Atur Data Payload Telemetri Instrumen Ilmiah
+ccsds_atur_data_payload(paket_ccsds, "2026-09-14T12:00:00.000Z", "A1F022B8CCD4");
+
+// Enkapsulasi ke Frame Transfer Biner CCSDS
+var frame = ccsds_enkapsulasi_frame_transfer(paket_ccsds);
+tulis("Frame Transfer Hex      : 0x" + frame["frame_transfer_hex"]);
+tulis("Panjang Oktet Frame     : " + frame["panjang_oktet"] + " byte");
+tulis("Protokol Standar        : " + frame["protokol_standar"]);
+
+// Verifikasi Checksum CRC-16-CCITT
+var cek_crc = ccsds_verifikasi_crc(paket_ccsds);
+tulis("Integritas CRC-16 Valid : " + cek_crc["crc_valid"]);
+tulis("Status Frame Downlink   : " + cek_crc["status_frame"]);
+
+tulis("\n[WIDYA DEEP SPACE] TMR & Telemetri CCSDS Berhasil Diverifikasi!");

@@ -1,0 +1,33 @@
+// =========================================================================
+// Contoh 99: Pilar Aplikasi Seluler (Baterai, Biometrik & Secure KeyStore)
+// WidyaMobileBatteryPower & WidyaMobileBiometrics / Storage
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR APLIKASI SELULER: BATERAI & BIOMETRIK AMAN ===");
+
+    // 1. Pemantauan Daya & Status Baterai
+    var bat = StatusBaterai();
+    cetak("Persentase Baterai: " + ke_teks(bat.persentase) + "%");
+    cetak("Status Pengisian: " + ke_teks(baterai_apakah_mengisi(bat)) + " via " + bat.sumber_daya);
+    cetak("Mode Hemat Daya: " + ke_teks(baterai_hemat_daya(bat)));
+    cetak("Suhu Baterai: " + ke_teks(bat.suhu_celsius) + " °C");
+
+    // 2. Autentikasi Biometrik Native (Face ID / Fingerprint)
+    var auth = biometrik_autentikasi("Konfirmasi Transaksi Dompet", "FaceID");
+    cetak("Status Autentikasi: " + ke_teks(auth.sukses) + " [Metode: " + auth.metode + "]");
+
+    // 3. Penyimpanan Kredensial Terenkripsi (Android KeyStore / iOS Keychain)
+    kunci_aman_simpan("auth_jwt_token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.widya_mobile_secure_session");
+    kunci_aman_simpan("user_pin_hash", "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08");
+
+    var token_tersimpan = kunci_aman_ambil("auth_jwt_token");
+    cetak("Token dari KeyStore: " + token_tersimpan);
+
+    var status_hapus = kunci_aman_hapus("user_pin_hash");
+    cetak("Status Hapus KeyStore: " + ke_teks(status_hapus));
+
+    cetak("=== UJI BATERAI & BIOMETRIK SUKSES ===");
+}
+
+utama();

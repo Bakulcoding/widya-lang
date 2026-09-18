@@ -1,0 +1,32 @@
+// Contoh 26: Quantum Computing Simulator & Zero-Knowledge Proofs (Widya-Lang)
+
+cetak("=== ⚛️ 1. Quantum Computing Circuit Simulator (WidyaQuantum) ===");
+
+// Inisialisasi Sirkuit Kuantum 2-Qubit (|00>)
+misal sirkuit = SirkuitKuantum(2);
+cetak("Sirkuit Kuantum Dibuat dengan " + string(sirkuit.qubits) + " Qubits.");
+
+// Menerapkan Gerbang Hadamard (H) untuk menciptakan Superposisi
+gerbang_h(sirkuit, 0);
+
+// Menerapkan Gerbang CNOT (Controlled-NOT) untuk menciptakan Entanglement Bell State (|00> + |11>) / sqrt(2)
+gerbang_cnot(sirkuit, 0, 1);
+
+// Mengukur probabilitas runtuhnya gelombang kuantum
+misal probabilitas = ukur_kuantum(sirkuit);
+cetak("Distribusi Probabilitas Pengukuran Kuantum (|00>, |01>, |10>, |11>): " + string(probabilitas));
+
+cetak("=== 🔐 2. Zero-Knowledge Proofs (zk-SNARKs Verifier) ===");
+
+// Pihak pembukti (Prover) membuat komitmen bukti kriptografis tanpa membocorkan rahasia
+misal rahasia_pribadi = "password_super_rahasia_12345";
+misal nilai_publik = "pengguna_terverifikasi_id_999";
+
+misal bukti_zk = buat_bukti_zk(rahasia_pribadi, nilai_publik);
+cetak("Komitmen Bukti ZK (Cryptographic Hash): " + bukti_zk.komitmen);
+
+// Pihak verifikator (Verifier) memvalidasi keabsahan klaim tanpa mengetahui rahasia
+misal terverifikasi = verifikasi_bukti_zk(bukti_zk, "pengguna_terverifikasi_id_999");
+cetak("Hasil Verifikasi Bukti Zero-Knowledge: " + string(terverifikasi));
+
+cetak("=== 🚀 Selesai Menjalankan Quantum & ZK-Proof Demo ===");

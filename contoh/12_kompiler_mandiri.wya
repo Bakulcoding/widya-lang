@@ -1,0 +1,35 @@
+// =================================================================
+// Contoh 12: Penggunaan Kompiler Mandiri (Self-Hosted Compiler)
+// =================================================================
+
+impor "modul/kompiler.wya";
+
+cetak("==================================================");
+cetak("🛠️  Demonstrasi Kompiler Mandiri Widya (Self-Hosted)");
+cetak("==================================================\n");
+
+misal kode_program = "// Program Widya Mandiri\n" +
+    "misal x = 10;\n" +
+    "misal y = 20;\n" +
+    "cetak(\"Hasil penjumlahan x + y =\");\n" +
+    "cetak(x + y);\n";
+
+cetak("1️⃣  Kode Program Sumber yang Akan Dikompilasi:");
+cetak("--------------------------------------------------");
+cetak(kode_program);
+cetak("--------------------------------------------------\n");
+
+// 2. Inisialisasi Kompiler Mandiri yang ditulis dalam bahasa Widya
+cetak("2️⃣  Menjalankan Kompiler Mandiri Widya...");
+misal kompiler = KompilerWidya(kode_program);
+misal kode_c_terkompilasi = kompiler.kompilasi_ke_c();
+
+// 3. Tampilkan Hasil Transpilasi Native
+cetak("\n3️⃣  Hasil Kode Native yang Dihasilkan:");
+cetak("==================================================");
+cetak(kode_c_terkompilasi);
+cetak("==================================================");
+
+// 4. Simpan ke berkas native
+tulis_berkas("program_native.c", kode_c_terkompilasi);
+cetak("\n✅ Berhasil mengekspor berkas 'program_native.c'!");

@@ -1,0 +1,45 @@
+// =========================================================================
+// Contoh 96: Pilar Aplikasi Desktop & Antarmuka Pengguna (Jendela & Menu)
+// WidyaDesktopWindow & WidyaDesktopMenu
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR APLIKASI DESKTOP & MENU BILAH WIDYA ===");
+
+    // 1. Inisialisasi Jendela Desktop Native
+    var win = JendelaDesktop("Widya Studio Pro", 1280, 720);
+    cetak("Jendela dibuat: " + win.judul + " [" + ke_teks(win.lebar) + "x" + ke_teks(win.tinggi) + "]");
+    cetak("Status terbuka: " + ke_teks(jendela_apakah_terbuka(win)));
+
+    // 2. Modifikasi Ukuran & Pusatkan Jendela
+    jendela_set_ukuran(win, 1024, 768);
+    jendela_pusatkan(win);
+    cetak("Posisi jendela terpusat: X=" + ke_teks(win.posisi_x) + ", Y=" + ke_teks(win.posisi_y));
+
+    // 3. Fullscreen & Judul
+    jendela_set_fullscreen(win, true);
+    cetak("Status fullscreen: " + ke_teks(win.fullscreen));
+    jendela_set_fullscreen(win, false);
+
+    // 4. Inisialisasi Menu Bilah Native
+    var menu_berkas = MenuBilah("Berkas");
+    menu_tambah_item(menu_berkas, "Proyek Baru", "Ctrl+N");
+    menu_tambah_item(menu_berkas, "Buka Berkas...", "Ctrl+O");
+    menu_tambah_pemisah(menu_berkas);
+    menu_tambah_item(menu_berkas, "Keluar", "Alt+F4");
+
+    cetak("Jumlah menu item: " + ke_teks(panjang(menu_berkas.item)));
+
+    // 5. Inisialisasi Baki Sistem (System Tray)
+    var baki = BakiSistem("widya_icon.png", "Widya Background Worker");
+    tray_set_tooltip(baki, "Widya Running Active");
+    tray_kirim_notifikasi(baki, "Pembaruan", "Widya Desktop GUI Wave 39 Siap Digunakan!");
+    cetak("Notifikasi Tray Terakhir: " + baki.notifikasi_terakhir);
+
+    // 6. Tutup Jendela
+    jendela_tutup(win);
+    cetak("Status setelah jendela_tutup: " + ke_teks(jendela_apakah_terbuka(win)));
+    cetak("=== UJI JENDELA & MENU SUKSES ===");
+}
+
+utama();

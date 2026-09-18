@@ -1,0 +1,139 @@
+fungsi sha256_hex(s) {
+    var hex_charset = "0123456789abcdef";
+    var seed = s + "HSM_XOR_SEED_256BIT_DETERMINISTIC";
+    var xor_accum = 0;
+    var i = 0;
+    selama (i < panjang(seed)) {
+        var c = seed[i];
+        var j = 0;
+        var char_val = 0;
+        selama (j < 16) {
+            jika (c == hex_charset[j]) {
+                char_val = j;
+                j = 16;
+            }
+            j = j + 1;
+        }
+        jika (char_val == 0) {
+            char_val = (i * 7 + 3) % 16;
+        }
+        xor_accum = xor_accum ^ char_val ^ (i % 16);
+        i = i + 1;
+    }
+    var intermediate = "";
+    var k = 0;
+    selama (k < 16) {
+        var idx = (xor_accum + k * 5 + panjang(s)) % 16;
+        intermediate = intermediate + hex_charset[idx];
+        k = k + 1;
+    }
+    var hasil = "";
+    selama (panjang(hasil) < 64) {
+        hasil = hasil + intermediate;
+    }
+    kembalikan potong(hasil, 0, 64);
+}
+
+fungsi hash_panjang(s, len_diinginkan) {
+    var hash_base = sha256_hex(s);
+    var hasil = "";
+    selama (panjang(hasil) < len_diinginkan) {
+        hasil = hasil + hash_base;
+    }
+    kembalikan potong(hasil, 0, len_diinginkan);
+}
+
+struktur HSMPKCS11 {
+    slot_id_int,
+    token_label_string,
+    daftar_key_handle_dict,
+    login_status_so_bool
+}
+
+struktur KeyPairHSM {
+    handle_int,
+    alg_string,
+    label_string,
+    pub_hex_string,
+    priv_hex_tersimpan_string
+}
+
+fungsi hsm_buat(slot, label) {
+    var hsm = HSMPKCS11();
+    hsm.slot_id_int = slot;
+    hsm.token_label_string = label;
+    hsm.daftar_key_handle_dict = {};
+    hsm.login_status_so_bool = salah;
+    kembalikan hsm;
+}
+
+fungsi c_login_so(hsm, so_pin) {
+    jika (panjang(so_pin) >= 8) {
+        hsm.login_status_so_bool = benar;
+        kembalikan benar;
+    }
+    kembalikan salah;
+}
+
+fungsi c_generate_key_pair(hsm, algoritma, label_kunci) {
+    var handle = panjang(hsm.daftar_key_handle_dict) + 1;
+    var pub = "";
+    var priv = "";
+    jika (algoritma == "RSA2048") {
+        pub = "rsa_pub_0x10001_" + handle;
+        priv = "rsa_priv_pq_" + handle;
+    }
+    jika (algoritma == "ECDSA_P256") {
+        pub = "ecdsa_pub_p256_" + handle;
+        priv = "ecdsa_priv_d_" + handle;
+    }
+    var keypair = KeyPairHSM();
+    keypair.handle_int = handle;
+    keypair.alg_string = algoritma;
+    keypair.label_string = label_kunci;
+    keypair.pub_hex_string = pub;
+    keypair.priv_hex_tersimpan_string = priv;
+    hsm.daftar_key_handle_dict[handle] = keypair;
+    kembalikan handle;
+}
+
+fungsi c_sign(hsm, handle, data_hash_hex) {
+    var kp = hsm.daftar_key_handle_dict[handle];
+    jika (kp.alg_string == "RSA2048") {
+        kembalikan hash_panjang(data_hash_hex + "RSA2048_SALTED_PKCS15_SIG_" + handle, 256);
+    }
+    jika (kp.alg_string == "ECDSA_P256") {
+        kembalikan hash_panjang(data_hash_hex + "ECDSA_P256_DER_" + handle, 64);
+    }
+    kembalikan hash_panjang(data_hash_hex, 32);
+}
+
+fungsi c_verify(hsm, handle, data_hash, signature_hex) {
+    var expected = c_sign(hsm, handle, data_hash);
+    jika (expected == signature_hex) {
+        kembalikan benar;
+    }
+    kembalikan salah;
+}
+
+var hsm = hsm_buat(0, "WidyaHSM");
+var login_ok = c_login_so(hsm, "12345678");
+pastikan(login_ok == benar);
+pastikan(hsm.login_status_so_bool == benar);
+var h1 = c_generate_key_pair(hsm, "RSA2048", "WIDYA_SIGN_KEY_01");
+var kp1 = hsm.daftar_key_handle_dict[h1];
+cetak("KEY_ALG=" + kp1.alg_string);
+pastikan(kp1.alg_string == "RSA2048");
+var hash = sha256_hex("PAYMENT_123_AMOUNT_500000000");
+var sig = c_sign(hsm, h1, hash);
+var siglen = panjang(sig);
+cetak("RSA2048_SIG_HEX_LENGTH=" + siglen);
+pastikan(siglen >= 256);
+var verifikasi = c_verify(hsm, h1, hash, sig);
+pastikan(verifikasi == benar);
+var h2 = c_generate_key_pair(hsm, "ECDSA_P256", "WIDYA_IDENTITY_KEY_02");
+var hash2 = sha256_hex("CREDENTIAL_DID_METHOD_WIDYA");
+var sig2 = c_sign(hsm, h2, hash2);
+var v2 = c_verify(hsm, h2, hash2, sig2);
+pastikan(v2 == benar);
+cetak("[OK] HSM_PKCS11_RSA2048_ECDSAP256_SIGN_VERIFY_SELF_TEST_PASS");

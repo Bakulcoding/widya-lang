@@ -1,0 +1,30 @@
+// Contoh 22: Enterprise API - WidyaGraphQL & WidyaGRPC Microservices (Widya-Lang)
+
+cetak("=== 🔮 1. WidyaGraphQL Server & Query Engine ===");
+
+// Mendefinisikan skema GraphQL
+misal skema_gql = "type Query { pengguna(id: ID!): Pengguna } type Pengguna { id: ID, nama: String, peran: String }";
+misal gql_server = ServerGraphQL(skema_gql, 4000);
+
+cetak("GraphQL Server status: " + gql_server.status + " pada port " + string(gql_server.port));
+
+// Menjalankan kueri GraphQL
+misal kueri = "query { pengguna(id: 1) { id nama peran } }";
+misal hasil_gql = eksekusi_graphql(gql_server, kueri);
+
+cetak("Hasil Eksekusi GraphQL Pengguna: " + hasil_gql.data.pengguna.nama + " (" + hasil_gql.data.pengguna.peran + ")");
+
+cetak("=== ⚡ 2. WidyaGRPC Microservices High-Throughput RPC ===");
+
+// Inisialisasi gRPC Server
+misal srv_grpc = ServerGRPC("LayananPembayaran", 50051);
+cetak("gRPC Layanan: " + srv_grpc.service + " port: " + string(srv_grpc.port));
+
+// Inisialisasi gRPC Klien & RPC Dispatch
+misal klien_grpc = KlienGRPC("127.0.0.1:50051", "LayananPembayaran");
+misal respon_rpc = grpc_panggil(klien_grpc, "ProsesTransaksi", "order_id=9876;total=500000");
+
+cetak("Respon Status gRPC: " + respon_rpc.status);
+cetak("Respon Data gRPC: " + respon_rpc.respon);
+
+cetak("=== 🚀 Selesai Menjalankan GraphQL & gRPC Demo ===");

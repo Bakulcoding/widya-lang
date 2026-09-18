@@ -1,0 +1,92 @@
+// Modul Event Streaming Bus (Partitioned Commit Log & Consumer Group)
+
+fungsi buat_streaming_topic(nama_topik, jumlah_partisi) {
+    var partisi_map = {};
+    var i = 0;
+    selama (i < jumlah_partisi) {
+        var key = "p_" + ke_teks(i);
+        partisi_map[key] = [];
+        i = i + 1;
+    }
+    
+    kembalikan {
+        "topik": nama_topik,
+        "jumlah_partisi": jumlah_partisi,
+        "partisi": partisi_map,
+        "total_pesan": 0
+    };
+}
+
+fungsi publish_event(topic_obj, key_partisi, payload) {
+    // Partisi ditentukan via hash modular key
+    var hash_val = 0;
+    var str_key = ke_teks(key_partisi);
+    var i = 0;
+    selama (i < panjang(str_key)) {
+        hash_val = hash_val + 31;
+        i = i + 1;
+    }
+    
+    var partisi_idx = hash_val % topic_obj["jumlah_partisi"];
+    var part_key = "p_" + ke_teks(partisi_idx);
+    
+    var log_list = topic_obj["partisi"][part_key];
+    var offset = panjang(log_list);
+    
+    var record = {
+        "offset": offset,
+        "key": key_partisi,
+        "payload": payload,
+        "waktu": waktu()
+    };
+    
+    log_list = tambah(log_list, record);
+    topic_obj["partisi"][part_key] = log_list;
+    topic_obj["total_pesan"] = topic_obj["total_pesan"] + 1;
+    
+    kembalikan {
+        "topik": topic_obj["topik"],
+        "partisi": partisi_idx,
+        "offset": offset,
+        "status": "COMMITTED"
+    };
+}
+
+fungsi buat_consumer_group(group_id, topic_name) {
+    kembalikan {
+        "group_id": group_id,
+        "topic": topic_name,
+        "offsets": {}
+    };
+}
+
+fungsi poll_events(consumer_group, topic_obj, max_records) {
+    var fetched = [];
+    var i = 0;
+    selama (i < topic_obj["jumlah_partisi"]) {
+        var part_key = "p_" + ke_teks(i);
+        var cur_offset = 0;
+        jika (ada_kunci(consumer_group["offsets"], part_key)) {
+            cur_offset = consumer_group["offsets"][part_key];
+        }
+        
+        var log_list = topic_obj["partisi"][part_key];
+        var log_len = panjang(log_list);
+        
+        selama (cur_offset < log_len dan panjang(fetched) < max_records) {
+            var item = log_list[cur_offset];
+            fetched = tambah(fetched, {
+                "partisi": i,
+                "offset": cur_offset,
+                "key": item["key"],
+                "payload": item["payload"]
+            });
+            cur_offset = cur_offset + 1;
+        }
+        
+        consumer_group["offsets"][part_key] = cur_offset;
+        i = i + 1;
+    }
+    
+    kembalikan fetched;
+}

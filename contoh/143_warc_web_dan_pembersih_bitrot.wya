@@ -1,0 +1,51 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 62 - ISO 28500 WARC Web Archive & Bit-Rot Storage Scrubber
+// Demonstrasi perekaman format arsip web WARC 1.1 dan pemindaian scrubbing bit-rot serta perbaikan blok data rusak otomatis dengan paritas.
+
+tulis("=== [WIDYA PRESERVASI DIGITAL] ARSIP WEB WARC & SCRUBBING BIT-ROT ===");
+
+// 1. ISO 28500 WARC (Web ARChive Format) Perekam Wayback Machine
+tulis("--- PEREKAM ARSIP WEB FORMAT WARC/1.1 ---");
+var warc = PerekamWARC("Arsip_Portal_Pemerintah_2026");
+
+// Rekam Respon HTTP Halaman Web Bersejarah
+warc_tambah_rekaman_http(
+    warc,
+    "https://indonesia.go.id/pengumuman-resmi-2026",
+    "2026-09-14T08:30:00Z",
+    200,
+    "Content-Type: text/html; charset=UTF-8\r\nServer: Nginx-Widya/1.0",
+    "<!DOCTYPE html><html><head><title>Portal Resmi</title></head><body><h1>Pengumuman Digital Indonesia 2026</h1></body></html>"
+);
+
+// Hitung Cryptographic Payload Digest Fixity
+var digest_fixity = warc_hitung_digest_fixity(warc, "https://indonesia.go.id/pengumuman-resmi-2026");
+tulis("Payload Digest Fixity : " + digest_fixity);
+
+// Ekspor Dokumen WARC 1.1
+var warc_doc = warc_ekspor_dokumen(warc);
+tulis("\nHeader Dokumen WARC yang Dihasilkan:\n" + warc_doc);
+
+// 2. Pembersih Integritas Bit-Rot (Storage Scrubbing & Parity Repair)
+tulis("--- PEMINDAI DAN PEMULIH KERUSAKAN BIT-ROT (SCRUBBING) ---");
+var scrubber = PembersihBitRot(4096);
+
+// Daftarkan Blok Data Penyimpanan Dingin (Cold Storage)
+scrub_daftarkan_blok_data(scrubber, "BLOK_01", "DATA_ARSIP_PERPUSTAKAAN_01_PENTING_SEKALI");
+scrub_daftarkan_blok_data(scrubber, "BLOK_02", "DATA_ARSIP_PERPUSTAKAAN_02_DOKUMEN_RESMI");
+
+// Buat Blok Paritas Pemulihan (XOR Parity Protection)
+scrub_buat_paritas_pemulihan(scrubber, ["BLOK_01", "BLOK_02"]);
+tulis("Blok Paritas Pemulihan Berhasil Dihasilkan.");
+
+// Simulasikan Terjadinya Kerusakan Bit Fisik (Bit-Rot / Bit-Flip) pada Media
+scrub_simulasi_korupsi_bit(scrubber, "BLOK_01", 5, "DATA_RUSAK_KORUPSI_BITROT_SECARA_FISIK");
+tulis("Simulasi Bit-Rot Terjadi pada BLOK_01.");
+
+// Lakukan Pemindaian Scrubbing dan Pemulihan Otomatis dari Paritas
+var hasil_scrub = scrub_pindai_dan_perbaiki_bitrot(scrubber);
+tulis("\n--- HASIL PEMINDAIAN SCRUBBING BIT-ROT ---");
+tulis("Blok Rusak Terdeteksi  : " + hasil_scrub["blok_rusak_terdeteksi"]);
+tulis("Blok Berhasil Dipulih  : " + hasil_scrub["blok_berhasil_dipulihkan"]);
+tulis("Status Integritas Akhir: " + hasil_scrub["status_scrubbing"]);
+
+tulis("\n[WIDYA PRESERVASI DIGITAL] WARC & Bit-Rot Scrubber Berhasil Diverifikasi!");

@@ -1,0 +1,32 @@
+// Modul Telekomunikasi Inti 5G Core Diameter RFC 6733 & GTP
+
+fungsi diameter_buat_ccr_charging_request(session_id, imsi, service_id, rating_group) {
+    // Credit-Control-Request (CCR) RFC 4006 / 3GPP Gy / Ro Interface
+    kembalikan {
+        "command_code": 272, // Credit-Control
+        "is_request": benar,
+        "session_id": session_id,
+        "subscription_id": {
+            "type": "END_USER_IMSI",
+            "data": imsi
+        },
+        "service_context_id": "32251@3gpp.org",
+        "service_identifier": service_id,
+        "rating_group": rating_group,
+        "waktu_permintaan": waktu()
+    };
+}
+
+fungsi diameter_proses_cca_charging_response(ccr_request, kuota_diberikan_mb) {
+    kembalikan {
+        "command_code": 272,
+        "is_request": salah,
+        "session_id": ccr_request["session_id"],
+        "result_code": 2001, // DIAMETER_SUCCESS
+        "granted_service_unit": {
+            "total_octets": kuota_diberikan_mb * 1048576,
+            "kuota_mb": kuota_diberikan_mb
+        },
+        "status_kuota": "DIAMETER_CREDIT_GRANTED"
+    };
+}

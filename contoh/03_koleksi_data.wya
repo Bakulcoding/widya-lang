@@ -1,0 +1,37 @@
+// ==========================================
+// Contoh 03: Manipulasi Koleksi (Daftar & Kamus)
+// ==========================================
+
+// 1. Array / Daftar
+misal nilai_siswa = [85, 92, 78, 95, 88];
+cetak("Nilai Awal:", nilai_siswa);
+
+tambah(nilai_siswa, 90);
+cetak("Setelah Tambah 90:", nilai_siswa);
+cetak("Jumlah Siswa:", panjang(nilai_siswa));
+
+misal total = 0;
+untuk nilai dalam nilai_siswa {
+    total += nilai;
+}
+misal rata_rata = total / panjang(nilai_siswa);
+cetak("Total Nilai:", total);
+cetak("Rata-rata:", bulat(rata_rata));
+
+// 2. Map / Kamus
+misal profil = {
+    "nama": "Siti Widya",
+    "kota": "Yogyakarta",
+    "jurusan": "Informatika",
+    "ipk": 3.95
+};
+
+cetak("\n--- Profil Mahasiswa ---");
+cetak("Nama:", profil["nama"]);
+cetak("Kota:", profil.kota);
+cetak("IPK:", profil.ipk);
+
+// Menambah kunci baru
+profil["status"] = "Aktif";
+cetak("Semua Kunci:", kunci(profil));
+cetak("Status Mahasiswa:", profil.status);

@@ -1,0 +1,55 @@
+// =========================================================================
+// Contoh 110: Pilar Finansial & HFT (Order Book L2 & Indikator Kuantitatif)
+// WidyaOrderBookL2 & WidyaFinancialIndicators
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR FINANSIAL & HFT: ORDER BOOK L2 & INDIKATOR KUANTITATIF ===");
+
+    // 1. Inisialisasi Limit Order Book (L2 Matching Engine)
+    var ob = BukuPesananL2("BTC/USDT");
+
+    // Tambah Limit Orders Beli (Bids) & Jual (Asks)
+    orderbook_tambah_pesanan(ob, "order_b1", "BID", 65000.0, 1.5);
+    orderbook_tambah_pesanan(ob, "order_b2", "BID", 65100.0, 0.5);
+    orderbook_tambah_pesanan(ob, "order_a1", "ASK", 65050.0, 0.8);
+    orderbook_tambah_pesanan(ob, "order_a2", "ASK", 65200.0, 2.0);
+
+    // Ambil Kedalaman Snapshot Pasar
+    var kedalaman = orderbook_ambil_kedalaman(ob);
+    cetak("Market Depth: Best Bid=" + ke_teks(kedalaman.best_bid) + ", Best Ask=" + ke_teks(kedalaman.best_ask) + ", Spread=" + ke_teks(kedalaman.spread));
+
+    // Eksekusi Matching Engine
+    var hasil_trade = orderbook_cocokkan(ob);
+    cetak("Jumlah Transaksi Terjadi: " + ke_teks(panjang(hasil_trade)));
+    jika panjang(hasil_trade) > 0 {
+        var tr = hasil_trade[0];
+        cetak("Trade 1: Bid " + tr.bid_id + " vs Ask " + tr.ask_id + " @ " + ke_teks(tr.harga_eksekusi) + " Vol=" + ke_teks(tr.jumlah_eksekusi));
+    }
+
+    // 2. Indikator Analisis Kuantitatif Pasar
+    var riwayat_harga = [100.0, 102.0, 101.5, 105.0, 107.0, 106.0, 109.0, 112.0, 115.0, 114.0, 118.0, 120.0, 122.0, 125.0, 124.0];
+    var volume_data = [10.0, 12.0, 15.0, 20.0, 18.0, 22.0, 30.0, 25.0, 35.0, 40.0, 38.0, 50.0, 45.0, 60.0, 55.0];
+
+    // Hitung 5-Period EMA
+    var ema5 = indikator_ema(riwayat_harga, 5);
+    cetak("EMA (5-Period) Nilai Terakhir: " + ke_teks(ema5[panjang(ema5) - 1]));
+
+    // Hitung 14-Period RSI
+    var rsi14 = indikator_rsi(riwayat_harga, 14);
+    var kondisi = "Netral";
+    jika rsi14 > 70.0 {
+        kondisi = "Overbought";
+    } kalau rsi14 < 30.0 {
+        kondisi = "Oversold";
+    }
+    cetak("RSI (14-Period): " + ke_teks(rsi14) + " (Kondisi: " + kondisi + ")");
+
+    // Hitung VWAP (Volume-Weighted Average Price)
+    var vwap = indikator_vwap(riwayat_harga, volume_data);
+    cetak("VWAP Benchmark Institusional: " + ke_teks(vwap));
+
+    cetak("=== UJI ORDER BOOK & INDIKATOR FINANSIAL SUKSES ===");
+}
+
+utama();

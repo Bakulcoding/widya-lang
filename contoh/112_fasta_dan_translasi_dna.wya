@@ -1,0 +1,40 @@
+// =========================================================================
+// Contoh 112: Pilar Bioinformatika (FASTA / FASTQ Parser & Translasi DNA)
+// WidyaFASTAQParser & WidyaDNATranslator
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR BIOINFORMATIKA: FASTA, FASTQ & TRANSLASI DNA ===");
+
+    // 1. Parsing Berkas Genomik Multi-Record FASTA
+    var fasta_raw = ">seq1_insulin Human Insulin Partial Gene\nATGGCCCTGTGGATGCGCCTCCTGCCCCTG\n>seq2_hemoglobin Beta-Globin Exon\nATGGTGCATCTGACTCCTGAGGAGAAG\n";
+    var fasta = ParserFASTA(fasta_raw);
+    cetak("Total Record FASTA Terurai: " + ke_teks(fasta.total_record));
+
+    var seq1 = fasta.records[0];
+    cetak("Record 1: ID = [" + seq1.id + "], Panjang = " + ke_teks(seq1.panjang) + " bp");
+
+    // 2. Analisis Konten Rasio GC (GC-Content %)
+    var gc_pct = genom_hitung_gc_content(seq1.sekuens);
+    cetak("Rasio GC-Content Sekuens 1: " + ke_teks(gc_pct) + "%");
+
+    // 3. Transkripsi DNA -> mRNA & Komplemen Terbalik 5' -> 3'
+    var mrna = dna_transkripsi_ke_rna(seq1.sekuens);
+    cetak("Hasil Transkripsi mRNA: " + mrna);
+
+    var rev_comp = dna_komplemen_terbalik(seq1.sekuens);
+    cetak("Untai Komplemen Terbalik (Reverse Complement): " + rev_comp);
+
+    // 4. Translasi Kodon mRNA -> Rantai Polipeptida Asam Amino Protein
+    var protein = rna_translasi_ke_protein(mrna);
+    cetak("Hasil Translasi Rantai Asam Amino: " + protein + " (" + ke_teks(panjang(protein)) + " Residu Asam Amino)");
+
+    // 5. Parsing Format FASTQ (Next-Generation Sequencing Reads & Phred Quality)
+    var fastq_raw = "@READ_001_ILLUMINA\nATGCGATCGATCG\n+\nIIIIHHHHFFFFF\n";
+    var fastq = ParserFASTQ(fastq_raw);
+    cetak("FASTQ Reads Terurai: " + ke_teks(fastq.total_reads) + " (Read 1 ID: " + fastq.reads[0].id + ", Q-Score: " + fastq.reads[0].kualitas_ascii + ")");
+
+    cetak("=== UJI FASTA, FASTQ & TRANSLASI DNA SUKSES ===");
+}
+
+utama();

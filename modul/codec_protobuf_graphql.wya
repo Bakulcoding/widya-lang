@@ -1,0 +1,76 @@
+// Modul Protobuf Varint Tag-Length-Value & GraphQL Query Resolver Codec
+
+// --- Protobuf Binary Codec Emulation ---
+
+fungsi protobuf_encode_varint(nilai) {
+    // Varint 7-bit packing with MSB continuation bit
+    var bytes = [];
+    var n = nilai;
+    selama (n >= 128) {
+        var b = (n % 128) + 128;
+        bytes = tambah(bytes, b);
+        n = (n / 128) - ((n % 128) / 128);
+    }
+    bytes = tambah(bytes, n);
+    kembalikan bytes;
+}
+
+fungsi protobuf_encode_tag(field_number, wire_type) {
+    // wire_type: 0 = Varint, 2 = Length-delimited (string/bytes)
+    var tag = (field_number * 8) + wire_type;
+    kembalikan protobuf_encode_varint(tag);
+}
+
+fungsi protobuf_encode_string(field_number, teks_val) {
+    var tag = protobuf_encode_tag(field_number, 2);
+    var len_bytes = protobuf_encode_varint(panjang(teks_val));
+    kembalikan {
+        "field": field_number,
+        "wire_type": 2,
+        "tag_bytes": tag,
+        "length_bytes": len_bytes,
+        "data": teks_val
+    };
+}
+
+fungsi protobuf_encode_int32(field_number, int_val) {
+    var tag = protobuf_encode_tag(field_number, 0);
+    var val_bytes = protobuf_encode_varint(int_val);
+    kembalikan {
+        "field": field_number,
+        "wire_type": 0,
+        "tag_bytes": tag,
+        "val_bytes": val_bytes,
+        "data": int_val
+    };
+}
+
+// --- GraphQL Execution & Schema Resolver ---
+
+fungsi graphql_parse_fields(query_str) {
+    // Ekstraksi field dari format sederhana: query { field1 field2 field3 }
+    var parts = pisah(query_str, " ");
+    var fields = [];
+    untuk p dalam parts {
+        jika (panjang(p) > 0 dan p != "query" dan p != "{" dan p != "}") {
+            fields = tambah(fields, p);
+        }
+    }
+    kembalikan fields;
+}
+
+fungsi graphql_resolve_query(query_str, dataset_row) {
+    var requested_fields = graphql_parse_fields(query_str);
+    var hasil = {};
+    
+    untuk f dalam requested_fields {
+        jika (ada_kunci(dataset_row, f)) {
+            hasil[f] = dataset_row[f];
+        }
+    }
+    
+    kembalikan {
+        "data": hasil,
+        "errors": []
+    };
+}

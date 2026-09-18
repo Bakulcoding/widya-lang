@@ -1,0 +1,47 @@
+// Modul SemVer Version Resolver & Package Integrity Verification
+
+fungsi semver_cocok(versi_tersedia, requirement) {
+    // Memanfaatkan builtin cocokkan_semver
+    kembalikan cocokkan_semver(versi_tersedia, requirement);
+}
+
+fungsi resolve_dependency_tree(manifest_deps, registry_packages) {
+    // Melakukan resolusi dependensi dan mencocokkan hash SHA256 integrity
+    var lockfile = {};
+    var gagal = [];
+    
+    var kunci_deps = kunci(manifest_deps);
+    untuk nama_pkg dalam kunci_deps {
+        var req_rule = manifest_deps[nama_pkg];
+        
+        jika (ada_kunci(registry_packages, nama_pkg)) {
+            var kandidat_list = registry_packages[nama_pkg];
+            var terpilih = Kosong();
+            
+            untuk item dalam kandidat_list {
+                jika (cocokkan_semver(item["versi"], req_rule)) {
+                    terpilih = Ada(item);
+                }
+            }
+            
+            jika (apakah_ok(terpilih) atau tipe(terpilih) != "nil") {
+                var item_pkg = buka(terpilih);
+                lockfile[nama_pkg] = {
+                    "versi": item_pkg["versi"],
+                    "sha256": item_pkg["sha256"],
+                    "status": "RESOLVED"
+                };
+            } lainnya {
+                gagal = tambah(gagal, "Tidak ditemukan versi cocok untuk " + nama_pkg + " (" + req_rule + ")");
+            }
+        } lainnya {
+            gagal = tambah(gagal, "Paket " + nama_pkg + " tidak terdaftar di repositori");
+        }
+    }
+    
+    kembalikan {
+        "sukses": panjang(gagal) == 0,
+        "lockfile": lockfile,
+        "galat": gagal
+    };
+}

@@ -1,0 +1,38 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 60 - Integrated Sensing & Communication (ISAC) & O-RAN RIC
+// Demonstrasi deteksi radar Doppler gelombang bersama ISAC dan optimasi xApp Traffic Steering pada O-RAN Near-RT RIC.
+
+tulis("=== [WIDYA TELEKOMUNIKASI 6G] ISAC SENSING & ARSITEKTUR O-RAN ===");
+
+// 1. Integrated Sensing & Communication (ISAC Dual-Functional Radar & Comm)
+tulis("--- SISTEM ISAC 6G (DUAL RADAR & KOMUNIKASI) ---");
+var isac = SistemISAC6G(28.0, 400.0); // 28 GHz mmWave Carrier, 400 MHz Bandwidth
+
+// Modulasi data payload komunikasi
+isac_sisip_simbol_radar_komunikasi(isac, "01101001_DATA_TELEMETRI_6G");
+
+// Proses pantulan gema target kendaraan: delay 120 ns, pergeseran Doppler +14.5 kHz
+var radar_hasil = isac_proses_gema_target(isac, 120.0, 14.5);
+tulis("Jarak Target Radar Terdeteksi   : " + radar_hasil["jarak_target_meter"] + " meter");
+tulis("Resolusi Spasial Jarak (Range)  : " + radar_hasil["resolusi_jarak_meter"] + " meter");
+tulis("Kecepatan Relatif Target        : " + radar_hasil["kecepatan_target_m_s"] + " m/s (" + radar_hasil["kecepatan_target_kmh"] + " km/jam)");
+
+// 2. Arsitektur O-RAN (Open Radio Access Network) Near-RT RIC & xApps
+tulis("\n--- O-RAN NEAR-RT RIC & xAPP TRAFFIC STEERING ---");
+var oran_ric = ArsitekturORAN("Near_RT_RIC_Jakarta_Selatan");
+
+// Daftarkan Node E2: O-CU (Centralized Unit) dan O-DU (Distributed Unit)
+oran_daftarkan_node_e2(oran_ric, "E2_DU_Cell_01", "O-DU", 273.0); // 273 PRB
+oran_daftarkan_node_e2(oran_ric, "E2_DU_Cell_02", "O-DU", 273.0);
+
+// Perbarui Telemetri KPI (Load tinggi pada Cell_01, Load rendah pada Cell_02)
+oran_perbarui_metrik_kpi(oran_ric, "E2_DU_Cell_01", 250.0, 1250.0, 15.2);
+oran_perbarui_metrik_kpi(oran_ric, "E2_DU_Cell_02", 40.0, 180.0, 3.4);
+
+// Eksekusi Kebijakan xApp Traffic Steering
+var hasil_xapp = oran_eksekusi_xapp_kebijakan(oran_ric, "xApp_Traffic_Steering_AI", "E2_DU_Cell_01", "PENGALIHAN_BEBAN_KE_CELL_02");
+tulis("xApp Dieksekusi   : " + hasil_xapp["xapp"]);
+tulis("Target Node E2    : " + hasil_xapp["node_target"]);
+tulis("Tindakan Kebijakan: " + hasil_xapp["tindakan"]);
+tulis("Status Kebijakan  : " + hasil_xapp["status"]);
+
+tulis("\n[WIDYA TELEKOMUNIKASI 6G] ISAC Radar & O-RAN RIC Berhasil Diverifikasi!");

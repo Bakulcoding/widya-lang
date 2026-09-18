@@ -1,0 +1,40 @@
+// =========================================================================
+// Contoh 98: Pilar Aplikasi Seluler (GPS Geolocation & Motion Sensors)
+// WidyaMobileLocation & WidyaMobileSensors
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR APLIKASI SELULER: GPS & SENSOR GERAK ===");
+
+    // 1. Inisialisasi Modul GPS
+    var gps = LokasiGPS(3.0, 5000);
+    var pos = gps_dapatkan_posisi(gps);
+    cetak("Koordinat Terkini: Lat=" + ke_teks(pos.latitude) + ", Lon=" + ke_teks(pos.longitude) + ", Alt=" + ke_teks(pos.altitude) + "m");
+
+    // 2. Perhitungan Jarak Geospasial (Haversine Formula)
+    // Jakarta (-6.2088, 106.8456) ke Bandung (-6.9175, 107.6191)
+    var jarak_meter = gps_hitung_jarak(-6.2088, 106.8456, -6.9175, 107.6191);
+    var jarak_km = jarak_meter / 1000.0;
+    cetak("Jarak Geospasial Jakarta -> Bandung: " + ke_teks(jarak_km) + " km");
+
+    // 3. Pengecekan Geofencing Radius Perimeter (500 meter)
+    var dalam_radius = gps_geofence_apakah_masuk(-6.2088, 106.8456, -6.2080, 106.8450, 500.0);
+    cetak("Status Masuk Geofence Perimeter: " + ke_teks(dalam_radius));
+
+    // 4. Inisialisasi Sensor Gerak 3D (Akselerometer & Giroskop)
+    var sensor_accel = SensorGerak("akselerometer");
+    var v_accel = sensor_baca_vektor(sensor_accel);
+    cetak("Akselerometer 3D: X=" + ke_teks(v_accel.x) + ", Y=" + ke_teks(v_accel.y) + ", Z=" + ke_teks(v_accel.z) + " m/s^2");
+
+    var sensor_gyro = SensorGerak("giroskop");
+    var v_gyro = sensor_baca_vektor(sensor_gyro);
+    cetak("Giroskop Rotasi: Roll=" + ke_teks(v_gyro.x) + ", Pitch=" + ke_teks(v_gyro.y) + ", Yaw=" + ke_teks(v_gyro.z) + " rad/s");
+
+    // 5. Umpan Balik Haptic Feedback
+    var respon_getar = haptic_getar(150);
+    cetak("Haptic Engine: " + respon_getar);
+
+    cetak("=== UJI GPS & SENSOR GERAK SUKSES ===");
+}
+
+utama();

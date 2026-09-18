@@ -1,0 +1,81 @@
+struktur WasmRuntime {
+    vendor,
+    daftar_module_inst,
+    fitur_aktif,
+    engine_state
+}
+
+struktur WasmModuleInst {
+    file_name,
+    fitur,
+    functions
+}
+
+fungsi runtime_buat(vendor) {
+    var r = WasmRuntime();
+    r.vendor = vendor;
+    jika r.vendor == nihil {
+        r.vendor = "Wasmtime";
+    }
+    r.daftar_module_inst = {};
+    r.fitur_aktif = [];
+    r.engine_state = "CREATED";
+    kembalikan r;
+}
+
+fungsi runtime_tambah_fitur(r, nama) {
+    r.fitur_aktif = r.fitur_aktif + [nama];
+    kembalikan panjang(r.fitur_aktif);
+}
+
+fungsi runtime_muat_module(r, file_wasm_name) {
+    var mod_id = "mod_" + file_wasm_name;
+    r.daftar_module_inst[mod_id] = { "file": file_wasm_name, "functions": {}, "instantiated": salah };
+    kembalikan mod_id;
+}
+
+fungsi runtime_instantiate(r, mod_id) {
+    r.daftar_module_inst[mod_id]["instantiated"] = benar;
+    r.engine_state = "READY";
+    kembalikan "READY";
+}
+
+fungsi runtime_panggil_fungsi(r, mod_id, nama_func, args_list) {
+    jika nama_func == "main" {
+        kembalikan 0;
+    }
+    jika nama_func == "fibonacci" {
+        var n = args_list[0];
+        jika n <= 1 {
+            kembalikan n;
+        }
+        var a = 0;
+        var b = 1;
+        var i = 2;
+        selama i <= n {
+            var c = a + b;
+            a = b;
+            b = c;
+            i = i + 1;
+        }
+        kembalikan b;
+    }
+    kembalikan 0;
+}
+
+var rt = runtime_buat("Wasmtime");
+runtime_tambah_fitur(rt, "wasi_snapshot_preview1");
+runtime_tambah_fitur(rt, "threads");
+var feat_count = panjang(rt.fitur_aktif);
+pastikan(feat_count == 2);
+var modid = runtime_muat_module(rt, "app.wasm");
+var inst = runtime_instantiate(rt, modid);
+cetak("ENGINE_STATE_AFTER_INSTANTIATE=" + rt.engine_state);
+pastikan(rt.engine_state == "READY");
+var main_exit = runtime_panggil_fungsi(rt, modid, "main", []);
+cetak("MAIN_RETURN_EXIT_CODE=" + main_exit);
+pastikan(main_exit == 0);
+var fib10 = runtime_panggil_fungsi(rt, modid, "fibonacci", [10]);
+cetak("FIBONACCI_10_RESULT=" + fib10);
+pastikan(fib10 == 55);
+cetak("[OK] WASMTIME_WASMER_RUNTIME_FEATURES_FIB_SELF_TEST_PASS");

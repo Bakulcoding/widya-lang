@@ -1,0 +1,240 @@
+// Modul Mesh Network libp2p-style: Heartbeat DHT, GossipSub, dan NAT Traversal
+// Integrasi TabelKademlia + Gossip Protocol + Hole Punching untuk Widya-Lang
+
+var heartbeat_dht_aktif = nihil
+
+fungsi set_heartbeat_dht(dht) {
+    heartbeat_dht_aktif = dht;
+}
+
+struktur HeartbeatDHT {
+    dht_internal,
+    node_map,
+    counter_diterima,
+
+    fungsi inisialisasi(id_boot, k_bucket) {
+        ini.dht_internal = TabelKademlia(id_boot, k_bucket);
+        ini.node_map = {};
+        ini.counter_diterima = {};
+        ini.node_map[id_boot] = {
+            "alamat": "127.0.0.1:9000",
+            "last_seen_ts": waktu(),
+            "status": "ONLINE"
+        };
+    }
+
+    fungsi tambah_node(id_node, alamat_node) {
+        kademlia_tambah_node(ini.dht_internal, id_node, alamat_node);
+        ini.node_map[id_node] = {
+            "alamat": alamat_node,
+            "last_seen_ts": waktu(),
+            "status": "ONLINE"
+        };
+        ini.counter_diterima[id_node] = 0;
+    }
+
+    fungsi simpan_data(kunci, nilai) {
+        kembalikan kademlia_simpan(ini.dht_internal, kunci, nilai);
+    }
+
+    fungsi ambil_data(kunci) {
+        kembalikan kademlia_ambil(ini.dht_internal, kunci);
+    }
+
+    fungsi node_terdekat(kunci, jumlah) {
+        kembalikan kademlia_node_terdekat(ini.dht_internal, kunci, jumlah);
+    }
+}
+
+fungsi kademlia_detak_heartbeat(dht, node_id_saya) {
+    var sekarang = waktu();
+    dht.node_map[node_id_saya]["last_seen_ts"] = sekarang;
+    dht.node_map[node_id_saya]["status"] = "ONLINE";
+    untuk id_n dalam dht.node_map {
+        jika id_n != node_id_saya {
+            var delta = sekarang - dht.node_map[id_n]["last_seen_ts"];
+            jika delta > 3 {
+                dht.node_map[id_n]["status"] = "OFFLINE";
+            }
+        }
+    }
+    kembalikan dht.node_map;
+}
+
+struktur GossipSubTopik {
+    nama_topik,
+    daftar_subscriber,
+    pesan_log,
+    callback_map,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_topik = nama;
+        ini.daftar_subscriber = [];
+        ini.pesan_log = [];
+        ini.callback_map = {};
+    }
+}
+
+fungsi gossip_buat_topik(nama) {
+    var topik = GossipSubTopik(nama);
+    kembalikan topik;
+}
+
+fungsi gossip_langganan(topik, node_id, callback_function_reference_saved_as_string_name) {
+    tambah(topik.daftar_subscriber, node_id);
+    topik.callback_map[node_id] = callback_function_reference_saved_as_string_name;
+    kembalikan benar;
+}
+
+fungsi gossip_publikasi(topik, node_pengirim, pesan_payload) {
+    var entry_pesan = {
+        "pengirim": node_pengirim,
+        "payload": pesan_payload,
+        "waktu_kirim": waktu()
+    };
+    tambah(topik.pesan_log, entry_pesan);
+
+    var jumlah_online = 0;
+    var node_map_konteks = nihil;
+
+    jika heartbeat_dht_aktif != nihil {
+        node_map_konteks = heartbeat_dht_aktif.node_map;
+    }
+
+    untuk_setiap(topik.daftar_subscriber, fungsi(sub_id) {
+        var status_online = benar;
+        jika node_map_konteks != nihil {
+            var info_node = node_map_konteks[sub_id];
+            jika info_node != nihil {
+                jika info_node["status"] == "OFFLINE" {
+                    status_online = salah;
+                }
+            }
+        }
+        jika status_online {
+            jumlah_online = jumlah_online + 1;
+            jika heartbeat_dht_aktif != nihil {
+                var counter = heartbeat_dht_aktif.counter_diterima[sub_id];
+                jika counter != nihil {
+                    heartbeat_dht_aktif.counter_diterima[sub_id] = counter + 1;
+                }
+            }
+        }
+    });
+
+    var id_pesan = sha256(ke_json(pesan_payload) + ke_teks(waktu()));
+
+    kembalikan {
+        "diterima": jumlah_online,
+        "total_subscriber": panjang(topik.daftar_subscriber),
+        "pesan_id": id_pesan
+    };
+}
+
+struktur NodeNetworkInfo {
+    id_node,
+    alamat_ip,
+    tipe_nat,
+    alamat_publik_reflektif,
+
+    fungsi inisialisasi(id, ip, nat_tipe) {
+        ini.id_node = id;
+        ini.alamat_ip = ip;
+        ini.tipe_nat = nat_tipe;
+        ini.alamat_publik_reflektif = "";
+    }
+}
+
+fungsi mesh_nat_traversal_coba(node_a, node_b) {
+    var status_koneksi = "GAGAL_TERHUBUNG";
+
+    jika (node_b.tipe_nat == "PUBLIK") {
+        node_a.alamat_publik_reflektif = node_b.alamat_ip + ":41234";
+        status_koneksi = "TERHUBUNG_LANGSUNG";
+    } lainnya jika (node_a.tipe_nat == "DI_BELAKANG_NAT" dan node_b.tipe_nat == "DI_BELAKANG_NAT") {
+        jika (rand() > 0.3) {
+            status_koneksi = "TERHUBUNG_HOLE_PUNCH";
+        } lainnya {
+            status_koneksi = "RELAY_DIBUTUHKAN";
+        }
+    } lainnya jika (node_a.tipe_nat == "SIMETRIS" atau node_b.tipe_nat == "SIMETRIS") {
+        status_koneksi = "RELAY_DIBUTUHKAN";
+    } lainnya {
+        status_koneksi = "RELAY_DIBUTUHKAN";
+    }
+
+    kembalikan {
+        "status": status_koneksi,
+        "alamat_reflektif_a": node_a.alamat_publik_reflektif,
+        "pesan": "NAT traversal selesai"
+    };
+}
+
+fungsi demo_mesh_sederhana() {
+    cetak("=== DEMO MESH LIBS2P STYLE WIDYA-LANG ===");
+    cetak("");
+
+    cetak("[1] Inisialisasi HeartbeatDHT...");
+    var hb_dht = HeartbeatDHT();
+    hb_dht.inisialisasi("node-jakarta-001", 20);
+    hb_dht.tambah_node("node-surabaya-002", "10.0.1.2:9001");
+    hb_dht.tambah_node("node-medan-003", "10.0.2.3:9002");
+    hb_dht.tambah_node("node-bali-004", "10.0.3.4:9003");
+    cetak("   Jumlah node terdaftar: " + ke_teks(panjang(kunci(hb_dht.node_map))));
+    cetak("");
+
+    cetak("[2] Detak Heartbeat DHT...");
+    var peta_node = kademlia_detak_heartbeat(hb_dht, "node-jakarta-001");
+    untuk_setiap(kunci(peta_node), fungsi(idn) {
+        cetak("   - " + idn + " | Status: " + peta_node[idn]["status"]);
+    });
+    cetak("");
+
+    cetak("[3] Simpan & Ambil data via DHT...");
+    var cid_data = sha256("dokumen-rahasia-widya");
+    hb_dht.simpan_data(cid_data, "KONTRAK_PINTAR_WIDYA_2026_v1");
+    var data_ambil = hb_dht.ambil_data(cid_data);
+    cetak("   CID: " + cid_data);
+    cetak("   Data dipulihkan: " + data_ambil);
+    cetak("");
+
+    cetak("[4] GossipSub Topik Publikasi...");
+    var topik_tx = gossip_buat_topik("widya.transaksi.mainnet");
+    gossip_langganan(topik_tx, "node-surabaya-002", "callback_tx_handler_sby");
+    gossip_langganan(topik_tx, "node-medan-003", "callback_tx_handler_medan");
+    gossip_langganan(topik_tx, "node-bali-004", "callback_tx_handler_bali");
+    heartbeat_dht_aktif = hb_dht;
+    var hasil_pub = gossip_publikasi(topik_tx, "node-jakarta-001", {"tx_from": "0xAlice", "tx_to": "0xBob", "nilai": 1500});
+    cetak("   Topik: " + topik_tx.nama_topik);
+    cetak("   Pesan ID: " + hasil_pub["pesan_id"]);
+    cetak("   Diterima Online: " + ke_teks(hasil_pub["diterima"]) + " / Total: " + ke_teks(hasil_pub["total_subscriber"]));
+    cetak("   Total pesan log: " + ke_teks(panjang(topik_tx.pesan_log)));
+    cetak("");
+
+    cetak("[5] NAT Traversal Simulation...");
+    var node_A = NodeNetworkInfo();
+    node_A.inisialisasi("peer-di-rumah-11", "192.168.1.50", "DI_BELAKANG_NAT");
+    var node_B = NodeNetworkInfo();
+    node_B.inisialisasi("peer-server-publik", "203.0.113.42", "PUBLIK");
+    var hasil_nat1 = mesh_nat_traversal_coba(node_A, node_B);
+    cetak("   A(DI_BELAKANG_NAT) <-> B(PUBLIK): " + hasil_nat1["status"]);
+    cetak("   Alamat reflektif A: " + hasil_nat1["alamat_reflektif_a"]);
+
+    var node_C = NodeNetworkInfo();
+    node_C.inisialisasi("peer-nat-simetris", "10.10.0.8", "SIMETRIS");
+    var node_D = NodeNetworkInfo();
+    node_D.inisialisasi("peer-di-kantor", "172.16.0.25", "DI_BELAKANG_NAT");
+    var hasil_nat2 = mesh_nat_traversal_coba(node_C, node_D);
+    cetak("   C(SIMETRIS) <-> D(DI_BELAKANG_NAT): " + hasil_nat2["status"]);
+    cetak("");
+
+    cetak("[6] 3 Node Terdekat XOR...");
+    var terdekat = hb_dht.node_terdekat(cid_data, 3);
+    untuk_setiap(terdekat, fungsi(nd) {
+        cetak("   - " + nd.id + " (" + nd.address + ")");
+    });
+    cetak("");
+
+    cetak("✔ DEMO MESH SEDERHANA SELESAI - SEMUA KOMPONEN DAPAT DIPANGGIL!");
+    kembalikan benar;
+}

@@ -1,0 +1,36 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 60 - Propagasi Kanal 6G Terahertz & Permukaan Cerdas RIS
+// Demonstrasi perhitungan redaman atmosferik THz, kapasitas Shannon, dan penguatan beamforming RIS metasurface.
+
+tulis("=== [WIDYA TELEKOMUNIKASI 6G] KANAL TERAHERTZ & METASURFACE RIS ===");
+
+// 1. Inisialisasi Model Kanal Nirkabel 6G Sub-THz (0.3 THz = 300 GHz, Jarak 15 Meter)
+var kanal_thz = KanalTeraHertz6G(0.30, 15.0);
+thz_set_parameter_lingkungan(kanal_thz, 60.0, 27.0, 1013.25); // 60% Kelembaban Relatif, 27 C
+
+var redaman_info = thz_hitung_redaman_molekuler(kanal_thz);
+tulis("--- ANALISIS REDAMAN PROPAGASI KANAL TERAHERTZ ---");
+tulis("Free-Space Path Loss (FSPL)    : " + redaman_info["fspl_db"] + " dB");
+tulis("Koefisien Redaman Molekuler H2O: " + redaman_info["redaman_molekuler_db_km"] + " dB/km");
+tulis("Redaman Molekuler Total        : " + redaman_info["redaman_molekuler_total_db"] + " dB");
+tulis("Total Path Loss (Jarak 15m)    : " + redaman_info["total_path_loss_db"] + " dB");
+
+// Hitung Kapasitas Shannon Puncak (Bandwidth 20 GHz, Daya Pancar 23 dBm = 200 mW)
+var shannon_info = thz_hitung_kapasitas_shannon_gbps(kanal_thz, 20.0, 23.0, 6.0);
+tulis("\n--- KAPASITAS DATA PUNCAK 6G (SHANNON CAPACITY) ---");
+tulis("Lebar Pita (Bandwidth)         : " + shannon_info["bandwidth_ghz"] + " GHz");
+tulis("Signal-to-Noise Ratio (SNR)    : " + shannon_info["snr_db"] + " dB");
+tulis("Kapasitas Transmisi Data       : " + shannon_info["kapasitas_gbps"] + " Gbps (" + shannon_info["kapasitas_tbps"] + " Tbps)");
+
+// 2. Simulasi Reconfigurable Intelligent Surface (RIS / Metasurface 16x16 = 256 Elemen)
+tulis("\n--- RECONFIGURABLE INTELLIGENT SURFACE (RIS BEAMFORMING) ---");
+var ris = PermukaanCerdasRIS(16, 16);
+ris_atur_matriks_fasa(ris, 60.0); // Arahkan sudut refleksi fasa ke 60 derajat
+
+// Tx -> RIS (10 meter), RIS -> Rx Pengguna (12 meter), Daya Tx = 23 dBm
+var ris_gain = ris_hitung_penguatan_sinyal_rx(ris, 23.0, 10.0, 12.0);
+tulis("Penguatan Array Beamforming RIS : " + ris_gain["penguatan_array_ris_db"] + " dB");
+tulis("Cascaded Path Loss (Tx-RIS-Rx)  : " + ris_gain["cascaded_path_loss_db"] + " dB");
+tulis("Daya Sinyal Diterima (Rx Power) : " + ris_gain["daya_terima_rx_dbm"] + " dBm");
+tulis("Status Koneksi Blindspot Area   : " + ris_gain["sinyal_terhubung"]);
+
+tulis("\n[WIDYA TELEKOMUNIKASI 6G] Kanal THz & RIS Metasurface Berhasil Diverifikasi!");

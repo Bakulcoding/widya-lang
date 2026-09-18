@@ -1,0 +1,56 @@
+// Contoh 73: WidyaSpatialRTree & WidyaZstdLite
+// 2D Spatial Indexing Engine & Zstandard-Style High-Ratio Compression
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 27: Spatial R-Tree & Zstd")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaSpatialRTree: Indeks Spasial 2D (Bounding Box)
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaSpatialRTree: Indeks Spasial 2D ---")
+
+let rtree = PohonR(8) // Pohon R dengan kapasitas node 8
+
+// Menyisipkan wilayah geografis / zona POI (min_x, min_y, max_x, max_y)
+rtree_sisip(rtree, "zona:monas", 106.82, -6.18, 106.83, -6.17, { "nama": "Monumen Nasional", "tipe": "Wisata" })
+rtree_sisip(rtree, "zona:sudirman", 106.81, -6.22, 106.83, -6.20, { "nama": "Kawasan Bisnis Sudirman", "tipe": "Bisnis" })
+rtree_sisip(rtree, "zona:bandara_soetta", 106.64, -6.14, 106.67, -6.12, { "nama": "Bandara Soekarno Hatta", "tipe": "Transportasi" })
+rtree_sisip(rtree, "zona:ancol", 106.83, -6.13, 106.86, -6.11, { "nama": "Taman Impian Jaya Ancol", "tipe": "Hiburan" })
+
+cetak("Total objek spasial tersimpan di PohonR:", rtree_hitung(rtree))
+
+// Kueri wilayah kotak pembatas (Bounding Box Range Search)
+cetak("\nMenjalankan Kueri Kotak Wilayah Jakarta Pusat (106.80, -6.23 s/d 106.84, -6.16):")
+let hasil_spasial = rtree_kueri_kotak(rtree, 106.80, -6.23, 106.84, -6.16)
+
+untuk_setiap(hasil_spasial, fungsi(item) {
+    let data = item.data
+    cetak("  -> Ditemukan POI:", item.id, "| Nama:", data.nama, "| Tipe:", data.tipe)
+})
+
+// ----------------------------------------------------
+// 2. WidyaZstdLite: Multi-Level High-Ratio Compression
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaZstdLite: Kompresi Rasio Tinggi ---")
+
+let log_data = "INFO [2026-09-14] User 101 login successfully. INFO [2026-09-14] User 101 query balance. INFO [2026-09-14] User 101 transfer 500000. INFO [2026-09-14] User 101 logout. AAAAAAAAAAAAAAAAAAAAAA"
+cetak("Data Log Analitik Asli (Panjang:", panjang(log_data), "karakter)")
+
+// Kompresi data dengan ZstdLite
+let paket_zstd = zstd_kompres(log_data)
+cetak("Hasil Kompresi Zstd:")
+cetak("  Ukuran Asli         :", paket_zstd.ukuran_asli, "byte")
+cetak("  Ukuran Terkompresi  :", paket_zstd.ukuran_kompresi, "byte")
+cetak("  Data Hex Terkompresi:", paket_zstd.data_hex)
+
+// Menghitung rasio penghematan ruang
+let hemat = zstd_rasio_hemat(log_data)
+cetak("  Persentase Penghematan Ruang:", bulat(hemat * 100), "%")
+
+// Dekompresi kembali
+let log_pulih = zstd_dekompres(paket_zstd)
+cetak("\nHasil Dekompresi Zstd:", log_pulih)
+pastikan(log_pulih == log_data, "Data hasil dekompresi Zstd harus 100% identik dengan aslinya!")
+
+cetak("\n[SUKSES] Seluruh fitur Spatial R-Tree & Zstandard Lite berjalan tangguh!")

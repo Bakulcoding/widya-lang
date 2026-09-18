@@ -1,0 +1,25 @@
+/// Demonstrasi variabel dan tipe data di Widya-Lang
+
+// Variabel teks
+var nama = "Widya"
+var bahasa = "Indonesia"
+
+// Variabel angka
+var umur = 25
+var tinggi = 175.5
+
+// Variabel boolean
+var mahasiswa = benar
+var bekerja = salah
+
+// Menampilkan variabel
+cetak("Nama:", nama)
+cetak("Bahasa:", bahasa)
+cetak("Umur:", umur, "tahun")
+cetak("Tinggi:", tinggi, "cm")
+cetak("Status Mahasiswa:", mahasiswa)
+cetak("Status Bekerja:", bekerja)
+
+// Operasi matematika
+var total = umur + 5
+cetak("Umur 5 tahun lagi:", total)

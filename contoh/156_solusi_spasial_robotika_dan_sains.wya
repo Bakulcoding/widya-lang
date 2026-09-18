@@ -1,0 +1,30 @@
+// Contoh 156: Solusi Spasial, Robotika, DSP & Verifikasi Formal Sains Komputasi
+// Mengintegrasikan navigasi robotik, pengolahan sinyal spektrum, dan pembukti logika formal
+
+impor "modul/spasial_dan_robotika.wya";
+impor "modul/dsp_dan_multimedia.wya";
+impor "modul/formal_dan_sains_komputasi.wya";
+
+cetak("==================================================================");
+cetak("🤖 WIDYA AUTONOMOUS ROBOTICS, DSP & FORMAL SCIENCE PIPELINE");
+cetak("==================================================================");
+
+// 1. Pergerakan Manipulator Robotika
+var stasiun = buat_stasiun_kontrol_robotika(10.0, 10.0);
+cetak("🦾 Menggerakkan Manipulator Lengan Robot ke Target (X=10, Y=10)...");
+var robot_res = robotika_gerak_ke_target(stasiun, 10.0, 10.0);
+cetak("🎯 Posisi Aktual Efektor:", robot_res["posisi_aktual"]);
+
+// 2. Pemrosesan Sinyal Sensor DSP (FFT & Noise Filtering)
+var sinyal_sensor = [1.0, 0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0];
+cetak("\n📡 Menganalisis Spektrum Frekuensi Sinyal Sensor (FFT)...");
+var dsp_res = proses_spektrum_sinyal(sinyal_sensor);
+cetak("📊 Jumlah Bin Spektrum FFT Terbentuk:", dsp_res["jumlah_bin"]);
+
+// 3. Verifikasi Keamanan Kendala Kontrol dengan SMT Solver
+cetak("\n🛡️ Memverifikasi Keamanan Kendala Tegangan Operasional (SMT)...");
+var kendala_tegangan = [["tegangan", ">=", 3.0], ["tegangan", "<=", 5.0]];
+var smt_res = verifikasi_kendala_linear_smt(kendala_tegangan);
+cetak("✅ Status Pembuktian Formal SMT (QF_LRA):", smt_res["status"]);
+
+cetak("\n🎉 Pipeline Spasial, Robotika & Sains Formal Selesai dengan Sempurna!");

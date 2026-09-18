@@ -1,0 +1,308 @@
+// Modul Scheduler Heterogen Widya
+// Penjadwalan tugas DAG pada klaster node heterogen (edge/server dengan/ tanpa GPU)
+
+var TUGAS_WASM = "TUGAS_WASM";
+var TUGAS_GPU_WGSL = "TUGAS_GPU_WGSL";
+var TUGAS_MICROVM = "TUGAS_MICROVM";
+
+struktur TugasDAG {
+    id_tugas,
+    tipe_tugas,
+    kebutuhan_cpu_core,
+    kebutuhan_ram_mb,
+    kode_payload,
+    daftar_dependensi,
+    prioritas,
+    node_ditugaskan,
+    status,
+
+    fungsi inisialisasi(id, tipe, cpu, ram, kode) {
+        ini.id_tugas = id;
+        ini.tipe_tugas = tipe;
+        ini.kebutuhan_cpu_core = cpu;
+        ini.kebutuhan_ram_mb = ram;
+        ini.kode_payload = kode;
+        ini.daftar_dependensi = [];
+        ini.prioritas = 0;
+        ini.node_ditugaskan = "";
+        ini.status = "BELUM_DIJADWALKAN";
+    }
+}
+
+struktur ComputeDAG {
+    daftar_tugas,
+    rencana_terakhir,
+    seed_deterministik,
+    jumlah_tugas,
+
+    fungsi inisialisasi() {
+        ini.daftar_tugas = {};
+        ini.rencana_terakhir = {};
+        ini.seed_deterministik = 42;
+        ini.jumlah_tugas = 0;
+    }
+}
+
+fungsi dag_tambah_tugas(dag, id_tugas, tipe_tugas, cpu, ram, kode, dependensi_opsional) {
+    misal tugas = TugasDAG(id_tugas, tipe_tugas, cpu, ram, kode);
+    jika dependensi_opsional != nihil {
+        tugas.daftar_dependensi = dependensi_opsional;
+    }
+    dag.daftar_tugas[id_tugas] = tugas;
+    dag.jumlah_tugas = dag.jumlah_tugas + 1;
+    kembalikan tugas;
+}
+
+fungsi widya_node_ke_scheduler_info(widya_node) {
+    misal info = {};
+    info["id_node"] = widya_node.nama_node;
+    info["profil"] = widya_node.profil;
+    info["ram_tersedia_mb"] = widya_node.kernel.heap_limit_mb;
+    info["cpu_core_tersedia"] = 1.0;
+    jika widya_node.profil == "server" {
+        info["cpu_core_tersedia"] = 32.0;
+    } lainnya {
+        info["cpu_core_tersedia"] = 2.0;
+    }
+    info["ada_gpu"] = salah;
+    jika widya_node.kernel.profil == "server" {
+        info["ada_gpu"] = benar;
+    }
+    kembalikan info;
+}
+
+fungsi node_sumber_daya_cukup(node_info, tugas) {
+    jika tugas.tipe_tugas == TUGAS_GPU_WGSL {
+        jika bukan node_info["ada_gpu"] {
+            kembalikan salah;
+        }
+    }
+    jika node_info["profil"] == "edge" dan tugas.tipe_tugas == TUGAS_MICROVM {
+        kembalikan salah;
+    }
+    jika node_info["profil"] == "server" dan tugas.tipe_tugas == TUGAS_WASM {
+        kembalikan salah;
+    }
+    jika node_info["ram_tersedia_mb"] < tugas.kebutuhan_ram_mb {
+        kembalikan salah;
+    }
+    jika node_info["cpu_core_tersedia"] < tugas.kebutuhan_cpu_core {
+        kembalikan salah;
+    }
+    kembalikan benar;
+}
+
+fungsi hash_sederhana(teks) {
+    misal hasil = 0;
+    misal i = 0;
+    selama i < panjang(teks) {
+        var c = potong(teks, i, i + 1);
+        var char_map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
+        misal j = 0;
+        selama j < panjang(char_map) {
+            jika potong(char_map, j, j + 1) == c {
+                hasil = hasil * 31 + j;
+                berhenti;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    jika hasil < 0 {
+        hasil = -hasil;
+    }
+    kembalikan hasil;
+}
+
+fungsi topo_sort_tugas(dag) {
+    misal urutan = [];
+    misal dikunjungi = {};
+    misal daftar_id = [];
+
+    untuk kunci dalam dag.daftar_tugas {
+        tambah(daftar_id, kunci);
+    }
+
+    fungsi kunjungi(id_tugas) {
+        jika dikunjungi[id_tugas] {
+            kembalikan;
+        }
+        dikunjungi[id_tugas] = benar;
+        misal tugas = dag.daftar_tugas[id_tugas];
+        untuk dep_id dalam tugas.daftar_dependensi {
+            kunjungi(dep_id);
+        }
+        tambah(urutan, id_tugas);
+    }
+
+    untuk id dalam daftar_id {
+        kunjungi(id);
+    }
+    kembalikan urutan;
+}
+
+fungsi scheduler_dispatch_heterogen(dag, klaster_node) {
+    dag.rencana_terakhir = {};
+    misal klaster_copy = [];
+    untuk node_asli dalam klaster_node {
+        misal node_copy = {};
+        node_copy["id_node"] = node_asli["id_node"];
+        node_copy["profil"] = node_asli["profil"];
+        node_copy["ram_tersedia_mb"] = node_asli["ram_tersedia_mb"];
+        node_copy["ada_gpu"] = node_asli["ada_gpu"];
+        node_copy["cpu_core_tersedia"] = node_asli["cpu_core_tersedia"];
+        tambah(klaster_copy, node_copy);
+    }
+
+    misal urutan_tugas = topo_sort_tugas(dag);
+    untuk id_tugas dalam urutan_tugas {
+        misal tugas = dag.daftar_tugas[id_tugas];
+        misal node_cocok = [];
+        untuk node dalam klaster_copy {
+            jika node_sumber_daya_cukup(node, tugas) {
+                tambah(node_cocok, node);
+            }
+        }
+        jika panjang(node_cocok) == 0 {
+            tugas.status = "GAGAL_TIDAK_ADA_NODE_COCOK";
+        } lainnya {
+            misal idx = (hash_sederhana(id_tugas) + dag.seed_deterministik) % panjang(node_cocok);
+            misal node_terpilih = node_cocok[idx];
+            tugas.node_ditugaskan = node_terpilih["id_node"];
+            tugas.status = "SUDAH_DIJADWALKAN";
+            node_terpilih["ram_tersedia_mb"] = node_terpilih["ram_tersedia_mb"] - tugas.kebutuhan_ram_mb;
+            node_terpilih["cpu_core_tersedia"] = node_terpilih["cpu_core_tersedia"] - tugas.kebutuhan_cpu_core;
+            dag.rencana_terakhir[id_tugas] = node_terpilih["id_node"];
+        }
+    }
+    kembalikan dag.rencana_terakhir;
+}
+
+fungsi scheduler_dapatkan_rencana(dag) {
+    kembalikan dag.rencana_terakhir;
+}
+
+fungsi scheduler_validasi_rencana(dag, klaster_node) {
+    misal hasil = {};
+    hasil["valid"] = 0;
+    hasil["invalid"] = [];
+    untuk id_tugas dalam dag.daftar_tugas {
+        misal tugas = dag.daftar_tugas[id_tugas];
+        jika tugas.status == "SUDAH_DIJADWALKAN" {
+            misal node_ketemu = nihil;
+            untuk node dalam klaster_node {
+                jika node["id_node"] == tugas.node_ditugaskan {
+                    node_ketemu = node;
+                    putus;
+                }
+            }
+            jika node_ketemu != nihil {
+                jika node_sumber_daya_cukup(node_ketemu, tugas) {
+                    hasil["valid"] = hasil["valid"] + 1;
+                } lainnya {
+                    tambah(hasil["invalid"], id_tugas);
+                }
+            } lainnya {
+                tambah(hasil["invalid"], id_tugas);
+            }
+        }
+    }
+    kembalikan hasil;
+}
+
+fungsi demo_scheduler_sederhana() {
+    cetak("=== DEMO SCHEDULER HETEROGEN ===");
+    cetak("");
+
+    var node_edge_32 = {};
+    node_edge_32.id_node = "edge_ram32";
+    node_edge_32.profil = "edge";
+    node_edge_32.ram_tersedia_mb = 32;
+    node_edge_32.ada_gpu = salah;
+    node_edge_32.cpu_core_tersedia = 1.0;
+
+    var node_edge_64 = {};
+    node_edge_64.id_node = "edge_ram64";
+    node_edge_64.profil = "edge";
+    node_edge_64.ram_tersedia_mb = 64;
+    node_edge_64.ada_gpu = salah;
+    node_edge_64.cpu_core_tersedia = 2.0;
+
+    var node_server_gpu = {};
+    node_server_gpu.id_node = "server_gpu16";
+    node_server_gpu.profil = "server";
+    node_server_gpu.ram_tersedia_mb = 16384;
+    node_server_gpu.ada_gpu = benar;
+    node_server_gpu.cpu_core_tersedia = 32.0;
+
+    var klaster = [node_edge_32, node_edge_64, node_server_gpu];
+
+    cetak("Klaster Node:");
+    untuk n dalam klaster {
+        cetak("  - " + n.id_node + " | profil=" + n.profil + " | ram=" + ke_teks(n.ram_tersedia_mb) + "MB | gpu=" + ke_teks(n.ada_gpu) + " | cpu=" + ke_teks(n.cpu_core_tersedia));
+    }
+    cetak("");
+
+    var dag = ComputeDAG();
+    dag_tambah_tugas(dag, "T0", TUGAS_WASM, 0.5, 16, "wasm_payload_T0", []);
+    dag_tambah_tugas(dag, "T1", TUGAS_WASM, 1.0, 32, "wasm_payload_T1", ["T0"]);
+    dag_tambah_tugas(dag, "T2", TUGAS_GPU_WGSL, 4.0, 2048, "wgsl_payload_T2", ["T0"]);
+    dag_tambah_tugas(dag, "T3", TUGAS_MICROVM, 8.0, 8192, "microvm_payload_T3", ["T1", "T2"]);
+
+    cetak("Daftar Tugas DAG (" + ke_teks(dag.jumlah_tugas) + " tugas):");
+    untuk id_t dalam dag.daftar_tugas {
+        misal t = dag.daftar_tugas[id_t];
+        cetak("  - " + t.id_tugas + " | tipe=" + t.tipe_tugas + " | cpu=" + ke_teks(t.kebutuhan_cpu_core) + " | ram=" + ke_teks(t.kebutuhan_ram_mb) + "MB | deps=" + ke_teks(t.daftar_dependensi));
+    }
+    cetak("");
+
+    cetak("Menjalankan scheduler_dispatch_heterogen...");
+    var rencana = scheduler_dispatch_heterogen(dag, klaster);
+    cetak("");
+
+    cetak("=== HASIL RENCANA PENJADWALAN ===");
+    untuk id_tugas dalam rencana {
+        cetak("  " + id_tugas + " -> " + rencana[id_tugas]);
+    }
+    cetak("");
+
+    cetak("=== STATUS AKHIR TIAP TUGAS ===");
+    untuk id_t dalam dag.daftar_tugas {
+        misal t = dag.daftar_tugas[id_t];
+        cetak("  " + t.id_tugas + " | status=" + t.status + " | node=" + t.node_ditugaskan);
+    }
+    cetak("");
+
+    cetak("=== VERIFIKASI ASSERT ===");
+    var t2_ke_server = (rencana["T2"] == "server_gpu16");
+    cetak("[ASSERT T2->server_gpu16] T2=" + rencana["T2"] + " -> " + ke_teks(t2_ke_server));
+
+    var t3_ke_server = (rencana["T3"] == "server_gpu16");
+    cetak("[ASSERT T3->server_gpu16] T3=" + rencana["T3"] + " -> " + ke_teks(t3_ke_server));
+
+    var t0_bukan_edge_tidak_cukup = benar;
+    jika rencana["T0"] == "edge_ram32" atau rencana["T0"] == "edge_ram64" atau rencana["T0"] == "server_gpu16" {
+        t0_bukan_edge_tidak_cukup = benar;
+    }
+    cetak("[ASSERT T0 tidak ke node tidak cukup] T0=" + rencana["T0"] + " -> " + ke_teks(t0_bukan_edge_tidak_cukup));
+
+    var t3_bukan_edge = (rencana["T3"] != "edge_ram32" dan rencana["T3"] != "edge_ram64");
+    cetak("[ASSERT T3 tidak ke edge] T3=" + rencana["T3"] + " -> " + ke_teks(t3_bukan_edge));
+
+    cetak("");
+
+    var validasi = scheduler_validasi_rencana(dag, klaster);
+    cetak("=== VALIDASI RENCANA ===");
+    cetak("  Jumlah valid   : " + ke_teks(validasi.valid));
+    cetak("  Daftar invalid : " + ke_teks(validasi.invalid));
+    cetak("");
+
+    jika t2_ke_server dan t3_ke_server dan t3_bukan_edge {
+        cetak("✔ SEMUA ASSERT UTAMA LULUS! Scheduler heterogen berjalan benar.");
+    } lain {
+        cetak("✖ BEBERAPA ASSERT GAGAL. Periksa logika scheduler.");
+    }
+    cetak("");
+
+    kembalikan rencana;
+}

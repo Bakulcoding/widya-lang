@@ -1,0 +1,68 @@
+// ========================================================================
+// CONTOH 31: Geospatial GIS Engine (WidyaGeo) & Live Hot-Patching (WidyaHotPatch)
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 3 & 4: WidyaGeo (Spatial GIS) & WidyaHotPatch (Live Reload)")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// 1. WidyaGeo: Geospatial Coordinates, Geodesic Distance & Point-In-Polygon
+// ------------------------------------------------------------------------
+cetak("\n🗺️ [1] Analisis Spasial & Navigasi Geodesik (WidyaGeo)...")
+
+// Koordinat Monas (Jakarta) dan Gedung Sate (Bandung)
+var monas_jkt = TitikGeo(-6.175392, 106.827153, 10.0)
+var gedung_sate_bdg = TitikGeo(-6.902484, 107.618810, 700.0)
+
+var jarak_meter = hitung_jarak_haversine(monas_jkt, gedung_sate_bdg)
+var jarak_km = jarak_meter / 1000.0
+cetak("  * Titik 1: Monas Jakarta (Lat: -6.175, Lon: 106.827)")
+cetak("  * Titik 2: Gedung Sate Bandung (Lat: -6.902, Lon: 107.618)")
+cetak("  * Jarak Geodesik Haversine: " + ke_teks(jarak_km) + " km (" + ke_teks(jarak_meter) + " m)")
+
+// Geofence Polygon Area Jakarta Raya
+var v1 = TitikGeo(-6.10, 106.70, 0.0)
+var v2 = TitikGeo(-6.10, 106.95, 0.0)
+var v3 = TitikGeo(-6.35, 106.95, 0.0)
+var v4 = TitikGeo(-6.35, 106.70, 0.0)
+var area_jakarta = PoligonGeo([v1, v2, v3, v4])
+
+// Uji Point-In-Polygon Ray-Casting
+var dalam_jkt = apakah_dalam_poligon(monas_jkt, area_jakarta)
+var dalam_bdg = apakah_dalam_poligon(gedung_sate_bdg, area_jakarta)
+
+cetak("  * Apakah Monas berada dalam Geofence Jakarta? -> " + ke_teks(dalam_jkt))
+cetak("  * Apakah Bandung berada dalam Geofence Jakarta? -> " + ke_teks(dalam_bdg))
+
+// Ekspor ke GeoJSON standar
+var berkas_geojson = ekspor_geojson(area_jakarta)
+cetak("  * Ekspor Poligon ke GeoJSON:")
+cetak("    " + berkas_geojson)
+
+// ------------------------------------------------------------------------
+// 2. WidyaHotPatch: In-Memory Zero-Downtime Dynamic Code Hot-Patching
+// ------------------------------------------------------------------------
+cetak("\n⚡ [2] Menguji Dynamic In-Memory Code Hot-Patching (WidyaHotPatch)...")
+
+fungsi hitung_diskon_lama(harga) {
+    kembalikan harga * 0.05;
+}
+
+cetak("  * Menghitung diskon sebelum patch (5%): Rp " + ke_teks(hitung_diskon_lama(100000.0)))
+
+// Melakukan hot-patch pada runtime tanpa restart
+var fungsi_baru = fungsi(harga) {
+    kembalikan harga * 0.25; // Promo dinaikkan ke 25%
+}
+
+patch_fungsi("hitung_diskon", fungsi_baru)
+
+var log_riwayat = riwayat_patch()
+cetak("  * Riwayat Hot-Patch Tercatat: " + ke_teks(panjang(log_riwayat)) + " entri")
+cetak("  * Status Hot-Patch: " + ke_teks(log_riwayat[panjang(log_riwayat) - 1]))
+
+cetak("\n========================================================================")
+cetak("✅ Selesai mengeksekusi WidyaGeo & WidyaHotPatch!")
+cetak("========================================================================")

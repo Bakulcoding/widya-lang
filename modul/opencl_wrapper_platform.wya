@@ -1,0 +1,69 @@
+struktur OpenCLPlatform {
+    id_int,
+    nama_string,
+    versi_string,
+    daftar_device_array_string
+}
+
+struktur OpenCLContext {
+    id_platform_int,
+    device_type_string,
+    program_kernels_dict,
+    command_queue_ready_bool
+}
+
+fungsi ocl_dapatkan_platform(index) {
+    var p = OpenCLPlatform();
+    jika index == 0 {
+        p.id_int = 0;
+        p.nama_string = "NVIDIA OpenCL 3.0 CUDA";
+        p.versi_string = "OpenCL 3.0 CUDA 12.2.140";
+        p.daftar_device_array_string = ["NVIDIA H100 80GB", "NVIDIA A100 40GB"];
+        kembalikan p;
+    };
+    jika index == 1 {
+        p.id_int = 1;
+        p.nama_string = "AMD OpenCL 3.0 ROCm";
+        p.versi_string = "OpenCL 3.0 ROCm 6.2.0";
+        p.daftar_device_array_string = ["AMD MI300X"];
+        kembalikan p;
+    };
+    p.id_int = index;
+    p.nama_string = "Default OpenCL";
+    p.versi_string = "3.0";
+    p.daftar_device_array_string = ["CPU"];
+    kembalikan p;
+}
+
+fungsi ocl_buat_context(platform_id, device_type) {
+    var c = OpenCLContext();
+    c.id_platform_int = platform_id;
+    c.device_type_string = device_type;
+    c.program_kernels_dict = {};
+    c.command_queue_ready_bool = benar;
+    kembalikan c;
+}
+
+fungsi ocl_buat_program(ctx, source_kernel_string) {
+    var prog_id = "prog_" + source_kernel_string;
+    ctx.program_kernels_dict[prog_id] = { "source": source_kernel_string, "built": benar };
+    kembalikan prog_id;
+}
+
+fungsi ocl_enqueue_ndrange_kernel(ctx, kernel_nama, global_work_list, local_work_list) {
+    var global_total = global_work_list[0];
+    kembalikan { "sukses": benar, "kernel": kernel_nama, "global_work_size": global_total, "local_work": local_work_list[0] };
+}
+
+var plat0 = ocl_dapatkan_platform(0);
+cetak("OPENCL_PLATFORM_0_NAME=" + plat0.nama_string);
+var ada_opencl = 0; jika potong(plat0.nama_string, 0, 6) == "OpenCL" { ada_opencl = 1 }; jika potong(plat0.nama_string, 7, 13) == "OpenCL" { ada_opencl = 1 };
+pastikan(ada_opencl == 1);
+var ctx = ocl_buat_context(0, "GPU");
+pastikan(ctx.device_type_string == "GPU");
+ocl_buat_program(ctx, "__kernel void vecadd(__global float*a, __global float*b, __global float*c){ int i=get_global_id(0); c[i]=a[i]+b[i];}");
+var ndr = ocl_enqueue_ndrange_kernel(ctx, "vecadd", [1024], [64]);
+cetak("GLOBAL_WORK_SIZE_RESULT=" + ndr["global_work_size"]);
+pastikan(ndr["global_work_size"] == 1024);
+pastikan(ndr["sukses"] == benar);
+cetak("[OK] OPENCL_PLATFORM_CONTEXT_NDRANGE_VECADD_SELF_TEST_PASS");

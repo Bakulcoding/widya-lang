@@ -1,0 +1,160 @@
+struktur KoleksiDokumen {
+    nama_koleksi,
+    dokumen,
+    indeks_field,
+    _dokumen_by_id,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_koleksi = nama;
+        ini.dokumen = [];
+        ini.indeks_field = {};
+        ini._dokumen_by_id = {};
+    }
+
+    fungsi sisip_satu(doc) {
+        jika bukan ada_kunci(doc, "_id") {
+            doc["_id"] = "doc_" + ke_teks(waktu()) + "_" + ke_teks(panjang(ini.dokumen) + 1);
+        }
+        tambah(ini.dokumen, doc);
+        ini._dokumen_by_id[doc["_id"]] = panjang(ini.dokumen) - 1;
+
+        misal field_terindeks = kunci(ini.indeks_field);
+        jika panjang(field_terindeks) > 0 {
+            untuk_setiap(field_terindeks, fungsi(nama_field) {
+                misal pohon = ini.indeks_field[nama_field];
+                jika ada_kunci(doc, nama_field) {
+                    misal nilai_field = ke_teks(doc[nama_field]);
+                    misal existing = bplus_cari(pohon, nilai_field);
+                    misal daftar_id = [];
+                    jika existing != nil {
+                        daftar_id = existing;
+                    }
+                    tambah(daftar_id, doc["_id"]);
+                    bplus_sisip(pohon, nilai_field, daftar_id);
+                }
+            });
+        }
+        kembalikan Ok(doc["_id"]);
+    }
+
+    fungsi cari(kunci_field, nilai_target) {
+        kembalikan saring(ini.dokumen, fungsi(item) {
+            jika ada_kunci(item, kunci_field) {
+                kembalikan item[kunci_field] == nilai_target;
+            }
+            kembalikan salah;
+        });
+    }
+
+    fungsi agregasi_total(kunci_angka) {
+        kembalikan lipat(ini.dokumen, 0, fungsi(acc, item) {
+            jika ada_kunci(item, kunci_angka) {
+                kembalikan acc + item[kunci_angka];
+            }
+            kembalikan acc;
+        });
+    }
+}
+
+fungsi indeks_tambah(koleksi, nama_field) {
+    misal pohon = PohonBPlus(4);
+    untuk_setiap(koleksi.dokumen, fungsi(doc) {
+        jika ada_kunci(doc, nama_field) {
+            misal nilai_field = ke_teks(doc[nama_field]);
+            misal existing = bplus_cari(pohon, nilai_field);
+            misal daftar_id = [];
+            jika existing != nil {
+                daftar_id = existing;
+            }
+            tambah(daftar_id, doc["_id"]);
+            bplus_sisip(pohon, nilai_field, daftar_id);
+        }
+    });
+    koleksi.indeks_field[nama_field] = pohon;
+    kembalikan benar;
+}
+
+fungsi _cari_dokumen_by_id(koleksi, id) {
+    jika ada_kunci(koleksi._dokumen_by_id, id) {
+        kembalikan koleksi.dokumen[koleksi._dokumen_by_id[id]];
+    }
+    misal hasil = saring(koleksi.dokumen, fungsi(d) {
+        kembalikan d["_id"] == id;
+    });
+    jika panjang(hasil) > 0 {
+        kembalikan hasil[0];
+    }
+    kembalikan nil;
+}
+
+fungsi indeks_cari(koleksi, nama_field, nilai_cari) {
+    jika bukan ada_kunci(koleksi.indeks_field, nama_field) {
+        kembalikan [];
+    }
+    misal pohon = koleksi.indeks_field[nama_field];
+    misal kunci_cari = ke_teks(nilai_cari);
+    misal hasil_ids = bplus_cari(pohon, kunci_cari);
+    jika hasil_ids == nil {
+        kembalikan [];
+    }
+    misal hasil = [];
+    untuk_setiap(hasil_ids, fungsi(id) {
+        misal doc = _cari_dokumen_by_id(koleksi, id);
+        jika doc != nil {
+            tambah(hasil, doc);
+        }
+    });
+    kembalikan hasil;
+}
+
+fungsi indeks_cari_rentang(koleksi, nama_field, min, maks) {
+    jika bukan ada_kunci(koleksi.indeks_field, nama_field) {
+        kembalikan [];
+    }
+    misal pohon = koleksi.indeks_field[nama_field];
+    misal kunci_min = ke_teks(min);
+    misal kunci_maks = ke_teks(maks);
+    misal rentang = bplus_rentang(pohon, kunci_min, kunci_maks);
+    misal semua_id = [];
+    untuk_setiap(rentang, fungsi(item) {
+        misal daftar_id = item.nilai;
+        untuk_setiap(daftar_id, fungsi(id) {
+            tambah(semua_id, id);
+        });
+    });
+    misal hasil = [];
+    untuk_setiap(semua_id, fungsi(id) {
+        misal doc = _cari_dokumen_by_id(koleksi, id);
+        jika doc != nil {
+            tambah(hasil, doc);
+        }
+    });
+    kembalikan hasil;
+}
+
+misal k = KoleksiDokumen("kota");
+
+misal urut = [1, 2, 3, 4, 5];
+untuk_setiap(urut, fungsi(i) {
+    k.sisip_satu({"kota": "Jakarta", "nomor": i, "provinsi": "DKI Jakarta"});
+});
+untuk_setiap(urut, fungsi(i) {
+    k.sisip_satu({"kota": "Bandung", "nomor": i, "provinsi": "Jawa Barat"});
+});
+untuk_setiap(urut, fungsi(i) {
+    k.sisip_satu({"kota": "Surabaya", "nomor": i, "provinsi": "Jawa Timur"});
+});
+
+indeks_tambah(k, "kota");
+
+misal hasil_jakarta = indeks_cari(k, "kota", "Jakarta");
+pastikan(panjang(hasil_jakarta) == 5, "Indeks cari Jakarta harus menghasilkan 5 dokumen");
+
+k.sisip_satu({"kota": "Jakarta", "nomor": 6, "provinsi": "DKI Jakarta"});
+
+misal hasil_jakarta2 = indeks_cari(k, "kota", "Jakarta");
+pastikan(panjang(hasil_jakarta2) == 6, "Setelah tambah 1, indeks cari Jakarta harus menghasilkan 6 dokumen");
+
+cetak("[OK] Secondary Index self-test");
+
+kembalikan benar;

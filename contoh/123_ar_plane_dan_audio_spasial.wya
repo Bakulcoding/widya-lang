@@ -1,0 +1,40 @@
+// =========================================================================
+// Contoh 123: Pilar Extended Reality (AR Plane Detection & Audio Spasial 3D)
+// WidyaARPlaneDetection & WidyaSpatialAudio
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR XR: AR PLANE DETECTION & AUDIO SPASIAL 3D ===");
+
+    // 1. Deteksi Bidang Datar AR (Augmented Reality Surface & Spatial Anchors)
+    var pelacak_ar = PelacakBidangAR();
+
+    // Deteksi Permukaan Meja & Lantai Nyata
+    ar_tambah_bidang(pelacak_ar, "BIDANG_LANTAI_01", "HORIZONTAL", 4.0, 5.0);
+    ar_tambah_bidang(pelacak_ar, "BIDANG_DINDING_UTARA", "VERTICAL", 4.0, 2.5);
+    cetak("Pelacak AR Mendeteksi " + ke_teks(panjang(pelacak_ar.bidang_terdeteksi)) + " Bidang Permukaan Fisik");
+
+    // Lakukan Raycast Hit-Test untuk Menempatkan Objek Hologram 3D
+    var hasil_hit = ar_lakukan_hit_test(pelacak_ar, 0.5, 1.2, -2.0);
+    cetak("Hit-Test Penempatan Objek Ditemukan: Posisi [X=" + ke_teks(hasil_hit.posisi_x) + ", Y=" + ke_teks(hasil_hit.posisi_y) + ", Z=" + ke_teks(hasil_hit.posisi_z) + "] pada " + hasil_hit.bidang_id);
+
+    // Kunci Objek dengan Spatial Anchor
+    ar_buat_jangkar_spasial(pelacak_ar, "JANGKAR_PATUNG_3D", hasil_hit.posisi_x, hasil_hit.posisi_y, hasil_hit.posisi_z);
+    cetak("Spatial Anchor 'JANGKAR_PATUNG_3D' Berhasil Dikunci pada Koordinat Fisik.");
+
+    // 2. Audio Spasial 3D HRTF (Spatialization & Head Tracking)
+    var posisi_sumber_suara = [2.0, 1.5, -3.0];
+    var posisi_pendengar = [0.0, 1.5, 0.0];
+
+    var audio_3d = xr_audio_spasial_3d(16, posisi_sumber_suara, posisi_pendengar);
+    cetak("\nAudio Spasial 3D Dihitung: Jarak Sumber = " + ke_teks(audio_3d.jarak_meter) + "m (Gain Redaman = " + ke_teks(audio_3d.gain_atenuasi) + ")");
+
+    // 3. Serialisasi Aplikasi WebXR HTML Interaktif
+    var sesi_ar = SesiXR("IMMERSIVE_AR", "LOCAL_FLOOR");
+    var html_app = xr_render_aplikasi_webxr_html(sesi_ar, "Aplikasi Museum Augmented Reality");
+    cetak("Dokumen WebXR HTML Siap Pakai Dihasilkan (" + ke_teks(panjang(html_app)) + " bytes)");
+
+    cetak("=== UJI AR PLANE DETECTION & AUDIO SPASIAL SUKSES ===");
+}
+
+utama();

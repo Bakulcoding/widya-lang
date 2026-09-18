@@ -1,0 +1,43 @@
+// =========================================================================
+// Contoh 120: Pilar CFD & Fisika Termal (Navier-Stokes & Difusi Panas 2D)
+// WidyaNavierStokes2D & WidyaHeatTransfer
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR CFD & FISIKA TERMAL: NAVIER-STOKES & DIFUSI PANAS ===");
+
+    // 1. Inisialisasi Solver Fluida Inkompresibel Navier-Stokes Grid Euler
+    // Resolusi = 16x16, Difusi = 0.0001, Viskositas = 0.0001, dt = 0.1s
+    var fluida = GridFluida2D(16, 0.0001, 0.0001, 0.1);
+    cetak("Grid Fluida 2D Dibuat (Resolusi: " + ke_teks(fluida.resolusi) + "x" + ke_teks(fluida.resolusi) + ")");
+
+    // Injeksi Sumber Densitas Asap & Vektor Kecepatan Aliran
+    fluida_tambah_densitas(fluida, 8, 8, 250.0);
+    fluida_tambah_kecepatan(fluida, 8, 8, 5.0, -2.5);
+    cetak("Injeksi Densitas Asap & Gaya Kecepatan pada Titik Pusat [8, 8]");
+
+    // Eksekusi 5 Langkah Simulasi Fluida
+    untuk i dalam 0..5 {
+        fluida_langkah_simulasi(fluida);
+    }
+    cetak("Simulasi Adveksi & Difusi Fluida Navier-Stokes Berhasil Dijalankan!");
+
+    // 2. Simulasi Konduksi & Difusi Panas Material Padat 2D (Heat Transfer PDE)
+    // Dimensi 10x10, Konduktivitas Termal (Alpha) = 0.2, dt = 0.1s
+    var kisi_panas = KisiTermal2D(10, 10, 0.2, 0.1);
+    cetak("\nKisi Termal 2D Diinisialisasi pada Suhu Awal 25.0°C");
+
+    // Letakkan Titik Sumber Panas 150.0°C di Pusat [5, 5]
+    termal_set_suhu(kisi_panas, 5, 5, 150.0);
+    cetak("Sumber Panas Diberikan pada Pusat [5, 5] = 150.0°C");
+
+    // Jalankan Langkah Difusi Termal Laplacian
+    untuk i dalam 0..10 {
+        termal_langkah_difusi(kisi_panas);
+    }
+    cetak("Difusi Termal Selesai: Distribusi Panas Merambat ke Sekitar!");
+
+    cetak("=== UJI CFD NAVIER-STOKES & DIFUSI PANAS SUKSES ===");
+}
+
+utama();

@@ -1,0 +1,60 @@
+// Contoh 55: WidyaHLL & WidyaVersionRange
+// Pengujian Estimasi Kardinalitas HyperLogLog dan Resolver Rentang Versi SemVer
+
+fungsi utama() {
+    tulis("=== CONTOH 55: HYPERLOGLOG & VERSION RANGE ===");
+
+    // 1. WidyaHLL: Estimasi Jumlah Elemen Unik (Cardinality Estimation)
+    tulis("\n--- 1. WidyaHLL (HyperLogLog) ---");
+    var hll1 = HyperLogLog(10); // 1024 registers
+
+    tulis("   Menambahkan 1000 data dengan banyak duplikasi...");
+    var i = 0;
+    selama (i < 1000) {
+        var ip = "192.168.1." + teks(i % 50); // Hanya ada 50 IP unik!
+        hll_tambah(hll1, ip);
+        i = i + 1;
+    }
+
+    var estimasi_unik = hll_estimasi(hll1);
+    tulis("   Kardinalitas sebenarnya : 50 IP Unik");
+    tulis("   Hasil estimasi HLL      : ~" + teks(estimasi_unik) + " IP Unik");
+
+    // Penggabungan (Merge) HLL terdistribusi
+    var hll2 = HyperLogLog(10);
+    hll_tambah(hll2, "10.0.0.1");
+    hll_tambah(hll2, "10.0.0.2");
+    hll_tambah(hll2, "10.0.0.3");
+
+    var hll_gabungan = hll_gabung(hll1, hll2);
+    tulis("   Estimasi setelah digabung dengan 3 IP subnet lain: ~" + teks(hll_estimasi(hll_gabungan)));
+
+    // 2. WidyaVersionRange: Pencocokan dan Pemilihan Versi SemVer
+    tulis("\n--- 2. WidyaVersionRange (SemVer Range Constraints) ---");
+
+    var daftar_paket = ["1.0.0", "1.1.0", "1.2.3", "1.2.8", "1.3.0", "2.0.0", "2.1.0-beta"];
+
+    tulis("   Daftar versi tersedia: " + teks(daftar_paket));
+
+    // Uji kecocokan
+    tulis("\n   Pemeriksaan Rentang Versi:");
+    tulis("   - '1.2.5' cocok '^1.2.0'? " + teks(semver_cocok_rentang("1.2.5", "^1.2.0")));
+    tulis("   - '2.0.1' cocok '^1.2.0'? " + teks(semver_cocok_rentang("2.0.1", "^1.2.0")));
+    tulis("   - '1.2.5' cocok '~1.2.0'? " + teks(semver_cocok_rentang("1.2.5", "~1.2.0")));
+    tulis("   - '1.3.0' cocok '~1.2.0'? " + teks(semver_cocok_rentang("1.3.0", "~1.2.0")));
+    tulis("   - '1.5.0' cocok '>=1.0.0 <2.0.0'? " + teks(semver_cocok_rentang("1.5.0", ">=1.0.0 <2.0.0")));
+
+    // Pemilihan versi tertinggi yang kompatibel (Best Match Selector)
+    var terbaik1 = semver_pilih_terbaik(daftar_paket, "^1.2.0");
+    tulis("\n   Versi terbaik untuk constraint '^1.2.0': " + teks(terbaik1)); // 1.2.8
+
+    var terbaik2 = semver_pilih_terbaik(daftar_paket, "<2.0.0");
+    tulis("   Versi terbaik untuk constraint '<2.0.0':  " + teks(terbaik2)); // 1.3.0
+
+    var terbaik3 = semver_pilih_terbaik(daftar_paket, ">=2.0.0");
+    tulis("   Versi terbaik untuk constraint '>=2.0.0': " + teks(terbaik3)); // 2.0.0
+
+    tulis("\n=== SELESAI CONTOH 55 ===");
+}
+
+utama();

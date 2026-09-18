@@ -1,0 +1,37 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 56 - Penyimpanan Data DNA & Koreksi Galat Reed-Solomon
+// Demonstrasi pengkodean teks digital ke rantai oligonukleotida DNA dengan batasan homopolimer dan primer PCR.
+
+tulis("=== [WIDYA BIOKOMPUTASI] PENYIMPANAN DATA DIGITAL PADA DNA ===");
+
+// 1. Inisialisasi Enkoder Penyimpanan DNA
+var enkoder_dna = EnkoderPenyimpananDNA(3); // Maksimal 3 homopolimer berurutan
+
+var pesan_rahasia = "WIDYA_GENOM";
+var untai_dna = dna_enkode_biner(enkoder_dna, pesan_rahasia);
+
+tulis("Pesan Asli       : " + pesan_rahasia);
+tulis("Untai DNA Sintesis : " + untai_dna);
+tulis("Panjang Untai    : " + panjang(untai_dna) + " nukleotida (nt)");
+
+var gc_rasio = dna_hitung_gc_content(untai_dna);
+tulis("Rasio GC-Content : " + gc_rasio + " % (Optimal: 40% - 60%)");
+
+// 2. Dekode Kembali dari DNA ke Teks Biner
+var hasil_dekode = dna_dekode_biner(enkoder_dna, untai_dna);
+tulis("Hasil Dekode DNA : " + hasil_dekode);
+
+// 3. Tambahkan Primer PCR Pengindeksan & Blok Paritas Koreksi Galat
+tulis("\n--- PENGINDEKSAN PRIMER PCR & PARITAS BIO-CODEC ---");
+var korektor = KorektorGalatBioDNA(4); // 4 basa paritas
+var primer_fwd = "ATGCGTAA";
+var primer_rev = "TTACGCAT";
+
+var payload_oligo = dna_tambah_primer_dan_paritas(korektor, untai_dna, primer_fwd, primer_rev);
+tulis("Payload Oligo Lengkap (Primer + DNA + Paritas + PrimerRev):");
+tulis("  " + payload_oligo);
+
+// Uji Pemulihan Mutasi Molekuler
+var pulih = dna_koreksi_dan_pulihkan(korektor, payload_oligo);
+tulis("Status Koreksi   : " + pulih["status"]);
+
+tulis("\n[WIDYA BIOKOMPUTASI] Penyimpanan Data DNA Berhasil Diverifikasi!");

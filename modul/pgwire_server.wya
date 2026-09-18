@@ -1,0 +1,2082 @@
+struktur TabelRelasional {
+    nama_tabel,
+    kolom,
+    baris_data,
+    indeks_pk,
+
+    fungsi inisialisasi(nama, daftar_kolom) {
+        ini.nama_tabel = nama;
+        ini.kolom = daftar_kolom;
+        ini.baris_data = [];
+        ini.indeks_pk = {};
+    }
+
+    fungsi sisip(data_record) {
+        misal id = data_record["id"];
+        jika id != nihil dan ada_kunci(ini.indeks_pk, ke_teks(id)) {
+            kembalikan salah;
+        }
+        tambah(ini.baris_data, data_record);
+        jika id != nihil {
+            ini.indeks_pk[ke_teks(id)] = panjang(ini.baris_data) - 1;
+        }
+        kembalikan benar;
+    }
+
+    fungsi pilih_di_mana(fungsi_predikat) {
+        kembalikan saring_bawaan(ini.baris_data, fungsi_predikat);
+    }
+
+    fungsi perbarui_berdasarkan_id(id, data_baru) {
+        misal key = ke_teks(id);
+        jika bukan ada_kunci(ini.indeks_pk, key) {
+            kembalikan salah;
+        }
+        misal idx = ini.indeks_pk[key];
+        ini.baris_data[idx] = data_baru;
+        kembalikan benar;
+    }
+}
+
+fungsi saring_bawaan(daftar, predikat) {
+    misal hasil = [];
+    untuk item dalam daftar {
+        jika predikat(item) {
+            tambah(hasil, item);
+        }
+    }
+    kembalikan hasil;
+}
+
+fungsi apakah_huruf(c) {
+    jika panjang(c) == 0 {
+        kembalikan salah;
+    }
+    tetap huruf_map = {
+        "A": benar, "B": benar, "C": benar, "D": benar, "E": benar, "F": benar, "G": benar,
+        "H": benar, "I": benar, "J": benar, "K": benar, "L": benar, "M": benar, "N": benar,
+        "O": benar, "P": benar, "Q": benar, "R": benar, "S": benar, "T": benar, "U": benar,
+        "V": benar, "W": benar, "X": benar, "Y": benar, "Z": benar,
+        "a": benar, "b": benar, "c": benar, "d": benar, "e": benar, "f": benar, "g": benar,
+        "h": benar, "i": benar, "j": benar, "k": benar, "l": benar, "m": benar, "n": benar,
+        "o": benar, "p": benar, "q": benar, "r": benar, "s": benar, "t": benar, "u": benar,
+        "v": benar, "w": benar, "x": benar, "y": benar, "z": benar,
+        "_": benar
+    };
+    kembalikan ada_kunci(huruf_map, c);
+}
+
+fungsi apakah_digit(c) {
+    tetap digit_map = {"0": benar, "1": benar, "2": benar, "3": benar, "4": benar, "5": benar, "6": benar, "7": benar, "8": benar, "9": benar};
+    kembalikan ada_kunci(digit_map, c);
+}
+
+fungsi apakah_huruf_atau_digit(c) {
+    kembalikan apakah_huruf(c) atau apakah_digit(c);
+}
+
+fungsi ke_besar_teks(s) {
+    tetap map_besar = {
+        "a": "A", "b": "B", "c": "C", "d": "D", "e": "E", "f": "F", "g": "G",
+        "h": "H", "i": "I", "j": "J", "k": "K", "l": "L", "m": "M", "n": "N",
+        "o": "O", "p": "P", "q": "Q", "r": "R", "s": "S", "t": "T", "u": "U",
+        "v": "V", "w": "W", "x": "X", "y": "Y", "z": "Z"
+    };
+    misal hasil = "";
+    misal i = 0;
+    selama i < panjang(s) {
+        misal c = s[i];
+        jika ada_kunci(map_besar, c) {
+            hasil = hasil + map_besar[c];
+        } lainnya {
+            hasil = hasil + c;
+        }
+        i = i + 1;
+    }
+    kembalikan hasil;
+}
+
+fungsi sql_lexer(sql_string) {
+    misal tokens = [];
+    misal pos = 0;
+    misal len = panjang(sql_string);
+
+    tetap KW_MAP = {
+        "SELECT": "SELECT",
+        "FROM": "FROM",
+        "WHERE": "WHERE",
+        "JOIN": "JOIN",
+        "ON": "ON",
+        "GROUP": "GROUP",
+        "BY": "BY",
+        "ORDER": "ORDER",
+        "ASC": "ASC",
+        "DESC": "DESC",
+        "INSERT": "INSERT",
+        "INTO": "INTO",
+        "VALUES": "VALUES",
+        "UPDATE": "UPDATE",
+        "SET": "SET",
+        "DELETE": "DELETE",
+        "LIMIT": "LIMIT",
+        "INT": "INT",
+        "STR": "STR",
+        "AND": "AND",
+        "OR": "OR",
+        "NOT": "NOT",
+        "NULL": "NULL",
+        "SUM": "SUM",
+        "AVG": "AVG",
+        "COUNT": "COUNT",
+        "MIN": "MIN",
+        "MAX": "MAX",
+        "INNER": "INNER",
+        "LEFT": "LEFT",
+        "RIGHT": "RIGHT",
+        "OUTER": "OUTER"
+    };
+
+    selama pos < len {
+        misal c = sql_string[pos];
+        misal ditangani = salah;
+
+        jika bukan ditangani dan (c == " " atau c == "\t" atau c == "\n" atau c == "\r") {
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == ";" {
+            tambah(tokens, {"tipe": "TITIK_KOMA", "nilai": ";"});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "," {
+            tambah(tokens, {"tipe": "KOMA", "nilai": ","});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "*" {
+            tambah(tokens, {"tipe": "ASTERISK", "nilai": "*"});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "(" {
+            tambah(tokens, {"tipe": "KURUNG_BUKA", "nilai": "("});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == ")" {
+            tambah(tokens, {"tipe": "KURUNG_TUTUP", "nilai": ")"});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "." {
+            tambah(tokens, {"tipe": "DOT", "nilai": "."});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "=" {
+            tambah(tokens, {"tipe": "OP_EQ", "nilai": "="});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == ">" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_GTE", "nilai": ">="});
+                pos = pos + 2;
+            } lainnya {
+                tambah(tokens, {"tipe": "OP_GT", "nilai": ">"});
+                pos = pos + 1;
+            }
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "<" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_LTE", "nilai": "<="});
+                pos = pos + 2;
+            } lainnya jika pos + 1 < len dan sql_string[pos + 1] == ">" {
+                tambah(tokens, {"tipe": "OP_NEQ", "nilai": "<>"});
+                pos = pos + 2;
+            } lainnya {
+                tambah(tokens, {"tipe": "OP_LT", "nilai": "<"});
+                pos = pos + 1;
+            }
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "!" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_NEQ", "nilai": "!="});
+                pos = pos + 2;
+                ditangani = benar;
+            }
+        }
+
+        jika bukan ditangani dan c == "'" {
+            misal mulai = pos + 1;
+            pos = pos + 1;
+            selama pos < len dan sql_string[pos] != "'" {
+                jika sql_string[pos] == "\\" dan pos + 1 < len {
+                    pos = pos + 2;
+                } lainnya {
+                    pos = pos + 1;
+                }
+            }
+            misal str_val = potong(sql_string, mulai, pos);
+            tambah(tokens, {"tipe": "STRING", "nilai": str_val});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan c == "\"" {
+            misal mulai = pos + 1;
+            pos = pos + 1;
+            selama pos < len dan sql_string[pos] != "\"" {
+                jika sql_string[pos] == "\\" dan pos + 1 < len {
+                    pos = pos + 2;
+                } lainnya {
+                    pos = pos + 1;
+                }
+            }
+            misal str_val = potong(sql_string, mulai, pos);
+            tambah(tokens, {"tipe": "STRING", "nilai": str_val});
+            pos = pos + 1;
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan apakah_digit(c) {
+            misal mulai = pos;
+            selama pos < len dan (apakah_digit(sql_string[pos]) atau sql_string[pos] == ".") {
+                pos = pos + 1;
+            }
+            misal num_str = potong(sql_string, mulai, pos);
+            tambah(tokens, {"tipe": "NUMBER", "nilai": num_str});
+            ditangani = benar;
+        }
+
+        jika bukan ditangani dan apakah_huruf(c) {
+            misal mulai = pos;
+            selama pos < len dan apakah_huruf_atau_digit(sql_string[pos]) {
+                pos = pos + 1;
+            }
+            misal ident = potong(sql_string, mulai, pos);
+            misal ident_upper = ke_besar_teks(ident);
+            jika ada_kunci(KW_MAP, ident_upper) {
+                tambah(tokens, {"tipe": ident_upper, "nilai": ident});
+            } lainnya {
+                tambah(tokens, {"tipe": "IDENT", "nilai": ident});
+            }
+            ditangani = benar;
+        }
+
+        jika bukan ditangani {
+            pos = pos + 1;
+        }
+    }
+
+    kembalikan tokens;
+}
+
+struktur ParserSQL {
+    tokens,
+    pos,
+    len_tokens,
+
+    fungsi inisialisasi(token_list) {
+        ini.tokens = token_list;
+        ini.pos = 0;
+        ini.len_tokens = panjang(token_list);
+    }
+
+    fungsi sekarang() {
+        jika ini.pos < ini.len_tokens {
+            kembalikan ini.tokens[ini.pos];
+        }
+        kembalikan nihil;
+    }
+
+    fungsi lihat(offset) {
+        misal idx = ini.pos + offset;
+        jika idx >= 0 dan idx < ini.len_tokens {
+            kembalikan ini.tokens[idx];
+        }
+        kembalikan nihil;
+    }
+
+    fungsi maju() {
+        misal tok = ini.sekarang();
+        ini.pos = ini.pos + 1;
+        kembalikan tok;
+    }
+
+    fungsi cocok(tipe) {
+        misal tok = ini.sekarang();
+        jika tok != nihil dan tok.tipe == tipe {
+            kembalikan ini.maju();
+        }
+        kembalikan nihil;
+    }
+
+    fungsi ekspektasi(tipe) {
+        misal tok = ini.cocok(tipe);
+        kembalikan tok;
+    }
+
+    fungsi parse_kolom_atau_expr() {
+        misal tok = ini.sekarang();
+        jika tok == nihil {
+            kembalikan nihil;
+        }
+
+        jika tok.tipe == "SUM" atau tok.tipe == "AVG" atau tok.tipe == "COUNT" atau tok.tipe == "MIN" atau tok.tipe == "MAX" {
+            misal agg_func = ini.maju();
+            ini.cocok("KURUNG_BUKA");
+            misal inner_expr = ini.parse_kolom_atau_expr();
+            ini.cocok("KURUNG_TUTUP");
+            kembalikan {"jenis": "agregat", "fn_nama": agg_func.tipe, "argumen": inner_expr};
+        }
+
+        jika tok.tipe == "ASTERISK" {
+            ini.maju();
+            kembalikan {"jenis": "asterisk"};
+        }
+
+        misal bagian1 = ini.cocok("IDENT");
+        jika bagian1 == nihil {
+            kembalikan nihil;
+        }
+
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DOT" {
+            ini.maju();
+            misal bagian2 = ini.cocok("IDENT");
+            jika bagian2 == nihil {
+                bagian2 = ini.cocok("ASTERISK");
+            }
+            kembalikan {"jenis": "kolom_qualified", "tabel_alias": bagian1.nilai, "kolom": bagian2.nilai};
+        }
+
+        kembalikan {"jenis": "kolom", "nama": bagian1.nilai};
+    }
+
+    fungsi parse_daftar_select() {
+        misal what_list = [];
+
+        selama benar {
+            misal expr = ini.parse_kolom_atau_expr();
+            jika expr == nihil {
+                berhenti;
+            }
+
+            misal alias_kolom = nihil;
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju();
+                misal t = ini.cocok("IDENT");
+                jika t != nihil {
+                    alias_kolom = t.nilai;
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek_next = ini.lihat(1);
+                jika peek_next == nihil atau (peek_next.tipe != "DOT" dan peek_next.tipe != "KURUNG_BUKA") {
+                    misal t = ini.cocok("IDENT");
+                    alias_kolom = t.nilai;
+                }
+            }
+
+            misal col_str = "";
+            jika expr.jenis == "asterisk" {
+                col_str = "*";
+            } lainnya jika expr.jenis == "kolom" {
+                col_str = expr.nama;
+            } lainnya jika expr.jenis == "kolom_qualified" {
+                col_str = expr.tabel_alias + "." + expr.kolom;
+            } lainnya jika expr.jenis == "agregat" {
+                misal inner_col = "*";
+                jika expr.argumen != nihil {
+                    jika expr.argumen.jenis == "kolom" {
+                        inner_col = expr.argumen.nama;
+                    } lainnya jika expr.argumen.jenis == "kolom_qualified" {
+                        inner_col = expr.argumen.tabel_alias + "." + expr.argumen.kolom;
+                    }
+                }
+                col_str = expr.fn_nama + "(" + inner_col + ")";
+            }
+
+            tambah(what_list, {"col": col_str, "alias": alias_kolom, "expr": expr});
+
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+
+        kembalikan what_list;
+    }
+
+    fungsi parse_daftar_from() {
+        misal from_list = [];
+
+        selama benar {
+            misal tbl_tok = ini.cocok("IDENT");
+            jika tbl_tok == nihil {
+                berhenti;
+            }
+            misal nama_tbl = tbl_tok.nilai;
+            misal alias_tbl = nihil;
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju();
+                misal a = ini.cocok("IDENT");
+                jika a != nihil {
+                    alias_tbl = a.nilai;
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek1 = ini.lihat(1);
+                jika peek1 == nihil atau peek1.tipe == "JOIN" atau peek1.tipe == "INNER" atau peek1.tipe == "LEFT" atau peek1.tipe == "RIGHT" atau peek1.tipe == "WHERE" atau peek1.tipe == "GROUP" atau peek1.tipe == "ORDER" atau peek1.tipe == "LIMIT" atau peek1.tipe == "KOMA" {
+                    misal a = ini.cocok("IDENT");
+                    alias_tbl = a.nilai;
+                }
+            }
+
+            tambah(from_list, {"tbl": nama_tbl, "alias": alias_tbl});
+
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+
+        kembalikan from_list;
+    }
+
+    fungsi parse_nilai() {
+        misal tok = ini.sekarang();
+        jika tok == nihil {
+            kembalikan nihil;
+        }
+        jika tok.tipe == "NUMBER" {
+            ini.maju();
+            misal s = tok.nilai;
+            jika ada(s, ".") {
+                kembalikan ke_pecahan(s);
+            }
+            kembalikan ke_angka(s);
+        }
+        jika tok.tipe == "STRING" {
+            ini.maju();
+            kembalikan tok.nilai;
+        }
+        jika tok.tipe == "NULL" {
+            ini.maju();
+            kembalikan nihil;
+        }
+        jika tok.tipe == "IDENT" {
+            ini.maju();
+            misal val = tok.nilai;
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DOT" {
+                ini.maju();
+                misal c2 = ini.cocok("IDENT");
+                val = val + "." + c2.nilai;
+            }
+            kembalikan {"jenis": "kolom_ref", "nilai": val};
+        }
+        kembalikan nihil;
+    }
+
+    fungsi parse_kondisi_where() {
+        misal where_list = [];
+
+        selama benar {
+            misal kol = ini.parse_kolom_atau_expr();
+            jika kol == nihil {
+                berhenti;
+            }
+
+            misal op_tok = ini.sekarang();
+            jika op_tok == nihil {
+                berhenti;
+            }
+            misal op_str = "";
+            jika op_tok.tipe == "OP_EQ" {
+                op_str = "=";
+            } lainnya jika op_tok.tipe == "OP_GT" {
+                op_str = ">";
+            } lainnya jika op_tok.tipe == "OP_LT" {
+                op_str = "<";
+            } lainnya jika op_tok.tipe == "OP_GTE" {
+                op_str = ">=";
+            } lainnya jika op_tok.tipe == "OP_LTE" {
+                op_str = "<=";
+            } lainnya jika op_tok.tipe == "OP_NEQ" {
+                op_str = "!=";
+            } lainnya {
+                berhenti;
+            }
+            ini.maju();
+
+            misal val = ini.parse_nilai();
+
+            misal col_name = "";
+            jika kol.jenis == "kolom" {
+                col_name = kol.nama;
+            } lainnya jika kol.jenis == "kolom_qualified" {
+                col_name = kol.tabel_alias + "." + kol.kolom;
+            }
+
+            tambah(where_list, {"col": col_name, "op": op_str, "val": val, "kiri": kol, "kanan": val});
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "AND" atau ini.lihat(0).tipe == "OR") {
+                berhenti;
+            }
+        }
+
+        kembalikan where_list;
+    }
+
+    fungsi parse_joins() {
+        misal joins = [];
+
+        selama benar {
+            misal ada_join = salah;
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "INNER" {
+                ini.maju();
+                ada_join = benar;
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "LEFT" {
+                ini.maju();
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "OUTER" {
+                    ini.maju();
+                }
+                ada_join = benar;
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "RIGHT" {
+                ini.maju();
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "OUTER" {
+                    ini.maju();
+                }
+                ada_join = benar;
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "JOIN" {
+                ini.maju();
+                ada_join = benar;
+            }
+            jika bukan ada_join {
+                berhenti;
+            }
+
+            misal tbl_tok = ini.cocok("IDENT");
+            jika tbl_tok == nihil {
+                berhenti;
+            }
+            misal nama_tbl = tbl_tok.nilai;
+            misal alias_tbl = nihil;
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju();
+                misal a = ini.cocok("IDENT");
+                jika a != nihil {
+                    alias_tbl = a.nilai;
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek1 = ini.lihat(1);
+                jika peek1 != nihil dan peek1.tipe == "ON" {
+                    misal a = ini.cocok("IDENT");
+                    alias_tbl = a.nilai;
+                }
+            }
+
+            ini.cocok("ON");
+
+            misal kiri_expr = ini.parse_kolom_atau_expr();
+            misal op_t = ini.sekarang();
+            misal op_sim = "=";
+            jika op_t != nihil {
+                jika op_t.tipe == "OP_EQ" {
+                    op_sim = "=";
+                }
+                ini.maju();
+            }
+            misal kanan_expr = ini.parse_kolom_atau_expr();
+
+            misal l_col = "";
+            jika kiri_expr.jenis == "kolom" {
+                l_col = kiri_expr.nama;
+            } lainnya jika kiri_expr.jenis == "kolom_qualified" {
+                l_col = kiri_expr.tabel_alias + "." + kiri_expr.kolom;
+            }
+
+            misal r_col = "";
+            jika kanan_expr.jenis == "kolom" {
+                r_col = kanan_expr.nama;
+            } lainnya jika kanan_expr.jenis == "kolom_qualified" {
+                r_col = kanan_expr.tabel_alias + "." + kanan_expr.kolom;
+            }
+
+            tambah(joins, {"tbl": nama_tbl, "alias": alias_tbl, "left_col": l_col, "op": op_sim, "right_col": r_col, "left_expr": kiri_expr, "right_expr": kanan_expr});
+        }
+
+        kembalikan joins;
+    }
+
+    fungsi parse_group_by() {
+        misal cols = [];
+        selama benar {
+            misal tok = ini.parse_kolom_atau_expr();
+            jika tok == nihil {
+                berhenti;
+            }
+            misal col_name = "";
+            jika tok.jenis == "kolom" {
+                col_name = tok.nama;
+            } lainnya jika tok.jenis == "kolom_qualified" {
+                col_name = tok.tabel_alias + "." + tok.kolom;
+            }
+            tambah(cols, col_name);
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+        kembalikan cols;
+    }
+
+    fungsi parse_order_by() {
+        misal orders = [];
+        selama benar {
+            misal tok = ini.parse_kolom_atau_expr();
+            jika tok == nihil {
+                berhenti;
+            }
+            misal col_name = "";
+            jika tok.jenis == "kolom" {
+                col_name = tok.nama;
+            } lainnya jika tok.jenis == "kolom_qualified" {
+                col_name = tok.tabel_alias + "." + tok.kolom;
+            }
+            misal arah = "ASC";
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DESC" {
+                arah = "DESC";
+                ini.maju();
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "ASC" {
+                arah = "ASC";
+                ini.maju();
+            }
+            tambah(orders, {"col": col_name, "dir": arah});
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+        kembalikan orders;
+    }
+
+    fungsi parse_select() {
+        ini.cocok("SELECT");
+        misal what = ini.parse_daftar_select();
+        ini.cocok("FROM");
+        misal from = ini.parse_daftar_from();
+        misal joins = ini.parse_joins();
+        misal where = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju();
+            where = ini.parse_kondisi_where();
+        }
+        misal group_by = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "GROUP" {
+            ini.maju();
+            ini.cocok("BY");
+            group_by = ini.parse_group_by();
+        }
+        misal order_by = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "ORDER" {
+            ini.maju();
+            ini.cocok("BY");
+            order_by = ini.parse_order_by();
+        }
+        misal limit = nihil;
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "LIMIT" {
+            ini.maju();
+            misal lt = ini.cocok("NUMBER");
+            jika lt != nihil {
+                limit = ke_angka(lt.nilai);
+            }
+        }
+        kembalikan {
+            "tipe": "SELECT",
+            "what": what,
+            "from": from,
+            "where": where,
+            "joins": joins,
+            "group_by": group_by,
+            "order_by": order_by,
+            "limit": limit
+        };
+    }
+
+    fungsi parse_insert() {
+        ini.cocok("INSERT");
+        ini.cocok("INTO");
+        misal tbl_tok = ini.cocok("IDENT");
+        misal nama_tbl = tbl_tok.nilai;
+        misal cols = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KURUNG_BUKA" {
+            ini.maju();
+            selama benar {
+                misal ct = ini.cocok("IDENT");
+                jika ct != nihil {
+                    tambah(cols, ct.nilai);
+                }
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                    ini.maju();
+                } lainnya {
+                    berhenti;
+                }
+            }
+            ini.cocok("KURUNG_TUTUP");
+        }
+        ini.cocok("VALUES");
+        misal semua_values = [];
+        selama benar {
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KURUNG_BUKA" {
+                ini.maju();
+                misal satu_baris = [];
+                selama benar {
+                    misal v = ini.parse_nilai();
+                    jika v != nihil {
+                        tambah(satu_baris, v);
+                    }
+                    jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                        ini.maju();
+                    } lainnya {
+                        berhenti;
+                    }
+                }
+                ini.cocok("KURUNG_TUTUP");
+                tambah(semua_values, satu_baris);
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+        kembalikan {
+            "tipe": "INSERT",
+            "tbl": nama_tbl,
+            "cols": cols,
+            "values": semua_values
+        };
+    }
+
+    fungsi parse_update() {
+        ini.cocok("UPDATE");
+        misal tbl_tok = ini.cocok("IDENT");
+        misal nama_tbl = tbl_tok.nilai;
+        ini.cocok("SET");
+        misal set_map = {};
+        selama benar {
+            misal col_t = ini.cocok("IDENT");
+            jika col_t == nihil {
+                berhenti;
+            }
+            ini.cocok("OP_EQ");
+            misal val = ini.parse_nilai();
+            set_map[col_t.nilai] = val;
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju();
+            } lainnya {
+                berhenti;
+            }
+        }
+        misal where = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju();
+            where = ini.parse_kondisi_where();
+        }
+        kembalikan {
+            "tipe": "UPDATE",
+            "tbl": nama_tbl,
+            "set": set_map,
+            "where": where
+        };
+    }
+
+    fungsi parse_delete() {
+        ini.cocok("DELETE");
+        ini.cocok("FROM");
+        misal tbl_tok = ini.cocok("IDENT");
+        misal nama_tbl = tbl_tok.nilai;
+        misal where = [];
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju();
+            where = ini.parse_kondisi_where();
+        }
+        kembalikan {
+            "tipe": "DELETE",
+            "tbl": nama_tbl,
+            "where": where
+        };
+    }
+
+    fungsi parse() {
+        misal tok_awal = ini.sekarang();
+        jika tok_awal == nihil {
+            kembalikan nihil;
+        }
+        jika tok_awal.tipe == "SELECT" {
+            kembalikan ini.parse_select();
+        }
+        jika tok_awal.tipe == "INSERT" {
+            kembalikan ini.parse_insert();
+        }
+        jika tok_awal.tipe == "UPDATE" {
+            kembalikan ini.parse_update();
+        }
+        jika tok_awal.tipe == "DELETE" {
+            kembalikan ini.parse_delete();
+        }
+        kembalikan nihil;
+    }
+}
+
+fungsi sql_parser(tokens) {
+    misal parser = ParserSQL(tokens);
+    kembalikan parser.parse();
+}
+
+fungsi tabel_ke_df(tabel_obj) {
+    misal kolom = tabel_obj.kolom;
+    misal baris_mentah = [];
+    untuk rec dalam tabel_obj.baris_data {
+        misal satu_baris = [];
+        untuk k dalam kolom {
+            jika ada_kunci(rec, k) {
+                tambah(satu_baris, rec[k]);
+            } lainnya {
+                tambah(satu_baris, nihil);
+            }
+        }
+        tambah(baris_mentah, satu_baris);
+    }
+    kembalikan DataFrame(kolom, baris_mentah);
+}
+
+fungsi terapkan_alias_ke_df(df, alias_tabel, semua_kolom) {
+    misal arr = df_ke_array(df);
+    misal hasil_arr = [];
+    untuk row dalam arr {
+        misal row_baru = {};
+        untuk k dalam kunci(row) {
+            row_baru[k] = row[k];
+            jika alias_tabel != nihil {
+                row_baru[alias_tabel + "." + k] = row[k];
+            }
+        }
+        tambah(hasil_arr, row_baru);
+    }
+    jika panjang(hasil_arr) == 0 {
+        kembalikan df;
+    }
+    misal kolom_baru = kunci(hasil_arr[0]);
+    misal baris_baru = [];
+    untuk r dalam hasil_arr {
+        misal br = [];
+        untuk k dalam kolom_baru {
+            tambah(br, r[k]);
+        }
+        tambah(baris_baru, br);
+    }
+    kembalikan DataFrame(kolom_baru, baris_baru);
+}
+
+fungsi bandingkan_nilai(a, op, b) {
+    jika op == "=" {
+        kembalikan a == b;
+    }
+    jika op == "!=" atau op == "<>" {
+        kembalikan a != b;
+    }
+    jika op == ">" {
+        kembalikan a > b;
+    }
+    jika op == "<" {
+        kembalikan a < b;
+    }
+    jika op == ">=" {
+        kembalikan a >= b;
+    }
+    jika op == "<=" {
+        kembalikan a <= b;
+    }
+    kembalikan salah;
+}
+
+fungsi df_ke_array_manual(df) {
+    kembalikan df_ke_array(df);
+}
+
+fungsi eksekusi_inner_join(df_kiri, df_kanan, left_col_full, right_col_full) {
+    misal arr_kiri = df_ke_array(df_kiri);
+    misal arr_kanan = df_ke_array(df_kanan);
+    misal hasil = [];
+
+    untuk l_row dalam arr_kiri {
+        misal l_val = nihil;
+        jika ada_kunci(l_row, left_col_full) {
+            l_val = l_row[left_col_full];
+        }
+        untuk r_row dalam arr_kanan {
+            misal r_val = nihil;
+            jika ada_kunci(r_row, right_col_full) {
+                r_val = r_row[right_col_full];
+            }
+            jika l_val == r_val {
+                misal gabungan = {};
+                untuk k dalam kunci(l_row) {
+                    gabungan[k] = l_row[k];
+                }
+                untuk k dalam kunci(r_row) {
+                    gabungan[k] = r_row[k];
+                }
+                tambah(hasil, gabungan);
+            }
+        }
+    }
+
+    jika panjang(hasil) == 0 {
+        kembalikan DataFrame([], []);
+    }
+
+    misal kolom_gabungan = kunci(hasil[0]);
+    misal baris_gabungan = [];
+    untuk r dalam hasil {
+        misal br = [];
+        untuk k dalam kolom_gabungan {
+            tambah(br, r[k]);
+        }
+        tambah(baris_gabungan, br);
+    }
+    kembalikan DataFrame(kolom_gabungan, baris_gabungan);
+}
+
+fungsi eksekusi_where_manual(df, where_list) {
+    misal arr = df_ke_array(df);
+    misal current = arr;
+
+    untuk kond in where_list {
+        misal hasil_filter = [];
+        untuk row dalam current {
+            misal col_name = kond.col;
+            misal op = kond.op;
+            misal val_target = kond.val;
+
+            misal row_val = nihil;
+            jika ada_kunci(row, col_name) {
+                row_val = row[col_name];
+            }
+
+            misal val_banding = val_target;
+            jika val_target != nihil dan tipe(val_target) == "map" dan ada_kunci(val_target, "jenis") dan val_target.jenis == "kolom_ref" {
+                misal ref_name = val_target.nilai;
+                jika ada_kunci(row, ref_name) {
+                    val_banding = row[ref_name];
+                }
+            }
+
+            jika bandingkan_nilai(row_val, op, val_banding) {
+                tambah(hasil_filter, row);
+            }
+        }
+        current = hasil_filter;
+    }
+
+    jika panjang(current) == 0 {
+        kembalikan DataFrame([], []);
+    }
+
+    misal kolom_df = kunci(current[0]);
+    misal baris_df = [];
+    untuk r dalam current {
+        misal br = [];
+        untuk k dalam kolom_df {
+            tambah(br, r[k]);
+        }
+        tambah(baris_df, br);
+    }
+    kembalikan DataFrame(kolom_df, baris_df);
+}
+
+fungsi ekstrak_nama_kolom_dari_select(col_str) {
+    jika col_str == "*" {
+        kembalikan "*";
+    }
+    misal tanda_buka = cari_teks(col_str, "(");
+    jika tanda_buka >= 0 {
+        misal tanda_tutup = cari_teks(col_str, ")");
+        misal di_dalam = potong(col_str, tanda_buka + 1, tanda_tutup);
+        kembalikan di_dalam;
+    }
+    kembalikan col_str;
+}
+
+fungsi ekstrak_fungsi_agregat(col_str) {
+    misal tanda_buka = cari_teks(col_str, "(");
+    jika tanda_buka >= 0 {
+        kembalikan ke_besar_teks(potong(col_str, 0, tanda_buka));
+    }
+    kembalikan nihil;
+}
+
+fungsi cari_teks(s, needle) {
+    misal i = 0;
+    misal ns = panjang(s);
+    misal nn = panjang(needle);
+    selama i <= ns - nn {
+        misal cocok = benar;
+        misal j = 0;
+        selama j < nn {
+            jika s[i + j] != needle[j] {
+                cocok = salah;
+                berhenti;
+            }
+            j = j + 1;
+        }
+        jika cocok {
+            kembalikan i;
+        }
+        i = i + 1;
+    }
+    kembalikan -1;
+}
+
+fungsi ada(s, needle) {
+    kembalikan cari_teks(s, needle) >= 0;
+}
+
+fungsi ke_angka(s) {
+    tetap digit_map = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9};
+    misal neg = salah;
+    misal start_idx = 0;
+    jika panjang(s) > 0 dan s[0] == "-" {
+        neg = benar;
+        start_idx = 1;
+    }
+    misal hasil = 0;
+    misal i = start_idx;
+    selama i < panjang(s) {
+        misal d = s[i];
+        jika ada_kunci(digit_map, d) {
+            hasil = hasil * 10 + digit_map[d];
+        } lainnya {
+            berhenti;
+        }
+        i = i + 1;
+    }
+    jika neg {
+        hasil = 0 - hasil;
+    }
+    kembalikan hasil;
+}
+
+fungsi ke_pecahan(s) {
+    tetap digit_map = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9};
+    misal bagian = pisah(s, ".");
+    misal bulat = ke_angka(bagian[0]);
+    misal frac_str = bagian[1];
+    misal frac = 0;
+    misal div = 1;
+    misal i = 0;
+    selama i < panjang(frac_str) {
+        misal d = frac_str[i];
+        jika ada_kunci(digit_map, d) {
+            frac = frac * 10 + digit_map[d];
+            div = div * 10;
+        }
+        i = i + 1;
+    }
+    kembalikan bulat + (frac / div);
+}
+
+fungsi pisah(s, delim) {
+    misal hasil = [];
+    misal mulai = 0;
+    misal i = 0;
+    misal p_delim = panjang(delim);
+    selama i <= panjang(s) - p_delim {
+        misal cocok = benar;
+        misal j = 0;
+        selama j < p_delim {
+            jika s[i + j] != delim[j] {
+                cocok = salah;
+                berhenti;
+            }
+            j = j + 1;
+        }
+        jika cocok {
+            tambah(hasil, potong(s, mulai, i));
+            i = i + p_delim;
+            mulai = i;
+        } lainnya {
+            i = i + 1;
+        }
+    }
+    tambah(hasil, potong(s, mulai, panjang(s)));
+    kembalikan hasil;
+}
+
+fungsi urutkan_array(arr, order_rules) {
+    misal n = panjang(arr);
+    misal i = 0;
+    selama i < n - 1 {
+        misal j = 0;
+        selama j < n - i - 1 {
+            misal a = arr[j];
+            misal b = arr[j + 1];
+            misal harus_tukar = salah;
+
+            untuk rule dalam order_rules {
+                misal col = rule.col;
+                misal dir = rule.dir;
+                misal va = nihil;
+                misal vb = nihil;
+                jika ada_kunci(a, col) {
+                    va = a[col];
+                }
+                jika ada_kunci(b, col) {
+                    vb = b[col];
+                }
+
+                jika va != vb {
+                    jika dir == "ASC" {
+                        harus_tukar = va > vb;
+                    } lainnya {
+                        harus_tukar = va < vb;
+                    }
+                    berhenti;
+                }
+            }
+
+            jika harus_tukar {
+                arr[j] = b;
+                arr[j + 1] = a;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    kembalikan arr;
+}
+
+fungsi potong_array(arr, start, end_idx) {
+    misal hasil = [];
+    misal i = start;
+    selama i < end_idx dan i < panjang(arr) {
+        tambah(hasil, arr[i]);
+        i = i + 1;
+    }
+    kembalikan hasil;
+}
+
+fungsi sql_eksekusi(db_rel_obj, ast) {
+    jika ast == nihil {
+        kembalikan nihil;
+    }
+
+    jika ast.tipe == "INSERT" {
+        misal nama_tbl = ast.tbl;
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil;
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl];
+        misal cols = ast.cols;
+        misal count_insert = 0;
+        untuk satu_values dalam ast.values {
+            misal rec = {};
+            jika panjang(cols) > 0 {
+                misal ci = 0;
+                selama ci < panjang(cols) {
+                    rec[cols[ci]] = satu_values[ci];
+                    ci = ci + 1;
+                }
+            } lainnya {
+                misal ci = 0;
+                selama ci < panjang(tbl.kolom) dan ci < panjang(satu_values) {
+                    rec[tbl.kolom[ci]] = satu_values[ci];
+                    ci = ci + 1;
+                }
+            }
+            jika tbl.sisip(rec) {
+                count_insert = count_insert + 1;
+            }
+        }
+        kembalikan {"dipengaruhi": count_insert};
+    }
+
+    jika ast.tipe == "UPDATE" {
+        misal nama_tbl = ast.tbl;
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil;
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl];
+        misal count_update = 0;
+        misal i = 0;
+        selama i < panjang(tbl.baris_data) {
+            misal rec = tbl.baris_data[i];
+            misal lolos = benar;
+            untuk kond dalam ast.where {
+                misal cv = nihil;
+                jika ada_kunci(rec, kond.col) {
+                    cv = rec[kond.col];
+                }
+                jika bukan bandingkan_nilai(cv, kond.op, kond.val) {
+                    lolos = salah;
+                    berhenti;
+                }
+            }
+            jika lolos {
+                untuk sk dalam kunci(ast["set"]) {
+                    rec[sk] = ast["set"][sk];
+                }
+                tbl.baris_data[i] = rec;
+                count_update = count_update + 1;
+            }
+            i = i + 1;
+        }
+        kembalikan {"dipengaruhi": count_update};
+    }
+
+    jika ast.tipe == "DELETE" {
+        misal nama_tbl = ast.tbl;
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil;
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl];
+        misal tersisa = [];
+        misal count_delete = 0;
+        untuk rec dalam tbl.baris_data {
+            misal lolos_hapus = benar;
+            untuk kond dalam ast.where {
+                misal cv = nihil;
+                jika ada_kunci(rec, kond.col) {
+                    cv = rec[kond.col];
+                }
+                jika bukan bandingkan_nilai(cv, kond.op, kond.val) {
+                    lolos_hapus = salah;
+                    berhenti;
+                }
+            }
+            jika lolos_hapus dan panjang(ast.where) > 0 {
+                count_delete = count_delete + 1;
+            } lainnya {
+                tambah(tersisa, rec);
+            }
+        }
+        tbl.baris_data = tersisa;
+        kembalikan {"dipengaruhi": count_delete};
+    }
+
+    jika ast.tipe == "SELECT" {
+        misal current_df = nihil;
+
+        untuk from_item dalam ast.from {
+            misal nama_tbl = from_item.tbl;
+            misal alias_tbl = from_item.alias;
+            jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+                kembalikan nihil;
+            }
+            misal tbl_obj = db_rel_obj.tabel[nama_tbl];
+            misal df_tbl = tabel_ke_df(tbl_obj);
+
+            df_tbl = terapkan_alias_ke_df(df_tbl, alias_tbl, tbl_obj.kolom);
+
+            jika current_df == nihil {
+                current_df = df_tbl;
+            } lainnya {
+                current_df = df_gabung(current_df, df_tbl);
+            }
+        }
+
+        untuk join_item dalam ast.joins {
+            misal nama_tbl_j = join_item.tbl;
+            misal alias_tbl_j = join_item.alias;
+            jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl_j) {
+                kembalikan nihil;
+            }
+            misal tbl_obj_j = db_rel_obj.tabel[nama_tbl_j];
+            misal df_tbl_j = tabel_ke_df(tbl_obj_j);
+            df_tbl_j = terapkan_alias_ke_df(df_tbl_j, alias_tbl_j, tbl_obj_j.kolom);
+            current_df = eksekusi_inner_join(current_df, df_tbl_j, join_item.left_col, join_item.right_col);
+        }
+
+        jika panjang(ast.where) > 0 {
+            current_df = eksekusi_where_manual(current_df, ast.where);
+        }
+
+        misal ada_agregat = salah;
+        untuk w dalam ast.what {
+            jika ekstrak_fungsi_agregat(w.col) != nihil {
+                ada_agregat = benar;
+                berhenti;
+            }
+        }
+
+        misal hasil_array = [];
+
+        jika panjang(ast.group_by) > 0 atau ada_agregat {
+            misal arr_current = df_ke_array(current_df);
+
+            jika panjang(arr_current) == 0 {
+                kembalikan DataFrame([], []);
+            }
+
+            misal groups = {};
+            untuk row dalam arr_current {
+                misal key_builder = "";
+                untuk gb_col dalam ast.group_by {
+                    misal gv = nihil;
+                    jika ada_kunci(row, gb_col) {
+                        gv = row[gb_col];
+                    }
+                    key_builder = key_builder + "||" + ke_teks(gv);
+                }
+                jika bukan ada_kunci(groups, key_builder) {
+                    groups[key_builder] = [];
+                }
+                tambah(groups[key_builder], row);
+            }
+
+            misal nama_group_bersih = [];
+            untuk gc dalam ast.group_by {
+                misal titik_idx = cari_teks(gc, ".");
+                jika titik_idx >= 0 {
+                    tambah(nama_group_bersih, potong(gc, titik_idx + 1, panjang(gc)));
+                } lainnya {
+                    tambah(nama_group_bersih, gc);
+                }
+            }
+
+            untuk gk dalam kunci(groups) {
+                misal g_members = groups[gk];
+                misal satu_hasil = {};
+
+                misal ggi = 0;
+                selama ggi < panjang(ast.group_by) {
+                    misal first_row = g_members[0];
+                    misal gc_full = ast.group_by[ggi];
+                    misal gc_bersih = nama_group_bersih[ggi];
+                    jika ada_kunci(first_row, gc_full) {
+                        satu_hasil[gc_full] = first_row[gc_full];
+                    }
+                    jika ada_kunci(first_row, gc_full) {
+                        satu_hasil[gc_bersih] = first_row[gc_full];
+                    }
+                    ggi = ggi + 1;
+                }
+
+                untuk w_item dalam ast.what {
+                    misal col_src = w_item.col;
+                    misal col_alias = w_item.alias;
+                    misal agg_func = ekstrak_fungsi_agregat(col_src);
+                    misal nama_output = col_alias;
+                    jika nama_output == nihil {
+                        nama_output = col_src;
+                    }
+
+                    jika agg_func != nihil {
+                        misal target_col = ekstrak_nama_kolom_dari_select(col_src);
+                        misal titik_idx = cari_teks(target_col, ".");
+                        misal col_bersih = target_col;
+                        jika titik_idx >= 0 {
+                            col_bersih = potong(target_col, titik_idx + 1, panjang(target_col));
+                        }
+
+                        misal agg_val = nihil;
+                        jika agg_func == "SUM" {
+                            agg_val = 0;
+                            untuk gm dalam g_members {
+                                misal vv = nihil;
+                                jika ada_kunci(gm, target_col) {
+                                    vv = gm[target_col];
+                                } lainnya jika ada_kunci(gm, col_bersih) {
+                                    vv = gm[col_bersih];
+                                }
+                                jika vv != nihil {
+                                    agg_val = agg_val + vv;
+                                }
+                            }
+                        } lainnya jika agg_func == "AVG" {
+                            misal total = 0;
+                            misal cnt = 0;
+                            untuk gm dalam g_members {
+                                misal vv = nihil;
+                                jika ada_kunci(gm, target_col) {
+                                    vv = gm[target_col];
+                                } lainnya jika ada_kunci(gm, col_bersih) {
+                                    vv = gm[col_bersih];
+                                }
+                                jika vv != nihil {
+                                    total = total + vv;
+                                    cnt = cnt + 1;
+                                }
+                            }
+                            jika cnt > 0 {
+                                agg_val = total / cnt;
+                            } lainnya {
+                                agg_val = 0;
+                            }
+                        } lainnya jika agg_func == "COUNT" {
+                            agg_val = panjang(g_members);
+                        }
+
+                        satu_hasil[nama_output] = agg_val;
+                        satu_hasil[col_src] = agg_val;
+                    }
+                }
+
+                tambah(hasil_array, satu_hasil);
+            }
+        } lainnya {
+            hasil_array = df_ke_array(current_df);
+        }
+
+        misal perlu_proyeksi = salah;
+        jika panjang(ast.what) > 0 {
+            untuk w dalam ast.what {
+                jika w.col != "*" {
+                    perlu_proyeksi = benar;
+                    berhenti;
+                }
+            }
+        }
+        jika perlu_proyeksi {
+            misal arr_proyeksi = [];
+            untuk r dalam hasil_array {
+                misal r_baru = {};
+                untuk w dalam ast.what {
+                    misal cname = w.col;
+                    misal aname = w.alias;
+                    jika cname == "*" {
+                        untuk rk dalam kunci(r) {
+                            r_baru[rk] = r[rk];
+                        }
+                        berhenti;
+                    }
+
+                    misal nilai_sumber = nihil;
+                    jika ada_kunci(r, cname) {
+                        nilai_sumber = r[cname];
+                    }
+
+                    misal tanda_titik = cari_teks(cname, ".");
+                    misal nama_bersih = "";
+                    jika tanda_titik >= 0 {
+                        nama_bersih = potong(cname, tanda_titik + 1, panjang(cname));
+                    }
+
+                    misal nama_output_utama = "";
+                    jika aname != nihil {
+                        nama_output_utama = aname;
+                    } lainnya jika tanda_titik >= 0 {
+                        nama_output_utama = nama_bersih;
+                    } lainnya {
+                        nama_output_utama = cname;
+                    }
+
+                    jika nilai_sumber != nihil {
+                        r_baru[nama_output_utama] = nilai_sumber;
+                        r_baru[cname] = nilai_sumber;
+                        jika aname != nihil {
+                            r_baru[aname] = nilai_sumber;
+                        }
+                        jika tanda_titik >= 0 {
+                            r_baru[nama_bersih] = nilai_sumber;
+                        }
+                    }
+                }
+                tambah(arr_proyeksi, r_baru);
+            }
+            hasil_array = arr_proyeksi;
+        }
+
+        jika panjang(ast.order_by) > 0 dan panjang(hasil_array) > 0 {
+            hasil_array = urutkan_array(hasil_array, ast.order_by);
+        }
+
+        jika ast.limit != nihil dan panjang(hasil_array) > ast.limit {
+            hasil_array = potong_array(hasil_array, 0, ast.limit);
+        }
+
+        jika panjang(hasil_array) == 0 {
+            kembalikan DataFrame([], []);
+        }
+
+        misal final_cols = kunci(hasil_array[0]);
+        misal final_rows = [];
+        untuk fr dalam hasil_array {
+            misal br = [];
+            untuk fc dalam final_cols {
+                tambah(br, fr[fc]);
+            }
+            tambah(final_rows, br);
+        }
+        kembalikan DataFrame(final_cols, final_rows);
+    }
+
+    kembalikan nihil;
+}
+
+fungsi eksekusi_sql(db_instance, sql_str) {
+    misal tokens = sql_lexer(sql_str);
+    misal ast = sql_parser(tokens);
+    kembalikan sql_eksekusi(db_instance, ast);
+}
+
+struktur DBWidya {
+    tabel,
+
+    fungsi inisialisasi() {
+        ini.tabel = {};
+    },
+
+    fungsi buat_tabel(nama, kolom) {
+        misal t = TabelRelasional(nama, kolom);
+        ini.tabel[nama] = t;
+        kembalikan t;
+    }
+}
+
+struktur PgWireServerState {
+    status,
+    user,
+    basisdata,
+    query_count,
+    db,
+
+    fungsi inisialisasi() {
+        ini.status = "idle";
+        ini.user = "";
+        ini.basisdata = "";
+        ini.query_count = 0;
+        ini.db = {"tabel": {}};
+    }
+}
+
+fungsi inisialisasi_default() {
+    misal state = PgWireServerState();
+    state.status = "idle";
+    state.user = "";
+    state.basisdata = "";
+    state.query_count = 0;
+    state.db = {"tabel": {}};
+    kembalikan state;
+}
+
+fungsi buat_ord_map() {
+    misal m = {};
+    m["\0"] = 0;
+    m[" "] = 32; m["!"] = 33; m["\""] = 34; m["#"] = 35; m["$"] = 36; m["%"] = 37; m["&"] = 38; m["'"] = 39;
+    m["("] = 40; m[")"] = 41; m["*"] = 42; m["+"] = 43; m[","] = 44; m["-"] = 45; m["."] = 46; m["/"] = 47;
+    m["0"] = 48; m["1"] = 49; m["2"] = 50; m["3"] = 51; m["4"] = 52; m["5"] = 53; m["6"] = 54; m["7"] = 55; m["8"] = 56; m["9"] = 57;
+    m[":"] = 58; m[";"] = 59; m["<"] = 60; m["="] = 61; m[">"] = 62; m["?"] = 63; m["@"] = 64;
+    m["A"] = 65; m["B"] = 66; m["C"] = 67; m["D"] = 68; m["E"] = 69; m["F"] = 70; m["G"] = 71; m["H"] = 72; m["I"] = 73; m["J"] = 74; m["K"] = 75; m["L"] = 76; m["M"] = 77;
+    m["N"] = 78; m["O"] = 79; m["P"] = 80; m["Q"] = 81; m["R"] = 82; m["S"] = 83; m["T"] = 84; m["U"] = 85; m["V"] = 86; m["W"] = 87; m["X"] = 88; m["Y"] = 89; m["Z"] = 90;
+    m["["] = 91; m["\\"] = 92; m["]"] = 93; m["^"] = 94; m["_"] = 95; m["`"] = 96;
+    m["a"] = 97; m["b"] = 98; m["c"] = 99; m["d"] = 100; m["e"] = 101; m["f"] = 102; m["g"] = 103; m["h"] = 104; m["i"] = 105; m["j"] = 106; m["k"] = 107; m["l"] = 108; m["m"] = 109;
+    m["n"] = 110; m["o"] = 111; m["p"] = 112; m["q"] = 113; m["r"] = 114; m["s"] = 115; m["t"] = 116; m["u"] = 117; m["v"] = 118; m["w"] = 119; m["x"] = 120; m["y"] = 121; m["z"] = 122;
+    m["{"] = 123; m["|"] = 124; m["}"] = 125; m["~"] = 126;
+    kembalikan m;
+}
+
+tetap ORD_MAP = buat_ord_map();
+
+fungsi buat_chr_map() {
+    misal m = {};
+    untuk k dalam kunci(ORD_MAP) {
+        misal v = ORD_MAP[k];
+        m[ke_teks(v)] = k;
+    }
+    kembalikan m;
+}
+
+tetap CHR_MAP = buat_chr_map();
+
+fungsi ord(c) {
+    jika ada_kunci(ORD_MAP, c) {
+        kembalikan ORD_MAP[c];
+    }
+    kembalikan 63;
+}
+
+fungsi chr(n) {
+    misal key = ke_teks(n);
+    jika ada_kunci(CHR_MAP, key) {
+        kembalikan CHR_MAP[key];
+    }
+    kembalikan "?";
+}
+
+fungsi int32_to_4bytes_bigendian(num) {
+    misal hasil = [];
+    misal n = num;
+    jika n < 0 {
+        n = n + 4294967296;
+    }
+    misal b1 = n / 16777216;
+    n = n - b1 * 16777216;
+    misal b2 = n / 65536;
+    n = n - b2 * 65536;
+    misal b3 = n / 256;
+    n = n - b3 * 256;
+    misal b4 = n;
+    tambah(hasil, b1);
+    tambah(hasil, b2);
+    tambah(hasil, b3);
+    tambah(hasil, b4);
+    kembalikan hasil;
+}
+
+fungsi pgwire_encode_frame(type_byte_char, payload_bytes_array) {
+    misal hasil = [];
+    tambah(hasil, type_byte_char);
+    misal panjang_total = 4 + panjang(payload_bytes_array);
+    misal len_bytes = int32_to_4bytes_bigendian(panjang_total);
+    tambah(hasil, len_bytes[0]);
+    tambah(hasil, len_bytes[1]);
+    tambah(hasil, len_bytes[2]);
+    tambah(hasil, len_bytes[3]);
+    untuk pb dalam payload_bytes_array {
+        tambah(hasil, pb);
+    }
+    kembalikan hasil;
+}
+
+fungsi string_ke_bytes_nullterm(s) {
+    misal hasil = [];
+    misal i = 0;
+    selama i < panjang(s) {
+        tambah(hasil, ord(s[i]));
+        i = i + 1;
+    }
+    tambah(hasil, 0);
+    kembalikan hasil;
+}
+
+fungsi int16_to_2bytes_bigendian(num) {
+    misal hasil = [];
+    misal n = num;
+    jika n < 0 {
+        n = n + 65536;
+    }
+    misal b1 = n / 256;
+    n = n - b1 * 256;
+    misal b2 = n;
+    tambah(hasil, b1);
+    tambah(hasil, b2);
+    kembalikan hasil;
+}
+
+fungsi frame_tipe_R_auth_ok() {
+    misal payload = [];
+    misal len_bytes = int32_to_4bytes_bigendian(0);
+    tambah(payload, len_bytes[0]);
+    tambah(payload, len_bytes[1]);
+    tambah(payload, len_bytes[2]);
+    tambah(payload, len_bytes[3]);
+    kembalikan pgwire_encode_frame(ord('R'), payload);
+}
+
+fungsi frame_tipe_S_param_status(k, v) {
+    misal payload = [];
+    misal kb = string_ke_bytes_nullterm(k);
+    untuk b dalam kb {
+        tambah(payload, b);
+    }
+    misal vb = string_ke_bytes_nullterm(v);
+    untuk b dalam vb {
+        tambah(payload, b);
+    }
+    kembalikan pgwire_encode_frame(ord('S'), payload);
+}
+
+fungsi frame_tipe_Z_idle() {
+    misal payload = [];
+    tambah(payload, ord('I'));
+    kembalikan pgwire_encode_frame(ord('Z'), payload);
+}
+
+fungsi frame_tipe_T_rowdesc(namako, oid) {
+    misal payload = [];
+    misal num_fields = panjang(namako);
+    misal nf_bytes = int16_to_2bytes_bigendian(num_fields);
+    tambah(payload, nf_bytes[0]);
+    tambah(payload, nf_bytes[1]);
+    misal ci = 0;
+    selama ci < panjang(namako) {
+        misal nama = namako[ci];
+        misal oid_val = 1043;
+        jika ci < panjang(oid) {
+            oid_val = oid[ci];
+        }
+        misal nb = string_ke_bytes_nullterm(nama);
+        untuk b dalam nb {
+            tambah(payload, b);
+        }
+        misal table_oid = int32_to_4bytes_bigendian(0);
+        untuk b dalam table_oid {
+            tambah(payload, b);
+        }
+        misal attr_num = int16_to_2bytes_bigendian(0);
+        untuk b dalam attr_num {
+            tambah(payload, b);
+        }
+        misal type_oid = int32_to_4bytes_bigendian(oid_val);
+        untuk b dalam type_oid {
+            tambah(payload, b);
+        }
+        misal type_len = int16_to_2bytes_bigendian(-1);
+        untuk b dalam type_len {
+            tambah(payload, b);
+        }
+        misal typmod = int32_to_4bytes_bigendian(-1);
+        untuk b dalam typmod {
+            tambah(payload, b);
+        }
+        misal fmt_code = int16_to_2bytes_bigendian(0);
+        untuk b dalam fmt_code {
+            tambah(payload, b);
+        }
+        ci = ci + 1;
+    }
+    kembalikan pgwire_encode_frame(ord('T'), payload);
+}
+
+fungsi frame_tipe_D_datarow(values_arr) {
+    misal payload = [];
+    misal num_cols = panjang(values_arr);
+    misal nc_bytes = int16_to_2bytes_bigendian(num_cols);
+    tambah(payload, nc_bytes[0]);
+    tambah(payload, nc_bytes[1]);
+    misal vi = 0;
+    selama vi < panjang(values_arr) {
+        misal val = values_arr[vi];
+        misal str_val = "";
+        jika val == nihil {
+            misal null_len = int32_to_4bytes_bigendian(-1);
+            untuk b dalam null_len {
+                tambah(payload, b);
+            }
+        } lainnya {
+            str_val = ke_teks(val);
+            misal vb = [];
+            misal si = 0;
+            selama si < panjang(str_val) {
+                tambah(vb, ord(str_val[si]));
+                si = si + 1;
+            }
+            misal vlen = int32_to_4bytes_bigendian(panjang(vb));
+            untuk b dalam vlen {
+                tambah(payload, b);
+            }
+            untuk b dalam vb {
+                tambah(payload, b);
+            }
+        }
+        vi = vi + 1;
+    }
+    kembalikan pgwire_encode_frame(ord('D'), payload);
+}
+
+fungsi frame_tipe_C_cmdcomplete(tag) {
+    misal payload = [];
+    misal tb = string_ke_bytes_nullterm(tag);
+    untuk b dalam tb {
+        tambah(payload, b);
+    }
+    kembalikan pgwire_encode_frame(ord('C'), payload);
+}
+
+fungsi frame_tipe_E_error(pesan) {
+    misal payload = [];
+    tambah(payload, ord('S'));
+    misal sb = string_ke_bytes_nullterm("ERROR");
+    untuk b dalam sb {
+        tambah(payload, b);
+    }
+    tambah(payload, ord('M'));
+    misal mb = string_ke_bytes_nullterm(pesan);
+    untuk b dalam mb {
+        tambah(payload, b);
+    }
+    tambah(payload, 0);
+    kembalikan pgwire_encode_frame(ord('E'), payload);
+}
+
+fungsi bytes_ke_teks(bytes_arr) {
+    misal hasil = "";
+    untuk b dalam bytes_arr {
+        hasil = hasil + chr(b);
+    }
+    kembalikan hasil;
+}
+
+fungsi pgwire_server_pipeline(state, frame_bytes) {
+    misal responses = [];
+    misal len_frame = panjang(frame_bytes);
+
+    jika len_frame < 5 {
+        tambah(responses, frame_tipe_E_error("Frame terlalu pendek"));
+        tambah(responses, frame_tipe_Z_idle());
+        kembalikan responses;
+    }
+
+    misal type_byte = frame_bytes[0];
+
+    jika type_byte == ord('Q') {
+        jika len_frame < 6 {
+            tambah(responses, frame_tipe_E_error("Query frame terlalu pendek"));
+            tambah(responses, frame_tipe_Z_idle());
+            kembalikan responses;
+        }
+        state.query_count = state.query_count + 1;
+        misal sql_bytes = [];
+        misal si = 5;
+        selama si < len_frame {
+            jika frame_bytes[si] == 0 {
+                berhenti;
+            }
+            tambah(sql_bytes, frame_bytes[si]);
+            si = si + 1;
+        }
+        misal sql_str = bytes_ke_teks(sql_bytes);
+
+        misal hasil_sql = nihil;
+        coba {
+            misal db_inst = {"tabel": state.db.tabel};
+            hasil_sql = eksekusi_sql(db_inst, sql_str);
+        } tangkap {
+            tambah(responses, frame_tipe_E_error("Gagal eksekusi SQL"));
+            tambah(responses, frame_tipe_Z_idle());
+            kembalikan responses;
+        }
+
+        jika hasil_sql == nihil {
+            tambah(responses, frame_tipe_E_error("SQL tidak valid atau tabel tidak ditemukan"));
+            tambah(responses, frame_tipe_Z_idle());
+            kembalikan responses;
+        }
+
+        jika tipe(hasil_sql) == "map" dan ada_kunci(hasil_sql, "dipengaruhi") {
+            misal tag = "OK " + ke_teks(hasil_sql.dipengaruhi);
+            tambah(responses, frame_tipe_C_cmdcomplete(tag));
+            tambah(responses, frame_tipe_Z_idle());
+            kembalikan responses;
+        }
+
+        misal arr_hasil = df_ke_array(hasil_sql);
+        misal nama_kolom = [];
+        misal oid_kolom = [];
+        jika panjang(arr_hasil) > 0 {
+            nama_kolom = kunci(arr_hasil[0]);
+        }
+        misal ok_idx = 0;
+        selama ok_idx < panjang(nama_kolom) {
+            tambah(oid_kolom, 23);
+            ok_idx = ok_idx + 1;
+        }
+
+        tambah(responses, frame_tipe_T_rowdesc(nama_kolom, oid_kolom));
+
+        misal jumlah_data_row = 0;
+        untuk row_map dalam arr_hasil {
+            misal row_vals = [];
+            untuk k dalam nama_kolom {
+                misal v = nihil;
+                jika ada_kunci(row_map, k) {
+                    v = row_map[k];
+                }
+                tambah(row_vals, v);
+            }
+            tambah(responses, frame_tipe_D_datarow(row_vals));
+            jumlah_data_row = jumlah_data_row + 1;
+        }
+
+        misal tag_cc = "SELECT " + ke_teks(jumlah_data_row);
+        tambah(responses, frame_tipe_C_cmdcomplete(tag_cc));
+        tambah(responses, frame_tipe_Z_idle());
+        kembalikan responses;
+    }
+
+    jika type_byte == ord('X') {
+        state.status = "terminated";
+        kembalikan responses;
+    }
+
+    jika len_frame >= 8 {
+        misal proto_ver_bytes = [frame_bytes[4], frame_bytes[5], frame_bytes[6], frame_bytes[7]];
+        misal proto_ver = proto_ver_bytes[0] * 16777216 + proto_ver_bytes[1] * 65536 + proto_ver_bytes[2] * 256 + proto_ver_bytes[3];
+        jika proto_ver == 196608 {
+            state.status = "authenticated";
+            tambah(responses, frame_tipe_R_auth_ok());
+            tambah(responses, frame_tipe_S_param_status("server_encoding", "UTF8"));
+            tambah(responses, frame_tipe_S_param_status("client_encoding", "UTF8"));
+            tambah(responses, frame_tipe_S_param_status("DateStyle", "ISO, MDY"));
+            tambah(responses, frame_tipe_Z_idle());
+            kembalikan responses;
+        }
+    }
+
+    tambah(responses, frame_tipe_E_error("Tipe pesan tidak dikenal: " + ke_teks(type_byte)));
+    tambah(responses, frame_tipe_Z_idle());
+    kembalikan responses;
+}
+
+fungsi jalankan_self_test() {
+    misal state = inisialisasi_default();
+    misal db_rel = {"tabel": state.db.tabel};
+    misal tbl_pengguna = TabelRelasional("pengguna", ["id", "nama", "kota"]);
+    tbl_pengguna.sisip({"id": 1, "nama": "Ahmad", "kota": "Jakarta"});
+    tbl_pengguna.sisip({"id": 2, "nama": "Siti", "kota": "Bandung"});
+    tbl_pengguna.sisip({"id": 3, "nama": "Budi", "kota": "Surabaya"});
+    state.db.tabel["pengguna"] = tbl_pengguna;
+
+    misal startup_frame = [];
+    misal startup_payload = [];
+    misal proto_bytes = int32_to_4bytes_bigendian(196608);
+    untuk b dalam proto_bytes {
+        tambah(startup_payload, b);
+    }
+    misal user_kv = string_ke_bytes_nullterm("user");
+    untuk b dalam user_kv {
+        tambah(startup_payload, b);
+    }
+    misal user_v = string_ke_bytes_nullterm("postgres");
+    untuk b dalam user_v {
+        tambah(startup_payload, b);
+    }
+    misal db_kv = string_ke_bytes_nullterm("database");
+    untuk b dalam db_kv {
+        tambah(startup_payload, b);
+    }
+    misal db_v = string_ke_bytes_nullterm("testdb");
+    untuk b dalam db_v {
+        tambah(startup_payload, b);
+    }
+    tambah(startup_payload, 0);
+    misal len_total_startup = 4 + panjang(startup_payload);
+    misal len_startup_bytes = int32_to_4bytes_bigendian(len_total_startup);
+    untuk b dalam len_startup_bytes {
+        tambah(startup_frame, b);
+    }
+    untuk b dalam startup_payload {
+        tambah(startup_frame, b);
+    }
+
+    misal resp1 = pgwire_server_pipeline(state, startup_frame);
+    misal ada_R_auth = salah;
+    misal ada_Z_idle_step1 = salah;
+    untuk fr dalam resp1 {
+        jika panjang(fr) > 0 dan fr[0] == ord('R') {
+            ada_R_auth = benar;
+        }
+        jika panjang(fr) > 0 dan fr[0] == ord('Z') {
+            ada_Z_idle_step1 = benar;
+        }
+    }
+    jika bukan ada_R_auth {
+        cetak("[FAIL] Tidak ada frame AuthenticationOk (R)");
+        kembalikan salah;
+    }
+    jika bukan ada_Z_idle_step1 {
+        cetak("[FAIL] Tidak ada frame ReadyForQuery (Z) di step 1");
+        kembalikan salah;
+    }
+    cetak("Step 1 OK: Startup -> AuthOK + ReadyForQuery");
+
+    misal sql_str = "SELECT COUNT(*) AS cnt FROM pengguna;";
+    misal query_frame = [];
+    tambah(query_frame, ord('Q'));
+    misal sql_bytes_nullterm = string_ke_bytes_nullterm(sql_str);
+    misal len_payload_q = 4 + panjang(sql_bytes_nullterm);
+    misal len_q_bytes = int32_to_4bytes_bigendian(len_payload_q);
+    untuk b dalam len_q_bytes {
+        tambah(query_frame, b);
+    }
+    untuk b dalam sql_bytes_nullterm {
+        tambah(query_frame, b);
+    }
+
+    misal resp2 = pgwire_server_pipeline(state, query_frame);
+    misal ada_T_rowdesc = salah;
+    misal ada_nama_cnt = salah;
+    misal jumlah_D_datarow = 0;
+    misal ada_C_select = salah;
+    misal ada_Z_step2 = salah;
+    misal nilai_cnt_benar = salah;
+
+    untuk fr dalam resp2 {
+        jika panjang(fr) > 0 {
+            jika fr[0] == ord('T') {
+                ada_T_rowdesc = benar;
+                misal frame_body_str = bytes_ke_teks(fr);
+                jika ada(frame_body_str, "cnt") {
+                    ada_nama_cnt = benar;
+                }
+            }
+            jika fr[0] == ord('D') {
+                jumlah_D_datarow = jumlah_D_datarow + 1;
+                misal d_str = bytes_ke_teks(fr);
+                jika ada(d_str, "3") {
+                    nilai_cnt_benar = benar;
+                }
+            }
+            jika fr[0] == ord('C') {
+                ada_C_select = benar;
+                misal c_str = bytes_ke_teks(fr);
+                jika bukan ada(c_str, "SELECT 1") {
+                    cetak("[FAIL] CommandComplete bukan SELECT 1, got: " + c_str);
+                }
+            }
+            jika fr[0] == ord('Z') {
+                ada_Z_step2 = benar;
+            }
+        }
+    }
+
+    jika bukan ada_T_rowdesc {
+        cetak("[FAIL] Tidak ada frame RowDescription (T)");
+        kembalikan salah;
+    }
+    jika bukan ada_nama_cnt {
+        cetak("[FAIL] RowDescription tidak ada kolom 'cnt'");
+        kembalikan salah;
+    }
+    jika jumlah_D_datarow != 1 {
+        cetak("[FAIL] Jumlah DataRow bukan 1, tapi: " + ke_teks(jumlah_D_datarow));
+        kembalikan salah;
+    }
+    jika bukan ada_C_select {
+        cetak("[FAIL] Tidak ada CommandComplete (C)");
+        kembalikan salah;
+    }
+    jika bukan ada_Z_step2 {
+        cetak("[FAIL] Tidak ada ReadyForQuery step 2");
+        kembalikan salah;
+    }
+
+    cetak("Step 2 OK: Query COUNT(*) -> RowDescription(cnt) + 1 DataRow + SELECT 1 + Z");
+    cetak("[OK] pgwire Server Pipeline Mock self-test");
+    kembalikan benar;
+}
+
+jalankan_self_test();

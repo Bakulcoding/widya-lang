@@ -1,0 +1,233 @@
+tetap KONSTANTA_E = 2.718281828459045;
+
+fungsi ln_natural(x) {
+    jika x <= 0 {
+        kembalikan 0;
+    }
+    misal y = 0;
+    jika x > 1 {
+        y = x / 2;
+    } lainnya {
+        y = x - 1;
+    }
+    untuk _ dalam 1..100 {
+        misal ey = pangkat(KONSTANTA_E, y);
+        misal y_baru = y - 1 + x / ey;
+        jika mutlak(y_baru - y) < 0.0000001 {
+            y = y_baru;
+            berhenti;
+        }
+        y = y_baru;
+    }
+    kembalikan y;
+}
+
+fungsi teks_tokenize(kalimat) {
+    misal stop_words = ["yang","dan","di","ke","dari","pada","untuk","dengan","adalah","ini","itu","saya","kamu","dia","akan","telah","sudah"];
+    misal huruf_kecil_kalimat = huruf_kecil(kalimat);
+    misal tanda_baca = [",",".",";",":","!","?"];
+    untuk_setiap(tanda_baca, fungsi(tb) {
+        huruf_kecil_kalimat = regex_ganti("\\" + tb, " ", huruf_kecil_kalimat);
+    });
+    huruf_kecil_kalimat = regex_ganti(r"\s+", " ", huruf_kecil_kalimat);
+    misal kata_kata = pisah(huruf_kecil_kalimat, " ");
+    misal hasil = [];
+    untuk_setiap(kata_kata, fungsi(k) {
+        jika k != "" && bukan apakah_ada(stop_words, fungsi(sw) {
+            kembalikan sw == k;
+        }) {
+            tambah(hasil, k);
+        }
+    });
+    kembalikan hasil;
+}
+
+struktur KoleksiDokumen {
+    nama_koleksi,
+    dokumen,
+    indeks_teks,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_koleksi = nama;
+        ini.dokumen = [];
+        ini.indeks_teks = {};
+    }
+
+    fungsi sisip_satu(doc) {
+        jika bukan ada_kunci(doc, "_id") {
+            doc["_id"] = "doc_" + ke_teks(waktu()) + "_" + ke_teks(panjang(ini.dokumen) + 1);
+        }
+        tambah(ini.dokumen, doc);
+        kembalikan Ok(doc["_id"]);
+    }
+
+    fungsi cari(kunci, nilai_target) {
+        kembalikan saring(ini.dokumen, fungsi(item) {
+            jika ada_kunci(item, kunci) {
+                kembalikan item[kunci] == nilai_target;
+            }
+            kembalikan salah;
+        });
+    }
+}
+
+struktur IndeksTerbalik {
+    map_kata,
+    panjang_dok,
+
+    fungsi inisialisasi() {
+        ini.map_kata = {};
+        ini.panjang_dok = {};
+    }
+}
+
+fungsi indeks_terbalik_tambah(it, doc_id, teks) {
+    misal tokens = teks_tokenize(teks);
+    it.panjang_dok[doc_id] = panjang(tokens);
+    misal freq_map = {};
+    untuk_setiap(tokens, fungsi(t) {
+        jika ada_kunci(freq_map, t) {
+            freq_map[t] = freq_map[t] + 1;
+        } lainnya {
+            freq_map[t] = 1;
+        }
+    });
+    untuk k dalam kunci(freq_map) {
+        misal entry = {"doc_id": doc_id, "term_freq": freq_map[k]};
+        jika ada_kunci(it.map_kata, k) {
+            tambah(it.map_kata[k], entry);
+        } lainnya {
+            it.map_kata[k] = [entry];
+        }
+    }
+}
+
+fungsi indeks_terbalik_kueri(it, koleksi_dok, nama_field, string_kueri, top_k) {
+    jika top_k == 0 {
+        top_k = 10;
+    }
+    misal kueri_tokens = teks_tokenize(string_kueri);
+    jika panjang(kueri_tokens) == 0 {
+        kembalikan [];
+    }
+    misal total_dok = panjang(koleksi_dok.dokumen);
+    misal skor_dok = {};
+    misal idx_dok_map = {};
+    misal idx_counter = 0;
+    untuk_setiap(koleksi_dok.dokumen, fungsi(dok) {
+        idx_dok_map[dok["_id"]] = idx_counter;
+        idx_counter = idx_counter + 1;
+    });
+    untuk_setiap(kueri_tokens, fungsi(kt) {
+        jika ada_kunci(it.map_kata, kt) {
+            misal daftar_posting = it.map_kata[kt];
+            misal df = panjang(daftar_posting);
+            misal idf = ln_natural((1 + total_dok) / (1 + df)) + 1;
+            untuk_setiap(daftar_posting, fungsi(posting) {
+                misal did = posting["doc_id"];
+                misal tf = posting["term_freq"];
+                misal pd = it.panjang_dok[did];
+                jika pd > 0 {
+                    misal tfidf = (tf / pd) * idf;
+                    misal tiebreaker = 0.0000001 * (total_dok - idx_dok_map[did]);
+                    jika ada_kunci(skor_dok, did) {
+                        skor_dok[did] = skor_dok[did] + tfidf;
+                    } lainnya {
+                        skor_dok[did] = tfidf + tiebreaker;
+                    }
+                }
+            });
+        }
+    });
+    misal daftar_skor = [];
+    untuk did dalam kunci(skor_dok) {
+        misal dok_target = saring(koleksi_dok.dokumen, fungsi(d) {
+            kembalikan d["_id"] == did;
+        });
+        jika panjang(dok_target) > 0 {
+            tambah(daftar_skor, {"dokumen": dok_target[0], "skor": skor_dok[did]});
+        }
+    }
+    misal skor_angka = [];
+    untuk_setiap(daftar_skor, fungsi(item) {
+        tambah(skor_angka, item["skor"]);
+    });
+    misal skor_terurut = urutkan(skor_angka);
+    skor_terurut = balik(skor_terurut);
+    misal hasil = [];
+    untuk s dalam skor_terurut {
+        jika panjang(hasil) >= top_k {
+            berhenti;
+        }
+        untuk item dalam daftar_skor {
+            jika item["skor"] == s && panjang(hasil) < top_k {
+                misal belum_ada = benar;
+                untuk h dalam hasil {
+                    jika h["dokumen"]["_id"] == item["dokumen"]["_id"] {
+                        belum_ada = salah;
+                    }
+                }
+                jika belum_ada {
+                    tambah(hasil, item);
+                }
+            }
+        }
+    }
+    kembalikan hasil;
+}
+
+fungsi pencarian_teks_terbalik(koleksi_dok, nama_field, string_kueri) {
+    jika bukan ada_kunci(koleksi_dok.indeks_teks, nama_field) {
+        misal it_baru = IndeksTerbalik();
+        untuk_setiap(koleksi_dok.dokumen, fungsi(dok) {
+            misal did = dok["_id"];
+            misal teks_field = "";
+            jika ada_kunci(dok, nama_field) {
+                teks_field = dok[nama_field];
+            }
+            indeks_terbalik_tambah(it_baru, did, teks_field);
+        });
+        koleksi_dok.indeks_teks[nama_field] = it_baru;
+    }
+    misal it = koleksi_dok.indeks_teks[nama_field];
+    kembalikan indeks_terbalik_kueri(it, koleksi_dok, nama_field, string_kueri, 10);
+}
+
+misal koleksi_artikel = KoleksiDokumen("artikel");
+misal A = {"_id": "a", "isi": "widya bahasa pemrograman widya widya widya modern AI widya OS"};
+misal B = {"_id": "b", "isi": "widya database sql"};
+misal C = {"_id": "c", "isi": "riset widya spasial"};
+misal D = {"_id": "d", "isi": "sistem operasi linux dan windows server"};
+misal E = {"_id": "e", "isi": "belajar pemrograman rust dasar untuk widya"};
+koleksi_artikel.sisip_satu(A);
+koleksi_artikel.sisip_satu(B);
+koleksi_artikel.sisip_satu(C);
+koleksi_artikel.sisip_satu(D);
+koleksi_artikel.sisip_satu(E);
+
+misal hasil1 = pencarian_teks_terbalik(koleksi_artikel, "isi", "widya");
+
+pastikan(panjang(hasil1) >= 3, "Hasil kueri widya minimal 3");
+pastikan(hasil1[0]["skor"] > hasil1[1]["skor"], "Skor A harus > skor B");
+pastikan(hasil1[1]["skor"] > hasil1[2]["skor"], "Skor B harus > skor C");
+pastikan(hasil1[2]["skor"] > 0, "Skor C harus > 0");
+pastikan(hasil1[0]["dokumen"]["_id"] == "a", "Teratas harus A (id a)");
+
+misal hasil2 = pencarian_teks_terbalik(koleksi_artikel, "isi", "tidakada");
+pastikan(panjang(hasil2) == 0, "Kueri kata tidakada harus kosong");
+
+misal F = {"_id": "f", "isi": "widya terbaru 2026 widya"};
+koleksi_artikel.sisip_satu(F);
+koleksi_artikel.indeks_teks = {};
+
+misal hasil3 = pencarian_teks_terbalik(koleksi_artikel, "isi", "widya");
+misal f_ada = salah;
+untuk_setiap(hasil3, fungsi(h) {
+    jika h["dokumen"]["_id"] == "f" {
+        f_ada = benar;
+    }
+});
+pastikan(f_ada, "Dokumen F harus masuk dalam hasil");
+
+cetak("[OK] Full-Text TF-IDF self-test");
+kembalikan benar;

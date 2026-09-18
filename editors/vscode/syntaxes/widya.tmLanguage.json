@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Widya",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#functions" },
+    { "include": "#attributes" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.widya",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.widya",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.widya",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.widya",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.widya",
+          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.widya",
+          "match": "\\b[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.hex.widya",
+          "match": "\\b0x[0-9a-fA-F]+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.widya",
+          "match": "\\b(fn|fungsi|let|tetapkan|mut|const|if|jika|else|lain|match|cocokkan|for|untuk|in|dalam|while|selama|return|kembalikan|struct|struktur|enum|impl|terapkan|trait|sifat|where|di_mana|type|tipe|async|await|try|coba|catch|tangkap)\\b"
+        },
+        {
+          "name": "constant.language.boolean.widya",
+          "match": "\\b(true|false|benar|salah|null|kosong)\\b"
+        }
+      ]
+    },
+    "types": {
+      "name": "entity.name.type.widya",
+      "match": "\\b(Int|Float|String|Teks|Bool|Bolean|Array|Larik|Map|Peta|Option|Result|Any|Void)\\b"
+    },
+    "functions": {
+      "name": "entity.name.function.widya",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()"
+    },
+    "attributes": {
+      "name": "meta.annotation.widya",
+      "match": "@\\[[a-zA-Z0-9_\\(\\),\\s]+\\]"
+    }
+  },
+  "scopeName": "source.widya"
+}

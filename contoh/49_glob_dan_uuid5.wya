@@ -1,0 +1,61 @@
+// contoh/49_glob_dan_uuid5.wya
+// Demonstrasi Pilar Mutakhir: WidyaGlob & WidyaUUIDv5
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaGlob (Pattern Match) & WidyaUUIDv5 (RFC 4122)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaGlob (Wildcard File Path Pattern Matcher)
+cetak("🌐 [1] Pencocokan Pola Jalur Berkas Wildcard (WidyaGlob)...");
+misal daftar_berkas = [
+    "src/main.rs",
+    "src/stdlib/mod.rs",
+    "src/lexer.rs",
+    "tests/test_widya.rs",
+    "contoh/01_halo.wya",
+    "contoh/48_desimal.wya",
+    "docs/panduan.md",
+    "target/debug/widya.exe"
+];
+
+cetak("  * Memeriksa kecocokan tunggal:");
+cetak("    - Apakah 'src/main.rs' cocok dengan 'src/*.rs'? -> " + teks(cocokkan_glob("src/*.rs", "src/main.rs")));
+cetak("    - Apakah 'docs/panduan.md' cocok dengan 'src/*.rs'? -> " + teks(cocokkan_glob("src/*.rs", "docs/panduan.md")));
+
+cetak("  * Menyaring daftar berkas dengan pola 'contoh/*.wya':");
+misal berkas_contoh = saring_glob(daftar_berkas, "contoh/*.wya");
+untuk b dalam berkas_contoh {
+    cetak("    -> " + b);
+}
+
+cetak("  * Menyaring daftar berkas dengan pola 'src/**/*.rs' (Rekursif):");
+misal berkas_rust = saring_glob(daftar_berkas, "src/**/*.rs");
+untuk r dalam berkas_rust {
+    cetak("    -> " + r);
+}
+cetak("");
+
+// 2. WidyaUUIDv5 (Deterministic Namespace UUID Engine RFC 4122)
+cetak("🔏 [2] Pembangkitan UUID v5 Deterministik Berbasis Namespace (WidyaUUIDv5)...");
+misal domain = "widya-lang.org";
+misal url = "https://widya-lang.org/docs/api";
+
+misal id_domain_1 = buat_uuid_v5_dns(domain);
+misal id_domain_2 = buat_uuid_v5_dns(domain);
+misal id_url = buat_uuid_v5_url(url);
+
+cetak("  * UUID v5 untuk DNS '" + domain + "' (Panggilan #1): " + id_domain_1);
+cetak("  * UUID v5 untuk DNS '" + domain + "' (Panggilan #2): " + id_domain_2);
+cetak("  * Apakah deterministik identik 100%? -> " + teks(id_domain_1 == id_domain_2));
+
+cetak("  * UUID v5 untuk URL '" + url + "': " + id_url);
+
+misal ns_kustom = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+misal id_kustom = buat_uuid_v5(ns_kustom, "entitas_pengguna_12345");
+cetak("  * UUID v5 Namespace Kustom: " + id_kustom);
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaGlob & WidyaUUIDv5!");
+cetak("========================================================================");

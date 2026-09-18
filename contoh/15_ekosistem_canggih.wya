@@ -1,0 +1,71 @@
+// ==============================================================================
+// CONTOH 15: DEMO WIDYAAI (TENSOR & MATRIX ENGINE) & WIDYAHTTP & WIDYAGAME
+// ==============================================================================
+
+cetak("===============================================================");
+cetak("🚀 DEMO EKOSISTEM TANGGUH: WIDYAAI, WIDYAHTTP & WIDYAGAME");
+cetak("===============================================================\n");
+
+// -----------------------------------------------------------------
+// 1. WIDYAAI: Komputasi Matriks & Neural Activation (Deep Learning)
+// -----------------------------------------------------------------
+cetak("1️⃣  WIDYAAI (KOMPUTASI TENSOR & NEURAL ACTIVATION):");
+misal m1 = Matriks([
+    [1, 2],
+    [3, 4]
+]);
+
+misal m2 = Matriks([
+    [5, 6],
+    [7, 8]
+]);
+
+misal m_tambah = matriks_tambah(m1, m2);
+misal m_kali = matriks_kali(m1, m2);
+misal m_trans = matriks_transpose(m1);
+
+misal nilai_sigmoid = sigmoid(0.0);
+misal nilai_relu = relu(-5.5);
+
+cetak("   - Matriks 1 + Matriks 2   :", m_tambah.data);
+cetak("   - Matriks 1 x Matriks 2   :", m_kali.data);
+cetak("   - Transpose Matriks 1     :", m_trans.data);
+cetak("   - Fungsi Aktivasi Sigmoid(0):", nilai_sigmoid);
+cetak("   - Fungsi Aktivasi ReLU(-5.5):", nilai_relu);
+cetak("");
+
+// -----------------------------------------------------------------
+// 2. WIDYAHTTP: Backend REST API Client & Server
+// -----------------------------------------------------------------
+cetak("2️⃣  WIDYAHTTP (MICROSERVICES & REST API ENGINE):");
+misal server = ServerHttp(8000);
+cetak("   - Server HTTP dikonfigurasi pada port:", server.port);
+
+misal respons_get = http_get("https://api.widya.id/v1/pengguna");
+misal respons_post = http_post("https://api.widya.id/v1/transaksi", { "id": 101, "jumlah": 50000 });
+
+cetak("   - HTTP GET Status :", respons_get.status, "-> Sukses:", respons_get.sukses);
+cetak("   - HTTP POST Status:", respons_post.status, "-> Data:", respons_post.data_terkirim);
+cetak("");
+
+// -----------------------------------------------------------------
+// 3. WIDYAGAME: Engine Game 2D & Grafika Interaktif
+// -----------------------------------------------------------------
+cetak("3️⃣  WIDYAGAME (2D INTERACTIVE GAME ENGINE):");
+misal game = KanvasGame("Petualangan Widya", 800, 500);
+misal game_html = render_game_html(game);
+
+tulis_berkas("target/game_widya.html", game_html);
+cetak("   🎮 Judul Game   :", game.judul);
+cetak("   📐 Ukuran Kanvas:", game.lebar, "x", game.tinggi, "piksel");
+cetak("   💾 Game berhasil dirender ke: 'target/game_widya.html'");
+
+// -----------------------------------------------------------------
+// 4. Penegasan Keamanan (Assertions)
+// -----------------------------------------------------------------
+pastikan(nilai_sigmoid == 0.5, "Sigmoid(0) harus 0.5");
+pastikan(nilai_relu == 0.0, "ReLU(-5.5) harus 0");
+pastikan(m_kali.data[0][0] == 19, "Perkalian matriks baris 0 kolom 0 harus 19");
+pastikan(respons_get.status == 200, "HTTP GET harus mengembalikan status 200");
+
+cetak("\n🎉 SEMUA FITUR WIDYAAI, WIDYAHTTP & WIDYAGAME BERJALAN 100% SUKSES!");

@@ -1,0 +1,59 @@
+// Contoh 52: WidyaBenchmark & WidyaMime
+// Pengujian tolak ukur mikro-performa fungsi dan deteksi MIME type file
+
+fungsi utama() {
+    tulis("=== CONTOH 52: TOLAK UKUR & MIME TYPE ===");
+
+    // 1. WidyaBenchmark: Pengukuran Waktu Eksekusi
+    tulis("\n--- 1. WidyaBenchmark ---");
+    
+    fungsi simulasi_beban() {
+        tulis("   >> Menjalankan komputasi beban...");
+        var sum = 0;
+        var i = 0;
+        selama (i < 100000) {
+            sum = sum + (i % 7);
+            i = i + 1;
+        }
+        kembalikan sum;
+    }
+
+    var hasil_waktu = waktu_eksekusi(simulasi_beban, []);
+    tulis("   Hasil komputasi: " + teks(hasil_waktu["hasil"]));
+    tulis("   Durasi eksekusi: " + teks(hasil_waktu["durasi_ms"]) + " ms");
+
+    // Benchmarking multi-iterasi
+    fungsi tugas_ringkas() {
+        var a = 123 * 456;
+        kembalikan a;
+    }
+
+    var hasil_bench = tolak_ukur_fungsi(tugas_ringkas, [], 50);
+    tulis("\n   Statistik Benchmark (50 iterasi):");
+    tulis("   - Iterasi : " + teks(hasil_bench["iterasi"]));
+    tulis("   - Rata-rata: " + teks(hasil_bench["rata_rata_ms"]) + " ms");
+    tulis("   - Min      : " + teks(hasil_bench["min_ms"]) + " ms");
+    tulis("   - Max      : " + teks(hasil_bench["max_ms"]) + " ms");
+
+    // 2. WidyaMime: Resolusi Tipe Media Konten
+    tulis("\n--- 2. WidyaMime ---");
+
+    var ekstensi_daftar = ["json", "png", "pdf", "html", "wya", "mp4", "zip"];
+    var idx = 0;
+    selama (idx < panjang(ekstensi_daftar)) {
+        var ext = ekstensi_daftar[idx];
+        var mime = ekstensi_ke_mime(ext);
+        var adalah_teks = apakah_mime_teks(mime);
+        tulis("   * Ext: ." + ext + " => MIME: " + mime + " (Teks: " + teks(adalah_teks) + ")");
+        idx = idx + 1;
+    }
+
+    tulis("\n   Reverse Lookup (MIME -> Ext):");
+    tulis("   * 'application/pdf' => ." + mime_ke_ekstensi("application/pdf"));
+    tulis("   * 'image/png'        => ." + mime_ke_ekstensi("image/png"));
+    tulis("   * 'application/json' => ." + mime_ke_ekstensi("application/json"));
+
+    tulis("\n=== SELESAI CONTOH 52 ===");
+}
+
+utama();

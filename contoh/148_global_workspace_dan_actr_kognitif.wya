@@ -1,0 +1,54 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 65 - Global Workspace Theory & ACT-R Cognitive Architecture
+// Demonstrasi arsitektur kesadaran mesin Baars GWT dan memori deklaratif/prosedural Anderson ACT-R.
+
+tulis("=== [WIDYA AGI RUNTIMES] GLOBAL WORKSPACE & ACT-R KOGNITIF ===");
+
+// 1. Baars Global Workspace Theory (GWT Conscious Blackboard Engine)
+tulis("--- GLOBAL WORKSPACE THEORY (KOMPETISI ATENSI & BROADCASTING) ---");
+var gwt = PapanGlobalWorkspace(0.7);
+
+// Daftarkan Modul Kognitif Bawah Sadar (Subconscious Specialist Modules)
+gwt_daftarkan_modul_kognitif(gwt, "Korteks_Visual", 0.85, "OBJEK_BAHAYA_TERDETEKSI_DI_DEPAN");
+gwt_daftarkan_modul_kognitif(gwt, "Modul_Auditori", 0.45, "SUARA_LATAR_ANGIN_SEPOI");
+gwt_daftarkan_modul_kognitif(gwt, "Perencana_Motorik", 0.60, "RUTE_BERJALAN_LURUS");
+
+// Kompetisi Akses Fokus Atensi ke Global Workspace
+var kompetisi = gwt_kompetisi_fokus_atensi(gwt);
+tulis("Modul Pemenang Atensi : " + kompetisi["modul_fokus"]);
+tulis("Skor Salience         : " + kompetisi["skor_salience"]);
+tulis("Konten Kesadaran      : " + kompetisi["konten_atensi"]);
+
+// Siarkan Ide Pemenang ke Seluruh Modul (Conscious Broadcasting)
+var siaran = gwt_siarkan_kesadaran_global(gwt);
+tulis("Status Sinkronisasi   : " + siaran["status_broadcasting"]);
+
+// 2. Anderson ACT-R Cognitive Architecture (Declarative & Procedural Memory)
+tulis("\n--- ARSITEKTUR KOGNITIF ACT-R (DEKLARATIF & PROSEDURAL) ---");
+var actr = MesinKognitifACTR();
+
+// Simpan Chunk Pengetahuan Deklaratif
+var slot_chunk = {"konsep": "PintuDarurat", "warna": "Hijau", "status": "Terbuka"};
+actr_tambah_chunk_deklaratif(actr, "ObjekLingkungan", slot_chunk);
+
+// Kueri Pengambilan Memori (Retrieval Process)
+var retrieval = actr_kueri_ingatan_retrieval(actr, "PintuDarurat");
+tulis("Tipe Chunk Terambil   : " + retrieval["_tipe_chunk"]);
+tulis("Skor Aktivasi Memori  : " + retrieval["skor_aktivasi_total"]);
+
+// Daftarkan Aturan Produksi Prosedural (IF-THEN Rules)
+actr_daftarkan_aturan_produksi(
+    actr,
+    "Rule_Evakuasi_Darurat",
+    "OBJEK_BAHAYA_TERDETEKSI",
+    "LARI_MENUJU_PINTU_DARURAT",
+    5.0
+);
+
+// Jalankan Siklus Eksekusi Produksi Kognitif
+var siklus = actr_siklus_eksekusi(actr);
+tulis("\nAturan Terpicu        : " + siklus["aturan_terpicu"]);
+tulis("Aksi Tereksekusi      : " + siklus["aksi_tereksekusi"]);
+tulis("Nilai Utilitas        : " + siklus["nilai_utilitas"]);
+tulis("Latensi Siklus        : " + siklus["latensi_siklus_ms"] + " ms");
+
+tulis("\n[WIDYA AGI RUNTIMES] GWT & ACT-R Berhasil Diverifikasi!");

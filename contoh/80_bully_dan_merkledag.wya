@@ -1,0 +1,54 @@
+// ===================================================================
+// CONTOH 80: BULLY LEADER ELECTION & IPFS-STYLE MERKLE-DAG
+// Widya-Lang Cluster Coordination & Decentralized Content-Addressed Storage
+// ===================================================================
+
+cetak("=== DEMO WIDYA BULLY ELECTION PROTOCOL ===")
+var cluster = KlasterBully(["node-asia-1", "node-eropa-2", "node-amerika-3", "node-global-4"])
+
+var leader_awal = bully_dapatkan_leader(cluster)
+cetak("Pemimpin klaster terpilih pertama kali: " + leader_awal)
+
+// Simulasi kegagalan node pemimpin tertinggi
+cetak("Simulasi: " + leader_awal + " mengalami crash...")
+bully_matikan_node(cluster, leader_awal)
+
+// Node dengan rank lebih rendah mendeteksi dan memicu pemilihan
+var leader_baru = bully_mulai_pemilihan(cluster, "node-asia-1")
+cetak("Pemimpin baru hasil pemilihan Bully : " + leader_baru)
+pastikan(leader_baru == "node-amerika-3", "Node peringkat tertinggi yang masih hidup harus terpilih")
+
+// Detak rutin klaster
+var detak = bully_detak(cluster)
+cetak("Status detak jantung berkala          : Leader aktif = " + detak)
+
+cetak("")
+cetak("=== DEMO WIDYA MERKLE-DAG (CONTENT-ADDRESSED IPFS STORE) ===")
+var dag = MerkleDAG()
+
+// Membuat simpul daun file chunk
+var cid_chunk_1 = dag_buat_node(dag, "CHUNK_DATA_AUDIO_001", [])
+var cid_chunk_2 = dag_buat_node(dag, "CHUNK_DATA_AUDIO_002", [])
+var cid_chunk_3 = dag_buat_node(dag, "CHUNK_DATA_AUDIO_003", [])
+
+cetak("CID Daun 1: " + cid_chunk_1)
+cetak("CID Daun 2: " + cid_chunk_2)
+cetak("CID Daun 3: " + cid_chunk_3)
+
+// Membuat simpul direktori pohon (Root Manifest)
+var cid_album = dag_buat_node(dag, "ALBUM_MANIFEST_2026", [cid_chunk_1, cid_chunk_2, cid_chunk_3])
+cetak("Root CID Album Merkle-DAG: " + cid_album)
+
+var album_node = dag_ambil_node(dag, cid_album)
+cetak("Data manifest tersimpan  : " + album_node.data)
+cetak("Jumlah tautan anak       : " + teks(panjang(album_node.links)))
+
+// Traversal DFS menyeluruh
+var rute_dfs = dag_traversal_dfs(dag, cid_album)
+cetak("Penelusuran graf Merkle-DAG (DFS):")
+untuk_setiap(rute_dfs, fungsi(cid) {
+    cetak(" -> " + cid)
+})
+
+cetak("")
+cetak("✔ Seluruh pengujian Bully Election & Merkle-DAG sukses dieksekusi!")

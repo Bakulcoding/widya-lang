@@ -1,0 +1,18 @@
+/// Operasi string dan teks
+
+var nama_depan = "Budi"
+var nama_belakang = "Santoso"
+
+// Konkatenasi string
+var nama_lengkap = nama_depan + " " + nama_belakang
+cetak("Nama lengkap:", nama_lengkap)
+
+// String dengan angka
+var umur = 25
+var pesan = nama_depan + " berumur " + umur + " tahun"
+cetak(pesan)
+
+// Multi-line
+cetak("Baris pertama")
+cetak("Baris kedua")
+cetak("Baris ketiga")

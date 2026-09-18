@@ -1,0 +1,27 @@
+/// Program kalkulator sederhana
+
+fungsi kalkulator(a, b, operasi) {
+    jika operasi == "+" {
+        kembalikan a + b
+    } kalau_tidak_jika operasi == "-" {
+        kembalikan a - b
+    } kalau_tidak_jika operasi == "*" {
+        kembalikan a * b
+    } kalau_tidak_jika operasi == "/" {
+        jika b == 0 {
+            cetak("Error: Pembagian dengan nol!")
+            kembalikan kosong
+        }
+        kembalikan a / b
+    } kalau_tidak {
+        cetak("Error: Operasi tidak dikenal")
+        kembalikan kosong
+    }
+}
+
+cetak("=== Kalkulator Sederhana ===")
+cetak("10 + 5 =", kalkulator(10, 5, "+"))
+cetak("10 - 5 =", kalkulator(10, 5, "-"))
+cetak("10 * 5 =", kalkulator(10, 5, "*"))
+cetak("10 / 5 =", kalkulator(10, 5, "/"))
+cetak("10 / 0 =", kalkulator(10, 0, "/"))

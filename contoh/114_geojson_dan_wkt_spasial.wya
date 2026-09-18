@@ -1,0 +1,45 @@
+// =========================================================================
+// Contoh 114: Pilar Sains Spasial & GIS (GeoJSON, WKT & Topologi Geometri)
+// WidyaGeoJSON, WidyaWKT & WidyaSpatialTopology
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR SPASIAL & GIS: GEOJSON, WKT & TOPOLOGI POLIGON ===");
+
+    // 1. Parsing Format Data Geospasial GeoJSON & Konversi ke OGC WKT
+    var geojson_raw = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [106.8456, -6.2088]}}";
+    var geojson = ParserGeoJSON(geojson_raw);
+    cetak("GeoJSON Geometry Parsed: " + geojson.tipe_geometri + " (Koordinat: " + ke_teks(geojson.koordinat) + ")");
+
+    var wkt_string = geojson_ke_wkt(geojson);
+    cetak("Konversi GeoJSON ke OGC Well-Known Text (WKT): " + wkt_string);
+
+    // Konversi WKT Polygon -> GeoJSON
+    var wkt_poly = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))";
+    var geojson_poly = wkt_ke_geojson(wkt_poly);
+    cetak("Konversi WKT Polygon ke GeoJSON: Tipe = " + geojson_poly.tipe_geometri + " [Jumlah Titik: " + ke_teks(panjang(geojson_poly.koordinat)) + "]");
+
+    // 2. Analisis Topologi Spasial: Point-in-Polygon (Ray Casting Algorithm)
+    // Poligon Wilayah Persegi [0, 0] s.d. [10, 10]
+    var batas_zona = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]];
+    
+    var titik_dalam = [5.0, 5.0];
+    var didalam = spasial_titik_dalam_poligon(titik_dalam, batas_zona);
+    cetak("Uji Titik [5.0, 5.0] dalam Batas Zona: " + ke_teks(didalam));
+
+    var titik_luar = [15.0, 15.0];
+    var diluar = spasial_titik_dalam_poligon(titik_luar, batas_zona);
+    cetak("Uji Titik [15.0, 15.0] dalam Batas Zona: " + ke_teks(diluar));
+
+    // 3. Kalkulasi Metrik Spasial (Luas Poligon Shoelace & Panjang Rute Garis)
+    var luas_km2 = spasial_hitung_luas_poligon(batas_zona);
+    cetak("Perkiraan Luas Wilayah Poligon: " + ke_teks(luas_km2) + " km²");
+
+    var rute_jalan = [[106.816666, -6.200000], [106.825000, -6.175000], [106.840000, -6.150000]];
+    var panjang_rute = spasial_hitung_panjang_garis(rute_jalan);
+    cetak("Total Panjang Rute Jalan Vektor: " + ke_teks(panjang_rute) + " km");
+
+    cetak("=== UJI GEOJSON, WKT & TOPOLOGI SPASIAL SUKSES ===");
+}
+
+utama();

@@ -1,0 +1,49 @@
+/// Algoritma sorting - Bubble Sort
+
+fungsi bubble_sort(arr) {
+    var n = panjang(arr)
+    
+    untuk i dalam rentang(0, n) {
+        untuk j dalam rentang(0, n - i - 1) {
+            jika arr[j] > arr[j + 1] {
+                // Swap
+                var temp = arr[j]
+                arr[j] = arr[j + 1]
+                arr[j + 1] = temp
+            }
+        }
+    }
+    
+    kembalikan arr
+}
+
+cetak("=== Bubble Sort ===")
+var data = [64, 34, 25, 12, 22, 11, 90]
+cetak("Sebelum sort:", data)
+
+var sorted = bubble_sort(data)
+cetak("Setelah sort:", sorted)
+
+// Binary search (array harus sudah terurut)
+fungsi binary_search(arr, target) {
+    var left = 0
+    var right = panjang(arr) - 1
+    
+    selama left <= right {
+        var mid = (left + right) / 2
+        
+        jika arr[mid] == target {
+            kembalikan mid
+        } kalau_tidak_jika arr[mid] < target {
+            left = mid + 1
+        } kalau_tidak {
+            right = mid - 1
+        }
+    }
+    
+    kembalikan -1
+}
+
+cetak("\n=== Binary Search ===")
+var index = binary_search(sorted, 22)
+cetak("Mencari 22, ditemukan di index:", index)

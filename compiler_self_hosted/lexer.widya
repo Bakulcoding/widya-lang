@@ -1,0 +1,29 @@
+// compiler_self_hosted/lexer.widya
+// Scanner / Lexer mandiri dalam bahasa Widya-Lang
+
+fungsi pindai_kata_kunci(kata: String) -> String {
+    jika kata == "fungsi" || kata == "fn" {
+        kembalikan "KATA_KUNCI_FUNGSI";
+    }
+    jika kata == "misal" || kata == "let" {
+        kembalikan "KATA_KUNCI_MISAL";
+    }
+    jika kata == "kembalikan" || kata == "return" {
+        kembalikan "KATA_KUNCI_KEMBALIKAN";
+    }
+    jika kata == "jika" || kata == "if" {
+        kembalikan "KATA_KUNCI_JIKA";
+    }
+    jika kata == "lain" || kata == "else" {
+        kembalikan "KATA_KUNCI_LAIN";
+    }
+    jika kata == "struktur" || kata == "struct" {
+        kembalikan "KATA_KUNCI_STRUKTUR";
+    }
+    kembalikan "IDENTIFIER";
+}
+
+fungsi uji_lexer() -> String {
+    misal jenis = pindai_kata_kunci("fungsi");
+    kembalikan jenis;
+}

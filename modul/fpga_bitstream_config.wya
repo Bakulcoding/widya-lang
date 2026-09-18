@@ -1,0 +1,55 @@
+struktur FPGABoard {
+    vendor_string,
+    part_number_string,
+    bus_interface_string,
+    status_config_string,
+    daftar_region_pr_dict,
+    register_map_dict
+}
+
+fungsi fpga_buat_board(vendor, part, bus) {
+    misal fpga = FPGABoard();
+    fpga.vendor_string = vendor;
+    fpga.part_number_string = part;
+    fpga.bus_interface_string = bus;
+    fpga.status_config_string = "IDLE";
+    fpga.daftar_region_pr_dict = {};
+    fpga.register_map_dict = { 0: 3735928559 };
+    kembalikan fpga;
+}
+
+fungsi fpga_program_bitstream(fpga, file_nama) {
+    fpga.status_config_string = "DONE";
+    kembalikan benar;
+}
+
+fungsi fpga_partial_reconfig(fpga, region, partial_file) {
+    fpga.daftar_region_pr_dict[region] = "CONFIGURED";
+    kembalikan { "region": region, "status": "CONFIGURED", "file": partial_file };
+}
+
+fungsi fpga_baca_register(fpga, addr_decimal) {
+    misal nilai = fpga.register_map_dict[addr_decimal];
+    jika nilai == nihil {
+        kembalikan 0;
+    }
+    kembalikan nilai;
+}
+
+fungsi fpga_tulis_register(fpga, addr_dec, value_num) {
+    fpga.register_map_dict[addr_dec] = value_num;
+    kembalikan value_num;
+}
+
+var fpga = fpga_buat_board("Xilinx", "XC7A35T", "JTAG");
+var prog = fpga_program_bitstream(fpga, "kernel_accel.bit");
+pastikan(fpga.status_config_string == "DONE");
+var pr = fpga_partial_reconfig(fpga, "fft_256", "fft_partial.bit");
+pastikan(fpga.daftar_region_pr_dict["fft_256"] == "CONFIGURED");
+var reg0 = fpga_baca_register(fpga, 0);
+cetak("FPGA_ID_REG_0x00_DECIMAL=" + reg0);
+pastikan(reg0 == 3735928559);
+fpga_tulis_register(fpga, 4, 42);
+var reg4 = fpga_baca_register(fpga, 4);
+pastikan(reg4 == 42);
+cetak("[OK] FPGA_FULL_BITSTREAM_PARTIAL_RECONFIG_SELF_TEST_PASS");

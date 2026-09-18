@@ -1,0 +1,77 @@
+name: Multi-Platform Build & Release Widya-Lang
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Build & Test on ${{ matrix.os }} (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: widya.exe
+            package_name: widya-windows-x86_64.zip
+          # Linux (GNU)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: widya
+            package_name: widya-linux-x86_64.tar.gz
+          # Linux (Musl Static Zero-Dependency)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            binary_name: widya
+            package_name: widya-linux-musl-static.tar.gz
+          # macOS (Apple Silicon M1/M2/M3/M4)
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: widya
+            package_name: widya-macos-arm64.tar.gz
+          # macOS (Intel)
+          - os: macos-13
+            target: x86_64-apple-darwin
+            binary_name: widya
+            package_name: widya-macos-x86_64.tar.gz
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux Musl Tools (if applicable)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Run Test Suite
+        run: cargo test --target ${{ matrix.target }}
+
+      - name: Build Release Binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package Binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path target/${{ matrix.target }}/release/${{ matrix.binary_name }}, README.md, contoh, modul -DestinationPath ${{ matrix.package_name }}
+
+      - name: Package Binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czvf ${{ matrix.package_name }} -C target/${{ matrix.target }}/release ${{ matrix.binary_name }} README.md contoh modul
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package_name }}
+          path: ${{ matrix.package_name }}

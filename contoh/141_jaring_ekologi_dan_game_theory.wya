@@ -1,0 +1,36 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 61 - Jaring-jaring Trofik Ekologi & Teori Permainan Evolusioner
+// Demonstrasi dinamika populasi rantai makanan predator-mangsa dan dinamika replikator ESS Prisoner's Dilemma.
+
+tulis("=== [WIDYA SISTEM KOMPLEKS] JARING EKOLOGI & TEORI PERMAINAN EVOLUSI ===");
+
+// 1. Jaring-jaring Makanan Ekologi Trofik (Multispecies Lotka-Volterra)
+tulis("--- JARING TROFIK EKOSISTEM PREDATOR-MANGSA ---");
+var ekosistem = JaringEkologiTrofik();
+
+// Daftarkan Spesies: Produsen (Rumput), Herbivora (Rusa), Karnivora (Serigala)
+ekologi_tambah_spesies(ekosistem, "Rumput_Vegetasi", 1000.0, 0.15); // Laju tumbuh 15%
+ekologi_tambah_spesies(ekosistem, "Rusa_Herbivora", 200.0, -0.02); // Kematian alami
+ekologi_tambah_spesies(ekosistem, "Serigala_Predator", 30.0, -0.05);
+
+// Daftarkan Interaksi Predasi
+ekologi_tambah_interaksi_predasi(ekosistem, "Rusa_Herbivora", "Rumput_Vegetasi", 0.0003);
+ekologi_tambah_interaksi_predasi(ekosistem, "Serigala_Predator", "Rusa_Herbivora", 0.001);
+
+tulis("Menjalankan simulasi dinamika populasi (50 langkah, dt = 0.1):");
+ekologi_simulasi_dinamika_populasi(ekosistem, 0.1, 50);
+tulis("Simulasi interaksi trofik ekosistem selesai dengan stabil.");
+
+// 2. Teori Permainan Evolusioner (Evolutionary Game Theory - Replicator Dynamics)
+tulis("\n--- DINAMIKA REPLIKATOR TEORI PERMAINAN EVOLUSI (PRISONER'S DILEMMA) ---");
+var game = TeoriPermainanEvolusi();
+
+// Payoff Matrix: Reward=3, Sucker=0, Temptation=5, Punishment=1
+game_set_matriks_imbalan(game, 3.0, 0.0, 5.0, 1.0);
+
+// Simulasi evolusi strategi populasi (50% kooperator awal, laju mutasi 1%, 100 generasi)
+var hasil_game = game_simulasi_dinamika_replikator(game, 0.50, 0.01, 100);
+tulis("Fraksi Kooperator Akhir : " + hasil_game["fraksi_kooperator_akhir"]);
+tulis("Fraksi Pembelot Akhir   : " + hasil_game["fraksi_pembelot_akhir"]);
+tulis("Keseimbangan Strategi   : " + hasil_game["strategi_ess"]);
+
+tulis("\n[WIDYA SISTEM KOMPLEKS] Jaring Ekologi & Game Theory Berhasil Diverifikasi!");

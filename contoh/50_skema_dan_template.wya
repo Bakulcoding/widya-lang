@@ -1,0 +1,65 @@
+// contoh/50_skema_dan_template.wya
+// Demonstrasi Pilar Mutakhir: WidyaSchemaValidator & WidyaTemplate
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaSchemaValidator & WidyaTemplate Engine");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaSchemaValidator (Data Shape & Type Verification)
+cetak("📋 [1] Validasi Skema Data JSON/API Terstruktur (WidyaSchemaValidator)...");
+misal skema_pengguna = {
+    "nama": { "wajib": benar, "tipe": "teks", "min_panjang": 3, "maks_panjang": 50 },
+    "umur": { "wajib": benar, "tipe": "angka", "min": 18, "maks": 100 },
+    "email": { "wajib": benar, "tipe": "teks" },
+    "saldo": { "wajib": salah, "tipe": "angka", "min": 0 }
+};
+
+misal data_sah = {
+    "nama": "Farhan Developer",
+    "umur": 25,
+    "email": "farhan@widya-lang.org",
+    "saldo": 500000
+};
+
+misal data_salah = {
+    "nama": "Al", // Terlalu pendek (< 3)
+    "umur": 16,   // Di bawah 18
+    // email hilang (wajib)
+    "saldo": -100 // Negatif
+};
+
+misal hasil_valid = validasi_skema(data_sah, skema_pengguna);
+cetak("  * Validasi Data Sah: ");
+cetak("    - Valid? -> " + teks(hasil_valid.valid));
+cetak("    - Total Galat: " + teks(panjang(hasil_valid.galat)));
+
+misal hasil_galat = validasi_skema(data_salah, skema_pengguna);
+cetak("  * Validasi Data Tidak Sah: ");
+cetak("    - Valid? -> " + teks(hasil_galat.valid));
+cetak("    - Daftar Galat yang Terdeteksi:");
+untuk g dalam hasil_galat.galat {
+    cetak("      [!] " + g);
+}
+cetak("");
+
+// 2. WidyaTemplate (Text Interpolation & Template Rendering)
+cetak("📝 [2] Mesin Rendering Template Teks & Email Notifikasi (WidyaTemplate)...");
+misal pola_email = "Halo {{nama}},\nTerima kasih telah bergabung di {{platform}}! Akun Anda dengan email {{email}} telah aktif pada {{waktu}}.\nSalam hangat,\nTim {{platform}}.";
+
+misal konteks_data = {
+    "nama": "Farhan Developer",
+    "platform": "Widya Cloud",
+    "email": "farhan@widya-lang.org",
+    "waktu": "14 September 2026"
+};
+
+misal hasil_render = render_template(pola_email, konteks_data);
+cetak("  * Hasil Template Rendered:\n--------------------------------------------------");
+cetak(hasil_render);
+cetak("--------------------------------------------------");
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaSchemaValidator & WidyaTemplate!");
+cetak("========================================================================");

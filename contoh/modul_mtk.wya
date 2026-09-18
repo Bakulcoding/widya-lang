@@ -1,0 +1,14 @@
+// Modul utilitas matematika untuk Widya-Lang
+
+fungsi luas_lingkaran(r) {
+    kembalikan PI * (r ^ 2);
+}
+
+fungsi keliling_lingkaran(r) {
+    kembalikan 2 * PI * r;
+}
+
+fungsi faktorial(n) {
+    jika n <= 1 { kembalikan 1; }
+    kembalikan n * faktorial(n - 1);
+}

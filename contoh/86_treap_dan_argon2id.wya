@@ -1,0 +1,74 @@
+// ==============================================================================
+// CONTOH 86: WIDYA-LANG - TREAP (CARTESIAN TREE) & ARGON2ID MEMORY-HARD KDF
+// Gelombang 34: Randomized Balanced Search Tree & Password Hashing Security
+// ==============================================================================
+
+cetak("================================================================")
+cetak("🌲 CONTOH 86: WIDYA TREAP (CARTESIAN TREE) & ARGON2ID HASHING")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: WIDYA TREAP (Randomized Binary Search Tree + Heap Invariant)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: POHON TREAP (RANDOMIZED CARTESIAN BST + HEAP) ---")
+
+var treap = PohonTreap()
+
+// Sisipkan sejumlah kunci dan nilai
+treap_sisip(treap, 50, "Server Web Pusat")
+treap_sisip(treap, 30, "Gateway Pembayaran")
+treap_sisip(treap, 70, "Klaster Database Shard A")
+treap_sisip(treap, 20, "Load Balancer Edge")
+treap_sisip(treap, 40, "Cache Redis In-Memory")
+treap_sisip(treap, 60, "Message Queue Kafka")
+treap_sisip(treap, 80, "Storage S3 Blob Engine")
+
+cetak("1. Seluruh Entri Terurut (In-Order Traversal BST Property):")
+var entri_treap = treap_ke_array(treap)
+untuk item dalam entri_treap {
+    cetak("   [Kunci: " + teks(item["kunci"]) + " | Prioritas Heap: " + teks(item["prioritas"]) + "] => " + teks(item["nilai"]))
+}
+
+// Pencarian pada Treap O(log N)
+cetak("\n2. Pencarian Kunci pada Treap:")
+var hasil_cari_1 = treap_cari(treap, 40)
+var hasil_cari_2 = treap_cari(treap, 70)
+var hasil_cari_3 = treap_cari(treap, 999) // Tidak ada
+
+cetak("   Cari Kunci 40 : " + teks(hasil_cari_1))
+cetak("   Cari Kunci 70 : " + teks(hasil_cari_2))
+cetak("   Cari Kunci 999: " + teks(hasil_cari_3) + " (Apakah Nihil: " + teks(hasil_cari_3 == nil) + ")")
+
+// Penghapusan Elemen pada Treap
+cetak("\n3. Penghapusan Elemen Kunci 30 (Gateway Pembayaran):")
+treap_hapus(treap, 30)
+var hasil_setelah_hapus = treap_cari(treap, 30)
+cetak("   Cari Kunci 30 setelah dihapus: " + teks(hasil_setelah_hapus) + " (Berhasil terhapus: " + teks(hasil_setelah_hapus == nil) + ")")
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: ARGON2ID (Memory-Hard Password Hashing & ASIC-Resistant KDF)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: ARGON2ID MEMORY-HARD PASSWORD HASHING ---")
+
+var kata_sandi_pengguna = "RahasiaWidyaSuperAman2026!#"
+var garam_unik = "garam_kripto_widya_99"
+
+cetak("1. Pembuatan Hash Kata Sandi Argon2id (Mode Hibrida Memory-Hard):")
+var hash_argon2 = argon2id_hash(kata_sandi_pengguna, garam_unik, 2, 128)
+cetak("   Kata Sandi: " + kata_sandi_pengguna)
+cetak("   Hash Hasil: " + hash_argon2)
+
+// Verifikasi Kata Sandi
+cetak("\n2. Verifikasi Otentikasi Kata Sandi:")
+var sah = argon2id_verifikasi(kata_sandi_pengguna, hash_argon2)
+cetak("   Verifikasi Kata Sandi Benar : " + teks(sah))
+pastikan(sah, "Argon2id harus memvalidasi kata sandi yang sesuai")
+
+var salah_sandi = argon2id_verifikasi("KataSandiYangSalah123", hash_argon2)
+cetak("   Verifikasi Kata Sandi Palsu : " + teks(salah_sandi))
+pastikan(salah_sandi == salah, "Argon2id harus menolak kata sandi yang salah")
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI TREAP & ARGON2ID BERHASIL 100%!")
+cetak("================================================================")

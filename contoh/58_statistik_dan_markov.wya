@@ -1,0 +1,48 @@
+// Contoh 58: WidyaStats & WidyaMarkov
+// Pengujian Kalkulasi Statistik Deskriptif & Pemodelan Rantai Markov
+
+fungsi utama() {
+    tulis("=== CONTOH 58: STATISTIK & RANTAI MARKOV ===");
+
+    // 1. WidyaStats: Analisis Data Statistik
+    tulis("\n--- 1. WidyaStats (Descriptive Statistics) ---");
+
+    var dataset = [10, 20, 20, 40, 50, 60, 70, 80, 90];
+    tulis("   Dataset: " + teks(dataset));
+
+    tulis("   - Rata-rata (Mean)      : " + teks(statistik_rata_rata(dataset)));
+    tulis("   - Nilai Tengah (Median) : " + teks(statistik_median(dataset)));
+    tulis("   - Modus (Most Frequent) : " + teks(statistik_modus(dataset)));
+    tulis("   - Variansi              : " + teks(statistik_variansi(dataset)));
+    tulis("   - Standar Deviasi (Std) : " + teks(statistik_standar_deviasi(dataset)));
+    tulis("   - Kuartil 1 (Q1)        : " + teks(statistik_kuartil(dataset, 1)));
+    tulis("   - Kuartil 3 (Q3)        : " + teks(statistik_kuartil(dataset, 3)));
+    tulis("   - Z-Score Standardisasi : " + teks(statistik_zscore(dataset)));
+
+    // 2. WidyaMarkov: Pemodelan Probabilitas Rantai Markov
+    tulis("\n--- 2. WidyaMarkov (Markov Chain Text Generator & State Machine) ---");
+
+    var model = RantaiMarkov(1);
+
+    // Latih dari korpus teks
+    var korpus = "widya adalah bahasa pemrograman modern widya adalah masa depan komputasi modern";
+    tulis("   Melatih korpus teks: '" + korpus + "'...");
+    markov_latih_teks(model, korpus);
+
+    // Generator teks
+    var hasil_teks = markov_hasilkan_teks(model, "widya", 8);
+    tulis("   Hasil teks acak: '" + hasil_teks + "'");
+
+    // Pemodelan State Transisi Cuaca
+    var model_cuaca = RantaiMarkov(1);
+    markov_latih_status(model_cuaca, "Cerah", "Hujan", 2);
+    markov_latih_status(model_cuaca, "Cerah", "Cerah", 8);
+    markov_latih_status(model_cuaca, "Hujan", "Cerah", 5);
+
+    var prediksi_esok = markov_status_berikutnya(model_cuaca, "Cerah");
+    tulis("   Prediksi status cuaca esok (dari Cerah): " + teks(prediksi_esok));
+
+    tulis("\n=== SELESAI CONTOH 58 ===");
+}
+
+utama();

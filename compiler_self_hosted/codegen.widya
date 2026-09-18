@@ -1,0 +1,11 @@
+// compiler_self_hosted/codegen.widya
+// Generator Kode Mesin Native / C-Emitter mandiri dalam Widya-Lang
+
+fungsi emit_c_header() -> String {
+    kembalikan "#include <stdio.h>\n#include <stdint.h>\n";
+}
+
+fungsi emit_c_fungsi_utama(isi_fungsi: String) -> String {
+    misal kode = emit_c_header();
+    kembalikan kode;
+}

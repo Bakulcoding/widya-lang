@@ -1,0 +1,35 @@
+// Contoh 24: Actor Model Concurrency & Reactive Streaming I/O (Widya-Lang)
+
+cetak("=== 🎭 1. Actor Model Concurrency System (WidyaActor) ===");
+
+// Membuat aktor penghitung independen yang berjalan di thread terisolasi
+misal aktor_hitung = Aktor("PenghitungGlobal", 100);
+cetak("Aktor dibuat: " + aktor_hitung.nama + " [Status: " + aktor_hitung.status + "]");
+
+// Mengirim pesan penambahan ke aktor secara asinkron
+kirim_ke_aktor(aktor_hitung, 50);
+misal respon1 = tunggu_respon_aktor(aktor_hitung);
+cetak("Hasil Respon Aktor (+50): " + string(respon1));
+
+kirim_ke_aktor(aktor_hitung, 25);
+misal respon2 = tunggu_respon_aktor(aktor_hitung);
+cetak("Hasil Respon Aktor (+25): " + string(respon2));
+
+cetak("=== 🌊 2. Reactive Streaming I/O Pipeline (WidyaStream) ===");
+
+// Inisialisasi reactive stream
+misal stream = Aliran("SensorStream");
+
+// Alirkan chunk data kontinu
+alirkan_ke(stream, 10);
+alirkan_ke(stream, 20);
+alirkan_ke(stream, 30);
+
+// Transformasi stream
+misal stream_tertransformasi = transformasi_aliran(stream, "kali_dua");
+cetak("Data Stream Tertransformasi: " + string(stream_tertransformasi));
+
+misal semua_data = tampung_aliran(stream);
+cetak("Seluruh data tertampung: " + string(semua_data));
+
+cetak("=== 🚀 Selesai Menjalankan Actor & Stream Demo ===");

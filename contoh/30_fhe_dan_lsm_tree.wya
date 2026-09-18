@@ -1,0 +1,74 @@
+// ========================================================================
+// CONTOH 30: Fully Homomorphic Encryption (FHE) & LSM-Tree Storage Engine
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 1 & 2: WidyaFHE (Encrypted Compute) & WidyaLSM (Storage)")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// 1. WidyaFHE: Fully Homomorphic Encryption & Privacy-Preserving Math
+// ------------------------------------------------------------------------
+cetak("\n🔐 [1] Menginisialisasi Konteks Kriptografi Homomorfik (CKKS/BFV)...")
+
+var konteks_fhe = KonteksFHE("CKKS_BFV", 8192)
+cetak("  * Skema: " + konteks_fhe.skema)
+cetak("  * Derajat Polinomial: " + ke_teks(konteks_fhe.derajat_polinomial))
+cetak("  * Kunci Publik Komputasi: " + konteks_fhe.kunci_publik)
+
+// Enkripsi data sensitif (misal: saldo gaji / data keuangan)
+var gaji_a = 7500000.0
+var gaji_b = 2500000.0
+
+var ciphertext_a = enkripsi_fhe(konteks_fhe, gaji_a)
+var ciphertext_b = enkripsi_fhe(konteks_fhe, gaji_b)
+
+cetak("\n  [Ciphertext Terenkripsi]:")
+cetak("    Ciphertext A: " + ciphertext_a.hash_cipher)
+cetak("    Ciphertext B: " + ciphertext_b.hash_cipher)
+
+// Komputasi matematika langsung di atas ciphertext di server tanpa didekripsi
+cetak("\n⚡ Menjalankan Penjumlahan & Perkalian Homomorfik Tanpa Buka Kunci...")
+var ct_total = fhe_tambah(ciphertext_a, ciphertext_b)
+var ct_bonus = fhe_kali(ciphertext_b, enkripsi_fhe(konteks_fhe, 2.0))
+
+// Dekripsi hasil akhir di sisi klien
+var total_terdekripsi = dekripsi_fhe(konteks_fhe, ct_total)
+var bonus_terdekripsi = dekripsi_fhe(konteks_fhe, ct_bonus)
+
+cetak("  * Hasil Dekripsi Penjumlahan (Gaji A + B): Rp " + ke_teks(total_terdekripsi))
+cetak("  * Hasil Dekripsi Perkalian (Gaji B * 2)  : Rp " + ke_teks(bonus_terdekripsi))
+
+jika total_terdekripsi == 10000000.0 {
+    cetak("  ✅ SUKSES: Komputasi Homomorfik FHE Terverifikasi 100% Presisi!")
+}
+
+// ------------------------------------------------------------------------
+// 2. WidyaLSM: Log-Structured Merge Tree Storage Engine
+// ------------------------------------------------------------------------
+cetak("\n🗄️ [2] Menginisialisasi Mesin Penyimpanan LSM-Tree (WidyaLSM)...")
+
+var db_lsm = BukaLSM("tabel_finansial_lsm")
+
+// Operasi Write (MemTable + Write-Ahead Log)
+lsm_tulis(db_lsm, "user:101", "Alice - Finansial Utama")
+lsm_tulis(db_lsm, "user:102", "Bob - Developer Inti")
+lsm_tulis(db_lsm, "config:mode", "Enterprise")
+
+cetak("  * Membaca dari MemTable user:101 -> " + ke_teks(lsm_baca(db_lsm, "user:101")))
+
+// Melakukan flush MemTable ke SSTable
+cetak("  * Melakukan Flush MemTable ke SSTable terkompresi...")
+lsm_flush(db_lsm)
+
+cetak("  * Membaca dari SSTable setelah flush user:102 -> " + ke_teks(lsm_baca(db_lsm, "user:102")))
+
+// Menulis Tombstone (Soft Delete)
+lsm_hapus(db_lsm, "user:101")
+var cek_terhapus = lsm_baca(db_lsm, "user:101")
+cetak("  * Membaca kunci yang telah dihapus user:101 -> " + ke_teks(cek_terhapus))
+
+cetak("\n========================================================================")
+cetak("✅ Selesai mengeksekusi WidyaFHE & WidyaLSM!")
+cetak("========================================================================")

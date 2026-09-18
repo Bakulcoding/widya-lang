@@ -1,0 +1,52 @@
+// =================================================================
+// Contoh 10: Simulasi Blockchain & Proof-of-Work Mining (WidyaChain)
+// =================================================================
+
+impor "modul/blockchain.wya";
+
+cetak("==================================================");
+cetak("⛓️  Selamat Datang di Jaringan Blockchain WidyaChain");
+cetak("==================================================\n");
+
+// 1. Inisialisasi Rantai Blok dengan Kesulitan 2 (Hash berawalan "00")
+misal widyachain = RantaiBlok(2);
+cetak("1️⃣  Genesis Block berhasil dibuat:");
+cetak("   Hash Genesis:", widyachain.blok_terakhir().hash, "\n");
+
+// 2. Buat Dompet untuk Alice, Bob, dan Charlie (Penambang)
+misal dompet_alice = DompetKripto();
+misal dompet_bob = DompetKripto();
+misal dompet_miner = DompetKripto();
+
+cetak("2️⃣  Dompet Kripto Dibuat:");
+cetak("   Alamat Alice  :", dompet_alice.alamat);
+cetak("   Alamat Bob    :", dompet_bob.alamat);
+cetak("   Alamat Miner  :", dompet_miner.alamat, "\n");
+
+// 3. Tambang Blok Pertama (Hadiah untuk Alice)
+cetak("3️⃣  Menambang Blok #1 (Hadiah awal ke Alice)...");
+widyachain.tambang_transaksi_tertunda(dompet_alice.alamat);
+cetak("   Saldo Alice saat ini:", widyachain.cek_saldo(dompet_alice.alamat), "WIDYA\n");
+
+// 4. Alice mengirim 20 WIDYA ke Bob
+cetak("4️⃣  Alice membuat transaksi 20 WIDYA ke Bob...");
+misal tx1 = dompet_alice.buat_transfer(dompet_bob.alamat, 20);
+widyachain.tambah_transaksi(tx1);
+
+// 5. Miner menambang transaksi ke Blok #2
+cetak("\n5️⃣  Penambang memproses transaksi di mempool...");
+widyachain.tambang_transaksi_tertunda(dompet_miner.alamat);
+
+// 6. Cek Saldo Semua Pihak
+cetak("6️⃣  Laporan Saldo Terkini:");
+cetak("   Saldo Alice :", widyachain.cek_saldo(dompet_alice.alamat), "WIDYA");
+cetak("   Saldo Bob   :", widyachain.cek_saldo(dompet_bob.alamat), "WIDYA");
+cetak("   Saldo Miner :", widyachain.cek_saldo(dompet_miner.alamat), "WIDYA");
+
+// 7. Validasi Integritas Seluruh Rantai
+cetak("\n7️⃣  Memverifikasi integritas seluruh Rantai Blok...");
+jika widyachain.validasi_integritas() {
+    cetak("   ✅ Status Rantai: VALID & TIDAK ADA PEMALSUAN DATA!");
+} lainnya {
+    cetak("   ❌ Status Rantai: TIDAK VALID (TERJADI TAMPERING)!");
+}

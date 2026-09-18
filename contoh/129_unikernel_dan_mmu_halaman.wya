@@ -1,0 +1,45 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 55 - Citra Unikernel & Translasi Halaman MMU 2-Tingkat
+// Demonstrasi pembuatan citra Unikernel Multiboot2 dan pemetaan virtual-to-physical memory MMU.
+
+tulis("=== [WIDYA EDGE OS] UNIKERNEL & TRANSLASI HALAMAN MMU ===");
+
+// 1. Inisialisasi Citra Unikernel Standalone (Single Address Space)
+var unikernel = CitraUnikernel("WidyaEdgeSecureUnikernel", "x86_64");
+
+// Sisipkan modul aplikasi & driver minimal
+unikernel_sisip_modul(unikernel, "Modul_Kripto_ChaCha", 16.0, "0x00101000");
+unikernel_sisip_modul(unikernel, "Modul_TCP_IP_Stack", 32.0, "0x00105000");
+unikernel_sisip_modul(unikernel, "Aplikasi_Edge_Inference", 48.0, "0x0010D000");
+
+// Bangun Header Multiboot Standar
+var header_boot = unikernel_bangun_header_boot(unikernel, "0x00100000");
+tulis("--- HEADER BOOTLOADER MULTIBOOT UNIKERNEL ---");
+tulis("Nama OS / Image   : " + header_boot["os_name"]);
+tulis("Arsitektur Target : " + header_boot["arsitektur"]);
+tulis("Magic Multiboot   : " + header_boot["multiboot_magic"]);
+tulis("Alamat Eksekusi   : " + header_boot["alamat_eksekusi"]);
+tulis("Total Ukuran (KB) : " + header_boot["total_ukuran_kb"]);
+
+var valid_mb = unikernel_verifikasi_multiboot(unikernel);
+tulis("Verifikasi Multiboot Header Valid: " + valid_mb);
+
+// 2. Simulasi Translasi Alamat Virtual MMU (Two-Level Page Table)
+tulis("\n--- SIMULASI TABEL HALAMAN MMU 2-LEVEL ---");
+var mmu = TabelHalamanMMU(4.0); // Halaman 4 KiB
+
+// Petakan alamat virtual ruang pengguna/kernel ke frame memori fisik
+mmu_petakan_halaman(mmu, "0xC0000000", "0x00100000", "RWX"); // Kernel Base
+mmu_petakan_halaman(mmu, "0x08048000", "0x00200000", "RX");  // Text Section
+mmu_petakan_halaman(mmu, "0xBFFFF000", "0x00300000", "RW");  // User Stack
+
+// Uji penerjemahan alamat virtual
+var t1 = mmu_terjemahkan_alamat(mmu, "0xC0000000");
+tulis("Translasi Virtual 0xC0000000 -> Fisik: " + t1["alamat_fisik"] + " [Izin: " + t1["hak_akses"] + "]");
+
+var t2 = mmu_terjemahkan_alamat(mmu, "0x08048000");
+tulis("Translasi Virtual 0x08048000 -> Fisik: " + t2["alamat_fisik"] + " [Izin: " + t2["hak_akses"] + "]");
+
+var t_invalid = mmu_terjemahkan_alamat(mmu, "0xDEADBEEF");
+tulis("Translasi Virtual 0xDEADBEEF -> Status Ditemukan: " + t_invalid["ditemukan"] + " (" + t_invalid["alamat_fisik"] + ")");
+
+tulis("\n[WIDYA EDGE OS] Citra Unikernel & Translasi MMU Berhasil Diverifikasi Sempurna!");

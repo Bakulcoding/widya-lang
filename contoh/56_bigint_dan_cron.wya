@@ -1,0 +1,55 @@
+// Contoh 56: WidyaBigInt & WidyaCronParser
+// Pengujian Aritmatika Bilangan Bulat Besar Arbitrer & Evaluator Ekspresi Cron
+
+fungsi utama() {
+    tulis("=== CONTOH 56: BIGINT & CRON PARSER ===");
+
+    // 1. WidyaBigInt: Aritmatika Presisi Arbitrer
+    tulis("\n--- 1. WidyaBigInt (Arbitrary Precision Arithmetic) ---");
+
+    var num1_str = "987654321098765432109876543210";
+    var num2_str = "123456789012345678901234567890";
+
+    var a = BigInt(num1_str);
+    var b = BigInt(num2_str);
+
+    tulis("   A = " + bigint_ke_string(a));
+    tulis("   B = " + bigint_ke_string(b));
+
+    var tambah = bigint_tambah(a, b);
+    tulis("   A + B = " + bigint_ke_string(tambah));
+
+    var kurang = bigint_kurang(a, b);
+    tulis("   A - B = " + bigint_ke_string(kurang));
+
+    var kali = bigint_kali(a, b);
+    tulis("   A * B = " + bigint_ke_string(kali));
+
+    var pangkat = bigint_pangkat(BigInt("2"), 64);
+    tulis("   2 ^ 64 = " + bigint_ke_string(pangkat)); // 18446744073709551616
+
+    var banding = bigint_bandingkan(a, b);
+    tulis("   Bandingkan A vs B: " + teks(banding) + " (1 berarti A > B)");
+
+    // 2. WidyaCronParser: Evaluasi Jadwal Cron
+    tulis("\n--- 2. WidyaCronParser (Cron Schedule Engine) ---");
+
+    var ekspresi_cron = "*/15 * * * *";
+    var cron_job = cron_parse(ekspresi_cron);
+
+    tulis("   Ekspresi Cron : " + ekspresi_cron);
+    tulis("   Deskripsi     : " + cron_deskripsi_manusia(cron_job));
+
+    // Waktu Epoch Uji: 1700000000 -> Misal dicek apakah cocok
+    var sekarang_epoch = 1700000000;
+    var cocok = cron_cocok_waktu(cron_job, sekarang_epoch);
+    tulis("   Apakah cocok pada epoch " + teks(sekarang_epoch) + "? " + teks(cocok));
+
+    var waktu_ikut = cron_waktu_berikutnya(cron_job, sekarang_epoch);
+    tulis("   Waktu pemicu berikutnya (Epoch): " + teks(waktu_ikut));
+    tulis("   Selisih waktu ke pemicu        : " + teks(waktu_ikut - sekarang_epoch) + " detik");
+
+    tulis("\n=== SELESAI CONTOH 56 ===");
+}
+
+utama();

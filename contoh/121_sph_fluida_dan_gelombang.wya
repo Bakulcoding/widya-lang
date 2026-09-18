@@ -1,0 +1,45 @@
+// =========================================================================
+// Contoh 121: Pilar CFD & Fisika Gelombang (SPH Partikel & Gelombang 2D)
+// WidyaSPHFluid & WidyaWaveEquation
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR CFD & GELOMBANG: SPH FLUIDA & GELOMBANG 2D ===");
+
+    // 1. Inisialisasi Sistem Partikel Fluida Lagrangian SPH (Smoothed Particle Hydrodynamics)
+    // Kapasitas = 500 Partikel, Radius Smoothing = 0.05m, Densitas = 1000 kg/m³, Viskositas = 0.001
+    var sph = SistemPartikelSPH(500, 0.05, 1000.0, 0.001);
+
+    // Tambah Kolom Partikel Air (Simulasi Dam Break / Tetesan Air)
+    sph_tambah_partikel(sph, 0.1, 1.0, 0.0, 0.0);
+    sph_tambah_partikel(sph, 0.2, 1.0, 0.0, 0.0);
+    sph_tambah_partikel(sph, 0.1, 1.1, 0.0, 0.0);
+    sph_tambah_partikel(sph, 0.2, 1.1, 0.0, 0.0);
+    cetak("Sistem SPH Diisi " + ke_teks(panjang(sph.partikel)) + " Partikel Air");
+
+    // Jalankan Simulasi Gravitasi & Kontak Lantai SPH
+    untuk i dalam 0..20 {
+        sph_langkah_waktu(sph, 0.01, -9.81);
+    }
+    var p0 = sph.partikel[0];
+    cetak("Posisi Partikel 0 Setelah Jatuh: X=" + ke_teks(p0.x) + ", Y=" + ke_teks(p0.y) + " (Kecepatan VY=" + ke_teks(p0.vy) + " m/s)");
+
+    // 2. Simulasi Persamaan Gelombang Hiperbolik Akustik / Muka Air 2D
+    // Dimensi 20x20, Kecepatan Gelombang C = 2.0 m/s, Redaman = 0.99
+    var kisi_gel = KisiGelombang2D(20, 20, 2.0, 0.99);
+    cetak("\nKisi Gelombang 2D Dibuat (20x20 Grid)");
+
+    // Beri Gangguan Impuls / Riak Air pada Koordinat [10, 10]
+    gelombang_beri_gangguan(kisi_gel, 10, 10, 50.0);
+    cetak("Gangguan Impuls Amplitudo 50.0 Diberikan pada Pusat [10, 10]");
+
+    // Propagasi Gelombang Melintasi Grid
+    untuk i dalam 0..10 {
+        gelombang_langkah_waktu(kisi_gel, 0.05);
+    }
+    cetak("Perambatan Muka Gelombang 2D Berhasil Tersebar!");
+
+    cetak("=== UJI SPH FLUIDA & PERSAMAAN GELOMBANG SUKSES ===");
+}
+
+utama();

@@ -1,0 +1,54 @@
+// ========================================================================
+// CONTOH 29: CRDT Real-Time Collaborative Document Sync & Debugger Demo
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 3: WidyaCRDT (Conflict-Free Replicated Data Types)")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// Simulasi Kolaborasi Dokumen Bersama Multi-Peer Tanpa Konflik
+// ------------------------------------------------------------------------
+cetak("\n📝 [1] Inisialisasi Dokumen CRDT pada Peer 1 (Alice) & Peer 2 (Bob)...")
+
+var doc_alice = DokumenCRDT("peer_alice", "dokumen_rekayasa")
+var doc_bob = DokumenCRDT("peer_bob", "dokumen_rekayasa")
+
+cetak("  * Alice mengetik: \"Widya Lang \"")
+sisip_karakter(doc_alice, 0, "Widya Lang ")
+
+cetak("  * Bob mengetik: \"Kuat & Cerdas\"")
+sisip_karakter(doc_bob, 0, "Kuat & Cerdas")
+
+cetak("\n  [Keadaan Teks Sebelum Penggabungan]:")
+cetak("    Teks Alice: \"" + baca_teks_crdt(doc_alice) + "\"")
+cetak("    Teks Bob  : \"" + baca_teks_crdt(doc_bob) + "\"")
+
+cetak("\n🔄 [2] Sinkronisasi & Penggabungan Dua Arah (CRDT Merge)...")
+// Ekstrak data serialisasi dari masing-masing peer
+var snapshot_alice = doc_alice.daftar_karakter
+var snapshot_bob = doc_bob.daftar_karakter
+
+// Bob menerima dan menggabungkan perubahan Alice
+gabung_perubahan(doc_bob, snapshot_alice)
+
+// Alice menerima dan menggabungkan perubahan Bob
+gabung_perubahan(doc_alice, snapshot_bob)
+
+cetak("\n  [Keadaan Teks Setelah Sinkronisasi Otomatis (Eventual Consistency)]:")
+cetak("    Teks Sinkron Alice: \"" + baca_teks_crdt(doc_alice) + "\"")
+cetak("    Teks Sinkron Bob  : \"" + baca_teks_crdt(doc_bob) + "\"")
+
+jika baca_teks_crdt(doc_alice) == baca_teks_crdt(doc_bob) {
+    cetak("  ✅ SUKSES: Kedua peer mencapai konsistensi data mutlak tanpa konflik!")
+} lainnya {
+    cetak("  ❌ Terjadi ketidaksinkronan.")
+}
+
+cetak("\n========================================================================")
+cetak("ℹ️  Petunjuk Time-Travel Debugger (Pilar 4):")
+cetak("    Jalankan perintah CLI berikut di terminal Anda:")
+cetak("    > widya debug contoh/29_crdt_dan_debugger.wya")
+cetak("    (Gunakan 's' untuk maju, 'b' untuk rewind waktu ke masa lalu!)")
+cetak("========================================================================")

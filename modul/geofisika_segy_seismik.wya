@@ -1,0 +1,45 @@
+// Modul Geofisika Eksplorasi Minyak, Gas & Seismik SEG-Y
+
+fungsi segy_buat_binary_file_header(job_id, line_number, sample_interval_us, samples_per_trace) {
+    // Header Biner 400-byte SEG-Y:
+    // Bytes 3201-3204: Job Identification
+    // Bytes 3205-3208: Line Number
+    // Bytes 3217-3218: Sample Interval (microseconds)
+    // Bytes 3221-3222: Samples per data trace
+    // Bytes 3225-3226: Data sample format code (1 = IBM floating point 32-bit, 5 = IEEE float)
+    
+    kembalikan {
+        "job_id": job_id,
+        "line_number": line_number,
+        "sample_interval_us": sample_interval_us,
+        "samples_per_trace": samples_per_trace,
+        "format_code": 5,
+        "tipe_format": "IEEE_FLOAT_32"
+    };
+}
+
+fungsi segy_proses_seismic_trace(trace_seq_num, receiver_x, receiver_y, sample_amplitudes) {
+    // Menghitung Root Mean Square (RMS) Amplitudo Seismik untuk identifikasi lapisan hidrokarbon
+    var sum_sq = 0.0;
+    var n = panjang(sample_amplitudes);
+    var i = 0;
+    
+    selama (i < n) {
+        var a = sample_amplitudes[i];
+        sum_sq = sum_sq + (a * a);
+        i = i + 1;
+    }
+    
+    var rms = akar(sum_sq / n);
+    
+    kembalikan {
+        "trace_num": trace_seq_num,
+        "koordinat_geophone": {
+            "x": receiver_x,
+            "y": receiver_y
+        },
+        "jumlah_sampel": n,
+        "amplitudo_rms": rms,
+        "anomali_refleksi": rms > 50.0
+    };
+}

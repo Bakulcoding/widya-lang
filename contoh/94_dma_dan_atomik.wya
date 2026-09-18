@@ -1,0 +1,60 @@
+// =========================================================================
+// CONTOH 94: WidyaRing0MMIO & WidyaAtomicOps
+// Pilar Sistem & Infrastruktur Tingkat Rendah (Gelombang 38)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("⚙️ CONTOH 94: MMIO DMA BUFFER & ATOMIC OPS (WAVE 38)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaRing0MMIO (Memory-Mapped I/O & Page-Aligned DMA Buffer)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaRing0MMIO (Akses Buffer DMA Bare-Metal) ---")
+
+// Alokasi 4KB contiguous buffer DMA
+var dma_buf = BufferDMA(4096)
+cetak(">> Alokasi Buffer DMA selesai (Ukuran: " + dma_ukuran(dma_buf) + " bytes)")
+cetak("   Alamat Fisik Simulasi: 0x" + dma_alamat_simulasi(dma_buf))
+
+// Tulis & Baca Data Byte (u8)
+dma_tulis_u8(dma_buf, 0, 0xAA)
+dma_tulis_u8(dma_buf, 1, 0xBB)
+var b0 = dma_baca_u8(dma_buf, 0)
+var b1 = dma_baca_u8(dma_buf, 1)
+cetak(">> Uji Akses Byte u8:")
+cetak("   Offset 0 -> Nilai: " + b0 + " (0xAA)")
+cetak("   Offset 1 -> Nilai: " + b1 + " (0xBB)")
+
+// Tulis & Baca Data Register 32-bit (u32)
+dma_tulis_u32(dma_buf, 64, 305419896) // 0x12345678
+var reg_val = dma_baca_u32(dma_buf, 64)
+cetak(">> Uji Akses Register 32-bit:")
+cetak("   Offset 64 -> Nilai u32: " + reg_val + " (0x12345678)")
+
+// -------------------------------------------------------------------------
+// 2. WidyaAtomicOps (Lock-Free Hardware Atomic Primitives)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaAtomicOps (Operasi Atomik Bebas-Kunci / Lock-Free) ---")
+
+var counter_atomik = NilaiAtomik(100)
+cetak(">> Nilai Atomik Awal: " + atomik_baca(counter_atomik))
+
+// Atomic Fetch-and-Add
+var prev = atomik_tambah(counter_atomik, 50)
+cetak(">> Atomic Fetch-and-Add (+50):")
+cetak("   Nilai Sebelumnya: " + prev + ", Nilai Saat Ini: " + atomik_baca(counter_atomik))
+
+// Atomic Compare-And-Swap (CAS)
+cetak("\n>> Atomic Compare-And-Swap (CAS):")
+// CAS 1: Gagal karena nilai ekspektasi salah (mengharapkan 100 padahal sekarang 150)
+var cas_gagal = atomik_banding_dan_tukar(counter_atomik, 100, 200)
+cetak("   CAS (Expected: 100, New: 200) -> Sukses: " + cas_gagal + " (Nilai: " + atomik_baca(counter_atomik) + ")")
+
+// CAS 2: Berhasil karena nilai ekspektasi benar (150 diganti menjadi 200)
+var cas_sukses = atomik_banding_dan_tukar(counter_atomik, 150, 200)
+cetak("   CAS (Expected: 150, New: 200) -> Sukses: " + cas_sukses + " (Nilai: " + atomik_baca(counter_atomik) + ")")
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaRing0MMIO & WidyaAtomicOps Beroperasi 100%!")
+cetak("=================================================================")

@@ -1,0 +1,54 @@
+// Contoh 75: WidyaBrotliLite & WidyaDifferentialPrivacy
+// Context-Modeling Web Compression & Mathematical Differential Privacy
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 28: Brotli & Diff Privacy")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaBrotliLite: Kompresi Teks / Web Berbasis Konteks
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaBrotliLite: Kompresi Web ---")
+
+let json_payload = "{\"pengguna\":\"budi_santoso\",\"email\":\"budi@widya.id\",\"status\":\"aktif\",\"peran\":\"admin\"}{\"pengguna\":\"ani_lestari\",\"email\":\"ani@widya.id\",\"status\":\"aktif\",\"peran\":\"operator\"}"
+cetak("Payload JSON Asli (Panjang:", panjang(json_payload), "karakter)")
+
+// Kompresi Brotli
+let paket_brotli = brotli_kompres(json_payload)
+cetak("Hasil Kompresi Brotli:")
+cetak("  Ukuran Asli     :", paket_brotli.ukuran_asli, "byte")
+cetak("  Ukuran Kompresi :", paket_brotli.ukuran_kompresi, "byte")
+cetak("  Data Hex        :", paket_brotli.data_hex)
+
+// Rasio penghematan
+let hemat = brotli_rasio_hemat(json_payload)
+cetak("  Rasio Penghematan Bandwidth:", bulat(hemat * 100), "%")
+
+// Dekompresi kembali
+let json_pulih = brotli_dekompres(paket_brotli)
+cetak("\nHasil Dekompresi Brotli:", json_pulih)
+pastikan(json_pulih == json_payload, "Hasil dekompresi Brotli harus identik sempurna dengan aslinya!")
+
+// ----------------------------------------------------
+// 2. WidyaDifferentialPrivacy: Laplace Perturbation
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaDifferentialPrivacy: Privasi Data ---")
+
+let data_gaji = [12000000, 15000000, 8500000, 22000000, 9500000, 18000000, 14000000]
+let jumlah_karyawan = panjang(data_gaji)
+let epsilon_ketat = 0.5 // Epsilon kecil = jaminan privasi sangat tinggi
+
+cetak("Data Gaji Karyawan Sensitif (Jumlah:", jumlah_karyawan, "orang)")
+
+// Kueri Count dengan Privasi Diferensial
+let count_aman = dp_kueri_hitung(jumlah_karyawan, epsilon_ketat)
+cetak("Kueri Count (Sensitivitas 1, Epsilon 0.5):")
+cetak("  Jumlah Asli          :", jumlah_karyawan)
+cetak("  Jumlah Aman Privasi  :", bulat(count_aman))
+
+// Kueri Average dengan Privasi Diferensial
+let avg_aman = dp_kueri_rata_rata(data_gaji, 1.0, 5000000, 30000000)
+cetak("\nKueri Rata-rata Gaji (Clipped [5jt - 30jt], Epsilon 1.0):")
+cetak("  Rata-rata Aman Privasi (Rp):", bulat(avg_aman))
+
+cetak("\n[SUKSES] Seluruh fitur Brotli Compression & Differential Privacy berjalan sempurna!")

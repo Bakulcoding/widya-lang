@@ -1,0 +1,69 @@
+// ========================================================================
+// CONTOH 28: Deep Learning LLM / Transformer & WebGL 3D Spatial Graphics
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 1 & 2: WidyaNeural (Deep Learning LLM) & Widya3D (Spatial)")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// 1. WidyaNeural: Deep Learning / Transformer Self-Attention Inference
+// ------------------------------------------------------------------------
+cetak("\n🧠 [1] Menginisialisasi Model Transformer LLM WidyaNeural...")
+
+var bobot_qkv = [
+    [0.5, 0.2, 0.1, 0.0],
+    [0.1, 0.6, 0.3, 0.2],
+    [0.0, 0.1, 0.8, 0.4],
+    [0.2, 0.3, 0.1, 0.7]
+]
+
+var lapisan_attention = LapisanAttention("attn_core_1", bobot_qkv)
+
+// Matriks token embedding (2 token: "Widya", "Cerdas" dengan dimensi 4)
+var token_embeddings = [
+    [1.0, 0.5, 0.2, 0.1],
+    [0.2, 0.9, 0.4, 0.6]
+]
+
+var hasil_atensi = forward_attention(lapisan_attention, token_embeddings)
+cetak("  * Matriks Output Multi-Head Self-Attention:")
+cetak("    " + ke_teks(hasil_atensi))
+
+// Menjalankan inferensi LLM generatif dengan temperature dan top_k
+var prompt = "Jelaskan keunggulan bahasa Widya-Lang untuk masa depan"
+var respons_ai = inferensi_llm(prompt, 0.7, 40)
+cetak("\n💬 Prompt Pengguna: \"" + prompt + "\"")
+cetak("🤖 Respons Widya LLM Engine:")
+cetak("   " + respons_ai)
+
+// ------------------------------------------------------------------------
+// 2. Widya3D: Interactive WebGL 3D Spatial Graphics Scene
+// ------------------------------------------------------------------------
+cetak("\n🌐 [2] Membangun Tata Ruang Adegan 3D Interaktif (Widya3D)...")
+
+var kamera = Kamera3D([0.0, 5.0, 15.0], [0.0, 0.0, 0.0], 60.0)
+var adegan = Adegan3D("Adegan Masa Depan Widya", "#0f172a", kamera)
+
+// Tambahkan beberapa objek mesh 3D
+var kubus_ai = ObjekMesh3D("Kubus Neural", "KUBUS", [0.0, 0.0, 0.0], [0.0, 45.0, 0.0], [2.0, 2.0, 2.0], "#38bdf8")
+var bola_quantum = ObjekMesh3D("Inti Quantum", "BOLA", [4.0, 1.0, -2.0], [0.0, 0.0, 0.0], [1.5, 1.5, 1.5], "#a855f7")
+var piramida_crdt = ObjekMesh3D("Piramida Data", "PIRAMIDA", [-4.0, 0.5, 2.0], [30.0, 0.0, 0.0], [1.8, 2.5, 1.8], "#22c55e")
+
+tambah_objek_3d(adegan, kubus_ai)
+tambah_objek_3d(adegan, bola_quantum)
+tambah_objek_3d(adegan, piramida_crdt)
+
+cetak("  * Total objek mesh 3D dalam adegan: " + ke_teks(panjang(adegan.daftar_objek)))
+
+// Merender seluruh adegan 3D ke file HTML WebGL standalone
+var berkas_adegan_html = "adegan_widya_3d.html"
+var html_rendered = render_adegan_html(adegan, berkas_adegan_html)
+
+cetak("  * Adegan 3D berhasil diekspor ke: " + berkas_adegan_html)
+cetak("    (Buka di browser web untuk navigasi 3D real-time interaktif)")
+
+cetak("\n========================================================================")
+cetak("✅ Selesai mengeksekusi WidyaNeural & Widya3D!")
+cetak("========================================================================")

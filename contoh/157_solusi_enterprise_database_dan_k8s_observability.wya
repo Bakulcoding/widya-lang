@@ -1,0 +1,43 @@
+// Contoh 157: Solusi Enterprise Database Connection Pool & Kubernetes Observability
+// Mengintegrasikan transaksi ACID, Redis caching, dan Prometheus metrics exporter
+
+impor "modul/database_driver.wya";
+impor "modul/observability_k8s.wya";
+
+cetak("==================================================================");
+cetak("🏢 WIDYA ENTERPRISE DATABASE POOL & KUBERNETES OBSERVABILITY");
+cetak("==================================================================");
+
+// 1. Inisialisasi Database Connection Pool & Redis Cache
+var db_pool = buat_kolam_koneksi("PostgreSQL", "db.cluster.internal", 5432, "fintech_db", 20);
+cetak("🗄️ Database Connection Pool Diinisialisasi:", db_pool["url"], "[Status: " + db_pool["status_pool"] + "]");
+
+// Eksekusi Transaksi ACID Bergaransi WAL
+var daftar_tx = [
+    ["PUT", "akun:1001:saldo", 50000000.0],
+    ["PUT", "akun:1002:saldo", 75000000.0]
+];
+var hasil_tx = db_eksekusi_transaksi_acid(db_pool, "TX_99812", daftar_tx);
+cetak("✅ Transaksi ACID Berhasil Dieksekusi:", hasil_tx);
+
+// Cache In-Memory Redis dengan TTL
+redis_set_dengan_ttl(db_pool, "cache:user:1001", "Budi Santoso", 60);
+var val_cached = redis_ambil(db_pool, "cache:user:1001");
+cetak("⚡ Nilai Cache Redis Diambil:", val_cached);
+
+// 2. Observabilitas Prometheus & Kubernetes Probes
+cetak("\n📊 Menghasilkan Metrik Prometheus & Memeriksa K8s Health Check...");
+var registry = buat_registry_metrik("widya-fintech-core");
+prometheus_tambah_counter(registry, "http_requests_total", 1520.0);
+prometheus_set_gauge(registry, "database_pool_active_connections", 4.0);
+
+registry["status_layanan"] = "READY";
+var liveness = k8s_liveness_probe(registry);
+var readiness = k8s_readiness_probe(registry);
+
+cetak("🟢 K8s Liveness Probe:", liveness);
+cetak("🟢 K8s Readiness Probe:", readiness);
+cetak("\n--- Format Metrik Prometheus Exposition ---");
+cetak(prometheus_ekspor_teks(registry));
+
+cetak("✅ Solusi Enterprise Database & Observabilitas K8s Sukses!");

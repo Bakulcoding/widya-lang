@@ -1,0 +1,85 @@
+struktur HypervisorControl {
+    vendor_string,
+    daftar_vm,
+    nested_vmx_flag_bool,
+    vm_counter
+}
+
+struktur VMCS_VMCB {
+    nama_vm,
+    vcpu_count_int,
+    ram_mb_int,
+    register_set_dict,
+    status_running_string
+}
+
+fungsi hv_buat(vendor) {
+    var hv = HypervisorControl();
+    jika vendor == nihil {
+        hv.vendor_string = "KVM";
+    } lainnya {
+        hv.vendor_string = vendor;
+    }
+    hv.daftar_vm = {};
+    hv.nested_vmx_flag_bool = benar;
+    hv.vm_counter = 0;
+    kembalikan hv;
+}
+
+fungsi vmcs_buat_vmcb(hv, nama, vcpu, ram_mb) {
+    hv.vm_counter = hv.vm_counter + 1;
+    var vm_id = "vm_" + ke_teks(hv.vm_counter);
+    var vmcb = VMCS_VMCB();
+    vmcb.nama_vm = nama;
+    vmcb.vcpu_count_int = vcpu;
+    vmcb.ram_mb_int = ram_mb;
+    vmcb.register_set_dict = { "rax": 0, "rbx": 0, "rcx": 0, "rdx": 0, "rip": 0, "rsp": 0 };
+    vmcb.status_running_string = "STOPPED";
+    hv.daftar_vm[vm_id] = vmcb;
+    kembalikan vm_id;
+}
+
+fungsi hv_nested_vt_check(hv) {
+    jika hv.nested_vmx_flag_bool == benar {
+        kembalikan "VT-x_Enabled_Nested";
+    } lainnya {
+        kembalikan "DISABLED";
+    }
+}
+
+fungsi vmcs_luncurkan(hv, vm_id) {
+    var obj = hv.daftar_vm[vm_id];
+    obj.status_running_string = "RUNNING";
+    kembalikan { "status": "RUNNING", "vm_id": vm_id };
+}
+
+fungsi vmcs_baca_register(hv, vm_id, reg_nama) {
+    var obj = hv.daftar_vm[vm_id];
+    var val = obj.register_set_dict[reg_nama];
+    jika val == nihil {
+        kembalikan 0;
+    } lainnya {
+        kembalikan val;
+    }
+}
+
+fungsi vmcs_tulis_register(hv, vm_id, reg_nama, val) {
+    var obj = hv.daftar_vm[vm_id];
+    obj.register_set_dict[reg_nama] = val;
+    kembalikan val;
+}
+
+var hv = hv_buat("KVM");
+var id1 = vmcs_buat_vmcb(hv, "edge_router_linux", 2, 512);
+var id2 = vmcs_buat_vmcb(hv, "cloud_server_win", 4, 2048);
+var total_vm = 0; untuk key dalam hv.daftar_vm { total_vm = total_vm + 1 };
+pastikan(total_vm == 2);
+var vt = hv_nested_vt_check(hv);
+cetak("NESTED_VT_STATUS=" + vt);
+pastikan(vt == "VT-x_Enabled_Nested");
+vmcs_tulis_register(hv, id1, "rax", 2863311530);
+var launch = vmcs_luncurkan(hv, id1);
+pastikan(launch["status"] == "RUNNING");
+var rax1 = vmcs_baca_register(hv, id1, "rax");
+pastikan(rax1 == 2863311530);
+cetak("[OK] HYPERVISOR_KVM_XEN_2VM_NESTED_VT_SELF_TEST_PASS");

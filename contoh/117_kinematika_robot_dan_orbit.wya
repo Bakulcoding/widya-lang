@@ -1,0 +1,34 @@
+// =========================================================================
+// Contoh 117: Pilar Robotika & Orbit Satelit (Kinematika Lengan & Orbit Kepler)
+// WidyaKinematicsRobotics & WidyaOrbitalKepler
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR ROBOTIKA & ORBIT: KINEMATIKA LENGAN & ORBIT KEPLER ===");
+
+    // 1. Konfigurasi Manipulator Lengan Robotik 2-DOF
+    // Link 1 = 10 cm, Link 2 = 10 cm (Jangkauan Maksimal = 20 cm)
+    var arm = LenganRobotik2DOF(10.0, 10.0);
+    cetak("Manipulator Lengan 2-DOF: L1=" + ke_teks(arm.panjang_l1) + " cm, L2=" + ke_teks(arm.panjang_l2) + " cm (Jangkauan: " + ke_teks(arm.jangkauan_maks) + " cm)");
+
+    // Forward Kinematics: Diberikan sudut sendi Theta1=45°, Theta2=45°
+    var pos_ujung = kinematika_maju_2dof(arm, 45.0, 45.0);
+    cetak("Posisi Ujung Efektor (Forward Kinematics): X = " + ke_teks(pos_ujung.x) + " cm, Y = " + ke_teks(pos_ujung.y) + " cm");
+
+    // Inverse Kinematics: Target posisi ujung X=10.0, Y=10.0 cm
+    var solusi_sudut = kinematika_balik_2dof(arm, 10.0, 10.0);
+    cetak("Sudut Sendi Target (Inverse Kinematics): Theta1 = " + ke_teks(solusi_sudut.theta1_deg) + "°, Theta2 = " + ke_teks(solusi_sudut.theta2_deg) + "°");
+
+    // 2. Propagasi Mekanika Orbit Satelit Keplerian (LEO Satellite)
+    // Semi-major axis = 6800 km (Ketinggian ~422 km di atas permukaan bumi), Eksentrisitas = 0.001, Inklinasi = 51.6° (ISS Orbit)
+    var satelit_leo = ElemenOrbitKepler(6800.0, 0.001, 51.6, 120.0, 45.0, 90.0);
+    var orbit_state = orbit_hitung_posisi_kepler(satelit_leo);
+
+    cetak("Radius Orbital Satelit: " + ke_teks(orbit_state.radius_orbital_km) + " km");
+    cetak("Kecepatan Orbital: " + ke_teks(orbit_state.kecepatan_km_s) + " km/s (~" + ke_teks(orbit_state.kecepatan_km_s * 3600.0) + " km/jam)");
+    cetak("Vektor Posisi Orbital Satelit: X = " + ke_teks(orbit_state.posisi_x) + " km, Y = " + ke_teks(orbit_state.posisi_y) + " km");
+
+    cetak("=== UJI KINEMATIKA ROBOT & ORBIT KEPLER SUKSES ===");
+}
+
+utama();

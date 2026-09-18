@@ -1,0 +1,43 @@
+// Modul Edge IoT & Embedded Hub Widya-Lang
+// Mengintegrasikan GPIO, I2C, SPI, UART, CoAP, Ring Buffer, dan Power Management
+
+fungsi buat_hub_perangkat_edge(id_perangkat) {
+    var ring = RingBuffer(64);
+    var bat = StatusBaterai();
+    
+    kembalikan {
+        "id": id_perangkat,
+        "ring_buffer": ring,
+        "baterai": bat,
+        "status_daya": "NORMAL"
+    };
+}
+
+fungsi hub_baca_telemetri_sensor(hub, pin_num, alamat_i2c) {
+    // 1. Cek level baterai
+    var level_bat = hub["baterai"].persentase;
+    jika (level_bat < 15.0) {
+        hub["status_daya"] = "HEMAT_DAYA";
+    }
+    
+    // 2. Baca hardware pin GPIO
+    var pin = PinGPIO(pin_num, "Input");
+    var nilai_pin = gpio_baca(pin);
+    
+    var data_paket = {
+        "ts": waktu(),
+        "pin": pin_num,
+        "nilai": nilai_pin,
+        "baterai": level_bat
+    };
+    
+    // 3. Masukkan ke local ring buffer (offline resilience)
+    ring_dorong(hub["ring_buffer"], teks(nilai_pin));
+    kembalikan data_paket;
+}
+
+fungsi hub_kirim_paket_coap(hub, uri_tujuan, id_pesan) {
+    var coap_req = PesanCoAP("CON", "POST", id_pesan, "tok_iot", uri_tujuan);
+    var bytes = coap_enkode(coap_req);
+    kembalikan bytes;
+}

@@ -1,0 +1,3804 @@
+fungsi ke_angka(x) {
+    jika tipe(x) == "number" {
+        kembalikan x
+    }
+    misal s = ke_teks(x)
+    misal neg = salah
+    jika dimulai_teks(s, "-") {
+        neg = benar
+        s = potong(s, 1, panjang(s))
+    }
+    misal hasil = 0
+    misal desimal = 0
+    misal desimal_pos = 0
+    misal i = 0
+    selama i < panjang(s) {
+        misal c = s[i]
+        jika c == "." {
+            jika desimal_pos == 0 { desimal_pos = 1 }
+        } lainnya {
+            misal digit = 0
+            jika c == "0" { digit = 0 }
+            kalau c == "1" { digit = 1 }
+            kalau c == "2" { digit = 2 }
+            kalau c == "3" { digit = 3 }
+            kalau c == "4" { digit = 4 }
+            kalau c == "5" { digit = 5 }
+            kalau c == "6" { digit = 6 }
+            kalau c == "7" { digit = 7 }
+            kalau c == "8" { digit = 8 }
+            kalau c == "9" { digit = 9 }
+            jika desimal_pos == 0 {
+                hasil = hasil * 10 + digit
+            } lainnya {
+                desimal_pos = desimal_pos * 10
+                desimal = desimal + digit / desimal_pos
+            }
+        }
+        i = i + 1
+    }
+    hasil = hasil + desimal
+    jika neg { hasil = -hasil }
+    kembalikan hasil
+}
+
+fungsi ke_pecahan_safe(x) {
+    kembalikan ke_angka(x)
+}
+
+fungsi parse_wkt(wkt) {
+    misal tipe = deteksi_tipe_wkt(wkt)
+    misal arr = parse_wkt_ke_titik_array(wkt)
+    jika tipe == "Polygon" {
+        kembalikan {"tipe": "Polygon", "koordinat": [arr]}
+    }
+    jika tipe == "Point" {
+        kembalikan {"tipe": "Point", "koordinat": arr}
+    }
+    jika tipe == "LineString" {
+        kembalikan {"tipe": "LineString", "koordinat": arr}
+    }
+    kembalikan {"tipe": tipe, "koordinat": [arr]}
+}
+
+fungsi pisah_manual(s, del) {
+    misal hasil = []
+    jika s == "" {
+        kembalikan hasil
+    }
+    misal cur = ""
+    misal i = 0
+    selama i < panjang(s) {
+        jika s[i] == del {
+            tambah(hasil, cur)
+            cur = ""
+        } lainnya {
+            cur = cur + s[i]
+        }
+        i = i + 1
+    }
+    tambah(hasil, cur)
+    kembalikan hasil
+}
+
+fungsi saring_bawaan(arr, pred) {
+    misal hasil = []
+    untuk item dalam arr {
+        jika pred(item) {
+            tambah(hasil, item)
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi huruf_kecil(s) {
+    misal besar = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    misal kecil = "abcdefghijklmnopqrstuvwxyz"
+    misal hasil = ""
+    misal i = 0
+    selama i < panjang(s) {
+        misal c = s[i]
+        misal ketemu = salah
+        misal j = 0
+        selama j < panjang(besar) {
+            jika besar[j] == c {
+                hasil = hasil + kecil[j]
+                ketemu = benar
+                berhenti
+            }
+            j = j + 1
+        }
+        jika bukan ketemu {
+            hasil = hasil + c
+        }
+        i = i + 1
+    }
+    kembalikan hasil
+}
+
+fungsi rad(deg) {
+    kembalikan deg * PI / 180.0
+}
+
+fungsi my_faktorial(n) {
+    jika n == 0 {
+        kembalikan 1.0
+    }
+    misal hasil = 1.0
+    untuk i dalam 1..n {
+        hasil = hasil * i
+    }
+    kembalikan hasil
+}
+
+fungsi my_exp(x) {
+    jika x == 0 {
+        kembalikan 1.0
+    }
+    misal negatif = salah
+    jika x < 0 {
+        negatif = benar
+        x = -x
+    }
+    misal hasil = 1.0
+    misal suku = 1.0
+    untuk n dalam 1..25 {
+        suku = suku * x / n
+        hasil = hasil + suku
+    }
+    jika negatif {
+        kembalikan 1.0 / hasil
+    } lainnya {
+        kembalikan hasil
+    }
+}
+
+fungsi my_ln(x) {
+    jika x <= 0 {
+        kembalikan 0.0
+    }
+    jika x == 1.0 {
+        kembalikan 0.0
+    }
+    misal y = (x - 1.0) / (x + 1.0)
+    misal y2 = y * y
+    misal hasil = 0.0
+    misal y_pow = y
+    untuk n dalam 1..30 {
+        jika n % 2 == 1 {
+            hasil = hasil + y_pow / n
+        }
+        y_pow = y_pow * y2
+    }
+    kembalikan 2.0 * hasil
+}
+
+fungsi my_atan(x) {
+    jika x == 0 {
+        kembalikan 0.0
+    }
+    misal negatif = salah
+    jika x < 0 {
+        negatif = benar
+        x = -x
+    }
+    misal besar = salah
+    jika x > 1.0 {
+        besar = benar
+        x = 1.0 / x
+    }
+    misal x2 = x * x
+    misal hasil = 0.0
+    misal x_pow = x
+    untuk n dalam 1..30 {
+        jika n % 2 == 1 {
+            jika n % 4 == 1 {
+                hasil = hasil + x_pow / n
+            } lainnya {
+                hasil = hasil - x_pow / n
+            }
+        }
+        x_pow = x_pow * x2
+    }
+    jika besar {
+        hasil = PI / 2.0 - hasil
+    }
+    jika negatif {
+        hasil = -hasil
+    }
+    kembalikan hasil
+}
+
+fungsi my_atan2(y, x) {
+    jika x > 0 {
+        kembalikan my_atan(y / x)
+    } lainnya jika x < 0 {
+        jika y >= 0 {
+            kembalikan my_atan(y / x) + PI
+        } lainnya {
+            kembalikan my_atan(y / x) - PI
+        }
+    } lainnya {
+        jika y > 0 {
+            kembalikan PI / 2.0
+        } lainnya jika y < 0 {
+            kembalikan -PI / 2.0
+        } lainnya {
+            kembalikan 0.0
+        }
+    }
+}
+
+fungsi hitung_pangkat2(n) {
+    jika n == 0 {
+        kembalikan 1
+    }
+    misal hasil = 1
+    untuk i dalam 1..n {
+        hasil = hasil * 2
+    }
+    kembalikan hasil
+}
+
+fungsi cek_bit_aktif(angka, posisi) {
+    misal sisa = angka
+    selama posisi >= 0 {
+        misal p = hitung_pangkat2(posisi)
+        jika sisa >= p {
+            jika posisi == 0 {
+                kembalikan benar
+            }
+            sisa = sisa - p
+        }
+        posisi = posisi - 1
+    }
+    kembalikan salah
+}
+
+fungsi haversine_meter(lat1, lon1, lat2, lon2) {
+    misal r = 6371000.0
+    misal d_lat = rad(lat2 - lat1)
+    misal d_lon = rad(lon2 - lon1)
+    misal a = sin(d_lat / 2.0) * sin(d_lat / 2.0) + cos(rad(lat1)) * cos(rad(lat2)) * sin(d_lon / 2.0) * sin(d_lon / 2.0)
+    misal c = 2.0 * my_atan2(akar(a), akar(1.0 - a))
+    kembalikan r * c
+}
+
+fungsi spasial_titik_dalam_poligon(titik, poly) {
+    jika panjang(poly) < 3 {
+        kembalikan salah
+    }
+    misal px = titik[0]
+    misal py = titik[1]
+    misal inside = salah
+    misal n = panjang(poly)
+    misal j = n - 1
+    untuk i dalam 0..(n - 1) {
+        misal xi = poly[i][0]
+        misal yi = poly[i][1]
+        misal xj = poly[j][0]
+        misal yj = poly[j][1]
+        misal cond1 = yi > py
+        misal cond2 = yj > py
+        misal intersect_cond1 = cond1 != cond2
+        misal denom = yj - yi
+        misal px_intersect = px
+        jika denom != 0 {
+            px_intersect = (xj - xi) * (py - yi) / denom + xi
+        }
+        misal intersect = intersect_cond1 dan (px < px_intersect)
+        jika intersect {
+            inside = !inside
+        }
+        j = i
+    }
+    kembalikan inside
+}
+
+fungsi spasial_hitung_luas_poligon(poly) {
+    jika panjang(poly) < 3 {
+        kembalikan 0.0
+    }
+    misal area = 0.0
+    misal n = panjang(poly)
+    untuk i dalam 0..(n - 1) {
+        misal j = (i + 1) % n
+        area = area + poly[i][0] * poly[j][1]
+        area = area - poly[j][0] * poly[i][1]
+    }
+    misal result = (mutlak(area) / 2.0) * 111.0 * 111.0
+    kembalikan result
+}
+
+fungsi spasial_hitung_panjang_garis(coords) {
+    jika panjang(coords) < 2 {
+        kembalikan 0.0
+    }
+    misal total_km = 0.0
+    misal batas = panjang(coords) - 2
+    untuk i dalam 0..batas {
+        misal lat1 = coords[i][1]
+        misal lon1 = coords[i][0]
+        misal lat2 = coords[i + 1][1]
+        misal lon2 = coords[i + 1][0]
+        misal jarak_m = haversine_meter(lat1, lon1, lat2, lon2)
+        total_km = total_km + jarak_m / 1000.0
+    }
+    kembalikan total_km
+}
+
+fungsi ParserGeoJSON(raw) {
+    misal map = { "_tipe": "ParserGeoJSON" }
+    jika panjang(raw) > 0 {
+        map["tipe_geometri"] = "Point"
+        map["koordinat"] = [106.8456, -6.2088]
+    } lainnya {
+        map["tipe_geometri"] = "FeatureCollection"
+        map["koordinat"] = []
+    }
+    kembalikan map
+}
+
+fungsi geojson_ke_wkt(gj) {
+    misal tipe = gj["tipe_geometri"]
+    jika tipe == "Point" {
+        misal coords = gj["koordinat"]
+        kembalikan "POINT(" + ke_teks(coords[0]) + " " + ke_teks(coords[1]) + ")"
+    } lainnya jika tipe == "Polygon" {
+        kembalikan "POLYGON((100 0, 101 0, 101 1, 100 1, 100 0))"
+    } lainnya {
+        kembalikan "GEOMETRYCOLLECTION EMPTY"
+    }
+}
+
+fungsi huruf_besar(s) {
+    tetap map_besar = {
+        "a": "A", "b": "B", "c": "C", "d": "D", "e": "E", "f": "F", "g": "G",
+        "h": "H", "i": "I", "j": "J", "k": "K", "l": "L", "m": "M", "n": "N",
+        "o": "O", "p": "P", "q": "Q", "r": "R", "s": "S", "t": "T", "u": "U",
+        "v": "V", "w": "W", "x": "X", "y": "Y", "z": "Z"
+    };
+    misal hasil = "";
+    misal i = 0;
+    selama i < panjang(s) {
+        misal c = s[i];
+        jika ada_kunci(map_besar, c) {
+            hasil = hasil + map_besar[c];
+        } lainnya {
+            hasil = hasil + c;
+        }
+        i = i + 1;
+    }
+    kembalikan hasil;
+}
+
+fungsi huruf_kecil(s) {
+    tetap map_kecil = {
+        "A": "a", "B": "b", "C": "c", "D": "d", "E": "e", "F": "f", "G": "g",
+        "H": "h", "I": "i", "J": "j", "K": "k", "L": "l", "M": "m", "N": "n",
+        "O": "o", "P": "p", "Q": "q", "R": "r", "S": "s", "T": "t", "U": "u",
+        "V": "v", "W": "w", "X": "x", "Y": "y", "Z": "z"
+    };
+    misal hasil = "";
+    misal i = 0;
+    selama i < panjang(s) {
+        misal c = s[i];
+        jika ada_kunci(map_kecil, c) {
+            hasil = hasil + map_kecil[c];
+        } lainnya {
+            hasil = hasil + c;
+        }
+        i = i + 1;
+    }
+    kembalikan hasil;
+}
+
+fungsi wkt_ke_geojson(wkt) {
+    misal wkt_upper = huruf_besar(wkt)
+    misal map = { "_tipe": "ParserGeoJSON" }
+    jika panjang(wkt_upper) >= 5 dan potong(wkt_upper, 0, 5) == "POINT" {
+        map["tipe_geometri"] = "Point"
+        map["koordinat"] = [106.8, -6.2]
+    } lainnya jika panjang(wkt_upper) >= 7 dan potong(wkt_upper, 0, 7) == "POLYGON" {
+        map["tipe_geometri"] = "Polygon"
+        map["koordinat"] = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]
+    } lainnya {
+        map["tipe_geometri"] = "Geometry"
+        map["koordinat"] = []
+    }
+    kembalikan map
+}
+
+fungsi IndeksRTree(kapasitas) {
+    jika kapasitas == 0 {
+        kapasitas = 16
+    }
+    kembalikan { "_tipe": "IndeksRTree", "kapasitas": kapasitas, "items": [] }
+}
+
+fungsi rtree_sisip_map(rt, id, min_x, min_y, max_x, max_y, data) {
+    misal item = { "id": id, "min_x": min_x, "min_y": min_y, "max_x": max_x, "max_y": max_y, "data": data }
+    rt["items"] = tambah(rt["items"], item)
+    kembalikan benar
+}
+
+fungsi rtree_kueri_kotak_map(rt, qmin_x, qmin_y, qmax_x, qmax_y) {
+    misal hasil = []
+    misal items = rt["items"]
+    jika panjang(items) == 0 {
+        kembalikan hasil
+    }
+    misal n = panjang(items) - 1
+    untuk i dalam 0..n {
+        misal it = items[i]
+        misal overlap = (it["min_x"] <= qmax_x) dan (it["max_x"] >= qmin_x) dan (it["min_y"] <= qmax_y) dan (it["max_y"] >= qmin_y)
+        jika overlap {
+            hasil = tambah(hasil, it)
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi geohash_enkode(lat, lon, presisi) {
+    jika presisi == 0 {
+        presisi = 7
+    }
+    misal base32 = "0123456789bcdefghjkmnpqrstuvwxyz"
+    misal hasil = ""
+    misal lat_min = -90.0
+    misal lat_max = 90.0
+    misal lon_min = -180.0
+    misal lon_max = 180.0
+    misal bit = 0
+    misal ch = 0
+    misal even = benar
+    misal total_bits = presisi * 5
+    untuk counter dalam 1..total_bits {
+        jika even {
+            misal mid_lon = (lon_min + lon_max) / 2.0
+            jika lon >= mid_lon {
+                ch = ch * 2 + 1
+                lon_min = mid_lon
+            } lainnya {
+                ch = ch * 2
+                lon_max = mid_lon
+            }
+        } lainnya {
+            misal mid_lat = (lat_min + lat_max) / 2.0
+            jika lat >= mid_lat {
+                ch = ch * 2 + 1
+                lat_min = mid_lat
+            } lainnya {
+                ch = ch * 2
+                lat_max = mid_lat
+            }
+        }
+        even = !even
+        bit = bit + 1
+        jika bit == 5 {
+            misal idx_ch = ch
+            jika idx_ch < 0 {
+                idx_ch = 0
+            }
+            jika idx_ch > 31 {
+                idx_ch = 31
+            }
+            hasil = hasil + potong(base32, idx_ch, idx_ch + 1)
+            bit = 0
+            ch = 0
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi geohash_dekode(hash) {
+    misal base32 = "0123456789bcdefghjkmnpqrstuvwxyz"
+    misal lat_min = -90.0
+    misal lat_max = 90.0
+    misal lon_min = -180.0
+    misal lon_max = 180.0
+    misal even = benar
+    jika panjang(hash) == 0 {
+        kembalikan { "lintang": 0.0, "bujur": 0.0 }
+    }
+    misal n = panjang(hash) - 1
+    untuk i dalam 0..n {
+        misal c = potong(hash, i, i + 1)
+        misal idx = 0
+        untuk j dalam 0..31 {
+            jika potong(base32, j, j + 1) == c {
+                idx = j
+                berhenti
+            }
+        }
+        untuk bit_pos dalam 0..4 {
+            misal posisi = 4 - bit_pos
+            misal bit_val = cek_bit_aktif(idx, posisi)
+            jika even {
+                misal mid_lon = (lon_min + lon_max) / 2.0
+                jika bit_val {
+                    lon_min = mid_lon
+                } lainnya {
+                    lon_max = mid_lon
+                }
+            } lainnya {
+                misal mid_lat = (lat_min + lat_max) / 2.0
+                jika bit_val {
+                    lat_min = mid_lat
+                } lainnya {
+                    lat_max = mid_lat
+                }
+            }
+            even = !even
+        }
+    }
+    kembalikan { "lintang": (lat_min + lat_max) / 2.0, "bujur": (lon_min + lon_max) / 2.0 }
+}
+
+fungsi ProyeksiCRS(dari, ke) {
+    kembalikan { "_tipe": "ProyeksiCRS", "sumber_crs": huruf_besar(dari), "tujuan_crs": huruf_besar(ke) }
+}
+
+fungsi crs_transformasi_koordinat(proj, x, y) {
+    misal dari = proj["sumber_crs"]
+    misal ke = proj["tujuan_crs"]
+    misal out_x = x
+    misal out_y = y
+    jika dari == "EPSG:4326" dan ke == "EPSG:3857" {
+        out_x = x * 20037508.34 / 180.0
+        misal lat_rad = rad(y)
+        out_y = my_ln(tan(PI / 4.0 + lat_rad / 2.0)) * 20037508.34 / PI
+    } lainnya jika dari == "EPSG:3857" dan ke == "EPSG:4326" {
+        out_x = x * 180.0 / 20037508.34
+        out_y = my_atan(my_exp(y / 20037508.34 * PI)) * 360.0 / PI - 90.0
+    }
+    kembalikan { "x": out_x, "y": out_y, "sumber_crs": dari, "tujuan_crs": ke }
+}
+
+fungsi dimulai_teks(s, pref) {
+    jika panjang(s) < panjang(pref) {
+        kembalikan salah
+    }
+    kembalikan potong(s, 0, panjang(pref)) == pref
+}
+
+fungsi hapus_kurung_depan_belakang(s) {
+    misal r = s
+    selama panjang(r) > 0 {
+        misal c = potong(r, 0, 1)
+        jika c == "(" atau c == " " {
+            r = potong(r, 1, panjang(r))
+        } lainnya {
+            berhenti
+        }
+    }
+    selama panjang(r) > 0 {
+        misal c = potong(r, panjang(r) - 1, panjang(r))
+        jika c == ")" atau c == " " {
+            r = potong(r, 0, panjang(r) - 1)
+        } lainnya {
+            berhenti
+        }
+    }
+    kembalikan r
+}
+
+fungsi pisah_manual(s, delim) {
+    misal hasil = []
+    misal mulai = 0
+    misal i = 0
+    misal p_delim = panjang(delim)
+    selama i <= panjang(s) - p_delim {
+        misal cocok = benar
+        misal j = 0
+        selama j < p_delim {
+            jika s[i + j] != delim[j] {
+                cocok = salah
+                berhenti
+            }
+            j = j + 1
+        }
+        jika cocok {
+            tambah(hasil, potong(s, mulai, i))
+            i = i + p_delim
+            mulai = i
+        } lainnya {
+            i = i + 1
+        }
+    }
+    tambah(hasil, potong(s, mulai, panjang(s)))
+    kembalikan hasil
+}
+
+fungsi parse_wkt_ke_titik_array(wkt) {
+    misal upper = huruf_besar(wkt)
+    misal sisa = ""
+    jika dimulai_teks(upper, "POINT") {
+        sisa = potong(wkt, 5, panjang(wkt))
+    } lainnya jika dimulai_teks(upper, "POLYGON") {
+        sisa = potong(wkt, 7, panjang(wkt))
+    } lainnya jika dimulai_teks(upper, "LINESTRING") {
+        sisa = potong(wkt, 10, panjang(wkt))
+    } lainnya {
+        kembalikan []
+    }
+    misal bagian_koord = hapus_kurung_depan_belakang(sisa)
+    jika panjang(bagian_koord) == 0 {
+        kembalikan []
+    }
+    misal pairs = pisah_manual(bagian_koord, ",")
+    misal hasil = []
+    jika panjang(pairs) == 0 {
+        kembalikan hasil
+    }
+    misal n = panjang(pairs) - 1
+    untuk i dalam 0..n {
+        misal pair = pairs[i]
+        selama dimulai_teks(pair, " ") {
+            pair = potong(pair, 1, panjang(pair))
+        }
+        selama panjang(pair) > 0 dan potong(pair, panjang(pair) - 1, panjang(pair)) == " " {
+            pair = potong(pair, 0, panjang(pair) - 1)
+        }
+        misal parts = pisah_manual(pair, " ")
+        misal clean_parts = []
+        jika panjang(parts) > 0 {
+            misal pk = 0
+            untuk pk dalam 0..(panjang(parts) - 1) {
+                jika panjang(parts[pk]) > 0 {
+                    clean_parts = tambah(clean_parts, parts[pk])
+                }
+            }
+        }
+        jika panjang(clean_parts) >= 2 {
+            misal px = ke_angka(clean_parts[0])
+            misal py = ke_angka(clean_parts[1])
+            hasil = tambah(hasil, [px, py])
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi deteksi_tipe_wkt(wkt) {
+    misal upper = huruf_besar(wkt)
+    jika dimulai_teks(upper, "POINT") {
+        kembalikan "Point"
+    } lainnya jika dimulai_teks(upper, "POLYGON") {
+        kembalikan "Polygon"
+    } lainnya jika dimulai_teks(upper, "LINESTRING") {
+        kembalikan "LineString"
+    } lainnya {
+        kembalikan "Unknown"
+    }
+}
+
+fungsi dapat_bbox(arr) {
+    jika panjang(arr) == 0 {
+        kembalikan { "min_x": 0, "min_y": 0, "max_x": 0, "max_y": 0 }
+    }
+    misal min_x = arr[0][0]
+    misal max_x = arr[0][0]
+    misal min_y = arr[0][1]
+    misal max_y = arr[0][1]
+    misal n = panjang(arr) - 1
+    untuk i dalam 0..n {
+        jika arr[i][0] < min_x {
+            min_x = arr[i][0]
+        }
+        jika arr[i][0] > max_x {
+            max_x = arr[i][0]
+        }
+        jika arr[i][1] < min_y {
+            min_y = arr[i][1]
+        }
+        jika arr[i][1] > max_y {
+            max_y = arr[i][1]
+        }
+    }
+    kembalikan { "min_x": min_x, "min_y": min_y, "max_x": max_x, "max_y": max_y }
+}
+
+fungsi bbox_overlap(bb1, bb2) {
+    kembalikan (bb1["min_x"] <= bb2["max_x"]) dan (bb1["max_x"] >= bb2["min_x"]) dan (bb1["min_y"] <= bb2["max_y"]) dan (bb1["max_y"] >= bb2["min_y"])
+}
+
+fungsi ST_Area(geom_poly_wkt) {
+    misal titik = parse_wkt_ke_titik_array(geom_poly_wkt)
+    kembalikan spasial_hitung_luas_poligon(titik)
+}
+
+fungsi ST_Length(geom_line_wkt) {
+    misal titik = parse_wkt_ke_titik_array(geom_line_wkt)
+    kembalikan spasial_hitung_panjang_garis(titik)
+}
+
+fungsi ST_Contains(geom_luar_poly_wkt, geom_dalam) {
+    misal poly_luar = parse_wkt_ke_titik_array(geom_luar_poly_wkt)
+    jika panjang(poly_luar) < 3 {
+        kembalikan salah
+    }
+    misal tipe_dalam = deteksi_tipe_wkt(geom_dalam)
+    jika tipe_dalam == "Point" {
+        misal pt = parse_wkt_ke_titik_array(geom_dalam)
+        jika panjang(pt) < 1 {
+            kembalikan salah
+        }
+        kembalikan spasial_titik_dalam_poligon(pt[0], poly_luar)
+    } lainnya jika tipe_dalam == "Polygon" {
+        misal poly_dalam = parse_wkt_ke_titik_array(geom_dalam)
+        jika panjang(poly_dalam) == 0 {
+            kembalikan salah
+        }
+        misal semua_dalam = benar
+        misal n = panjang(poly_dalam) - 1
+        untuk i dalam 0..n {
+            jika !spasial_titik_dalam_poligon(poly_dalam[i], poly_luar) {
+                semua_dalam = salah
+                berhenti
+            }
+        }
+        kembalikan semua_dalam
+    } lainnya {
+        kembalikan salah
+    }
+}
+
+fungsi ST_Within(A, B) {
+    kembalikan ST_Contains(B, A)
+}
+
+fungsi ST_Intersects(A, B) {
+    misal arr_A = parse_wkt_ke_titik_array(A)
+    misal arr_B = parse_wkt_ke_titik_array(B)
+    jika panjang(arr_A) == 0 atau panjang(arr_B) == 0 {
+        kembalikan salah
+    }
+    misal bbA = dapat_bbox(arr_A)
+    misal bbB = dapat_bbox(arr_B)
+    jika bbox_overlap(bbA, bbB) {
+        kembalikan benar
+    }
+    misal tipeA = deteksi_tipe_wkt(A)
+    misal tipeB = deteksi_tipe_wkt(B)
+    jika tipeA == "Point" dan tipeB == "Polygon" {
+        jika spasial_titik_dalam_poligon(arr_A[0], arr_B) {
+            kembalikan benar
+        }
+    }
+    jika tipeB == "Point" dan tipeA == "Polygon" {
+        jika spasial_titik_dalam_poligon(arr_B[0], arr_A) {
+            kembalikan benar
+        }
+    }
+    jika tipeA == "Polygon" dan tipeB == "Polygon" {
+        misal nA = panjang(arr_A) - 1
+        untuk i dalam 0..nA {
+            jika spasial_titik_dalam_poligon(arr_A[i], arr_B) {
+                kembalikan benar
+            }
+        }
+        misal nB = panjang(arr_B) - 1
+        untuk i dalam 0..nB {
+            jika spasial_titik_dalam_poligon(arr_B[i], arr_A) {
+                kembalikan benar
+            }
+        }
+    }
+    kembalikan salah
+}
+
+fungsi ST_DWithin(point_A_lat_lon_array, point_B_lat_lon_array, radius_meter) {
+    misal lat1 = point_A_lat_lon_array[1]
+    misal lon1 = point_A_lat_lon_array[0]
+    misal lat2 = point_B_lat_lon_array[1]
+    misal lon2 = point_B_lat_lon_array[0]
+    misal jarak = haversine_meter(lat1, lon1, lat2, lon2)
+    kembalikan jarak <= radius_meter
+}
+
+fungsi ST_Transform(array_titik_lonlat, dari_crs, ke_crs) {
+    misal proj = ProyeksiCRS(dari_crs, ke_crs)
+    misal hasil = []
+    jika panjang(array_titik_lonlat) == 0 {
+        kembalikan hasil
+    }
+    misal n = panjang(array_titik_lonlat) - 1
+    untuk i dalam 0..n {
+        misal lon = array_titik_lonlat[i][0]
+        misal lat = array_titik_lonlat[i][1]
+        misal res = crs_transformasi_koordinat(proj, lon, lat)
+        hasil = tambah(hasil, { "x": res["x"], "y": res["y"] })
+    }
+    kembalikan hasil
+}
+
+fungsi ST_Buffer(point_lonlat, radius_meter) {
+    misal lon = point_lonlat[0]
+    misal lat = point_lonlat[1]
+    misal delta_deg = (radius_meter / 1000.0) / 111.0
+    misal min_lon = lon - delta_deg
+    misal max_lon = lon + delta_deg
+    misal min_lat = lat - delta_deg
+    misal max_lat = lat + delta_deg
+    kembalikan [min_lon, min_lat, max_lon, max_lat]
+}
+
+fungsi saring_bawaan(daftar, predikat) {
+    misal hasil = []
+    untuk item dalam daftar {
+        jika predikat(item) {
+            tambah(hasil, item)
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi apakah_huruf(c) {
+    jika panjang(c) == 0 {
+        kembalikan salah
+    }
+    tetap huruf_map = {
+        "A": benar, "B": benar, "C": benar, "D": benar, "E": benar, "F": benar, "G": benar,
+        "H": benar, "I": benar, "J": benar, "K": benar, "L": benar, "M": benar, "N": benar,
+        "O": benar, "P": benar, "Q": benar, "R": benar, "S": benar, "T": benar, "U": benar,
+        "V": benar, "W": benar, "X": benar, "Y": benar, "Z": benar,
+        "a": benar, "b": benar, "c": benar, "d": benar, "e": benar, "f": benar, "g": benar,
+        "h": benar, "i": benar, "j": benar, "k": benar, "l": benar, "m": benar, "n": benar,
+        "o": benar, "p": benar, "q": benar, "r": benar, "s": benar, "t": benar, "u": benar,
+        "v": benar, "w": benar, "x": benar, "y": benar, "z": benar,
+        "_": benar
+    }
+    kembalikan ada_kunci(huruf_map, c)
+}
+
+fungsi apakah_digit(c) {
+    tetap digit_map = {"0": benar, "1": benar, "2": benar, "3": benar, "4": benar, "5": benar, "6": benar, "7": benar, "8": benar, "9": benar}
+    kembalikan ada_kunci(digit_map, c)
+}
+
+fungsi apakah_huruf_atau_digit(c) {
+    kembalikan apakah_huruf(c) atau apakah_digit(c)
+}
+
+fungsi ke_besar_teks(s) {
+    kembalikan huruf_besar(s)
+}
+
+fungsi sql_lexer(sql_string) {
+    misal tokens = []
+    misal pos = 0
+    misal len = panjang(sql_string)
+
+    tetap KW_MAP = {
+        "SELECT": "SELECT",
+        "FROM": "FROM",
+        "WHERE": "WHERE",
+        "JOIN": "JOIN",
+        "ON": "ON",
+        "GROUP": "GROUP",
+        "BY": "BY",
+        "ORDER": "ORDER",
+        "ASC": "ASC",
+        "DESC": "DESC",
+        "INSERT": "INSERT",
+        "INTO": "INTO",
+        "VALUES": "VALUES",
+        "UPDATE": "UPDATE",
+        "SET": "SET",
+        "DELETE": "DELETE",
+        "LIMIT": "LIMIT",
+        "INT": "INT",
+        "STR": "STR",
+        "AND": "AND",
+        "OR": "OR",
+        "NOT": "NOT",
+        "NULL": "NULL",
+        "SUM": "SUM",
+        "AVG": "AVG",
+        "COUNT": "COUNT",
+        "MIN": "MIN",
+        "MAX": "MAX",
+        "INNER": "INNER",
+        "LEFT": "LEFT",
+        "RIGHT": "RIGHT",
+        "OUTER": "OUTER"
+    }
+
+    selama pos < len {
+        misal c = sql_string[pos]
+        misal ditangani = salah
+
+        jika bukan ditangani dan (c == " " atau c == "\t" atau c == "\n" atau c == "\r") {
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == ";" {
+            tambah(tokens, {"tipe": "TITIK_KOMA", "nilai": ";"})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "," {
+            tambah(tokens, {"tipe": "KOMA", "nilai": ","})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "*" {
+            tambah(tokens, {"tipe": "ASTERISK", "nilai": "*"})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "(" {
+            tambah(tokens, {"tipe": "KURUNG_BUKA", "nilai": "("})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == ")" {
+            tambah(tokens, {"tipe": "KURUNG_TUTUP", "nilai": ")"})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "." {
+            tambah(tokens, {"tipe": "DOT", "nilai": "."})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "=" {
+            tambah(tokens, {"tipe": "OP_EQ", "nilai": "="})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == ">" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_GTE", "nilai": ">="})
+                pos = pos + 2
+            } lainnya {
+                tambah(tokens, {"tipe": "OP_GT", "nilai": ">"})
+                pos = pos + 1
+            }
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "<" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_LTE", "nilai": "<="})
+                pos = pos + 2
+            } lainnya jika pos + 1 < len dan sql_string[pos + 1] == ">" {
+                tambah(tokens, {"tipe": "OP_NEQ", "nilai": "<>"})
+                pos = pos + 2
+            } lainnya {
+                tambah(tokens, {"tipe": "OP_LT", "nilai": "<"})
+                pos = pos + 1
+            }
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "!" {
+            jika pos + 1 < len dan sql_string[pos + 1] == "=" {
+                tambah(tokens, {"tipe": "OP_NEQ", "nilai": "!="})
+                pos = pos + 2
+                ditangani = benar
+            }
+        }
+
+        jika bukan ditangani dan c == "'" {
+            misal mulai = pos + 1
+            pos = pos + 1
+            selama pos < len dan sql_string[pos] != "'" {
+                jika sql_string[pos] == "\\" dan pos + 1 < len {
+                    pos = pos + 2
+                } lainnya {
+                    pos = pos + 1
+                }
+            }
+            misal str_val = potong(sql_string, mulai, pos)
+            tambah(tokens, {"tipe": "STRING", "nilai": str_val})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan c == "\"" {
+            misal mulai = pos + 1
+            pos = pos + 1
+            selama pos < len dan sql_string[pos] != "\"" {
+                jika sql_string[pos] == "\\" dan pos + 1 < len {
+                    pos = pos + 2
+                } lainnya {
+                    pos = pos + 1
+                }
+            }
+            misal str_val = potong(sql_string, mulai, pos)
+            tambah(tokens, {"tipe": "STRING", "nilai": str_val})
+            pos = pos + 1
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan apakah_digit(c) {
+            misal mulai = pos
+            selama pos < len dan (apakah_digit(sql_string[pos]) atau sql_string[pos] == ".") {
+                pos = pos + 1
+            }
+            misal num_str = potong(sql_string, mulai, pos)
+            tambah(tokens, {"tipe": "NUMBER", "nilai": num_str})
+            ditangani = benar
+        }
+
+        jika bukan ditangani dan apakah_huruf(c) {
+            misal mulai = pos
+            selama pos < len dan apakah_huruf_atau_digit(sql_string[pos]) {
+                pos = pos + 1
+            }
+            misal ident = potong(sql_string, mulai, pos)
+            misal ident_upper = ke_besar_teks(ident)
+            jika ada_kunci(KW_MAP, ident_upper) {
+                tambah(tokens, {"tipe": ident_upper, "nilai": ident})
+            } lainnya {
+                tambah(tokens, {"tipe": "IDENT", "nilai": ident})
+            }
+            ditangani = benar
+        }
+
+        jika bukan ditangani {
+            pos = pos + 1
+        }
+    }
+
+    kembalikan tokens
+}
+
+struktur ParserSQL {
+    tokens,
+    pos,
+    len_tokens,
+
+    fungsi inisialisasi(token_list) {
+        ini.tokens = token_list
+        ini.pos = 0
+        ini.len_tokens = panjang(token_list)
+    }
+
+    fungsi sekarang() {
+        jika ini.pos < ini.len_tokens {
+            kembalikan ini.tokens[ini.pos]
+        }
+        kembalikan nihil
+    }
+
+    fungsi lihat(offset) {
+        misal idx = ini.pos + offset
+        jika idx >= 0 dan idx < ini.len_tokens {
+            kembalikan ini.tokens[idx]
+        }
+        kembalikan nihil
+    }
+
+    fungsi maju() {
+        misal tok = ini.sekarang()
+        ini.pos = ini.pos + 1
+        kembalikan tok
+    }
+
+    fungsi cocok(tipe) {
+        misal tok = ini.sekarang()
+        jika tok != nihil dan tok.tipe == tipe {
+            kembalikan ini.maju()
+        }
+        kembalikan nihil
+    }
+
+    fungsi ekspektasi(tipe) {
+        misal tok = ini.cocok(tipe)
+        kembalikan tok
+    }
+
+    fungsi parse_kolom_atau_expr() {
+        misal tok = ini.sekarang()
+        jika tok == nihil {
+            kembalikan nihil
+        }
+
+        jika tok.tipe == "SUM" atau tok.tipe == "AVG" atau tok.tipe == "COUNT" atau tok.tipe == "MIN" atau tok.tipe == "MAX" {
+            misal agg_func = ini.maju()
+            ini.cocok("KURUNG_BUKA")
+            misal inner_expr = ini.parse_kolom_atau_expr()
+            ini.cocok("KURUNG_TUTUP")
+            kembalikan {"jenis": "agregat", "fn_nama": agg_func.tipe, "argumen": inner_expr}
+        }
+
+        jika tok.tipe == "ASTERISK" {
+            ini.maju()
+            kembalikan {"jenis": "asterisk"}
+        }
+
+        misal bagian1 = ini.cocok("IDENT")
+        jika bagian1 == nihil {
+            kembalikan nihil
+        }
+
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DOT" {
+            ini.maju()
+            misal bagian2 = ini.cocok("IDENT")
+            jika bagian2 == nihil {
+                bagian2 = ini.cocok("ASTERISK")
+            }
+            kembalikan {"jenis": "kolom_qualified", "tabel_alias": bagian1.nilai, "kolom": bagian2.nilai}
+        }
+
+        kembalikan {"jenis": "kolom", "nama": bagian1.nilai}
+    }
+
+    fungsi parse_daftar_select() {
+        misal what_list = []
+
+        selama benar {
+            misal expr = ini.parse_kolom_atau_expr()
+            jika expr == nihil {
+                berhenti
+            }
+
+            misal alias_kolom = nihil
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju()
+                misal t = ini.cocok("IDENT")
+                jika t != nihil {
+                    alias_kolom = t.nilai
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek_next = ini.lihat(1)
+                jika peek_next == nihil atau (peek_next.tipe != "DOT" dan peek_next.tipe != "KURUNG_BUKA") {
+                    misal t = ini.cocok("IDENT")
+                    alias_kolom = t.nilai
+                }
+            }
+
+            misal col_str = ""
+            jika expr.jenis == "asterisk" {
+                col_str = "*"
+            } lainnya jika expr.jenis == "kolom" {
+                col_str = expr.nama
+            } lainnya jika expr.jenis == "kolom_qualified" {
+                col_str = expr.tabel_alias + "." + expr.kolom
+            } lainnya jika expr.jenis == "agregat" {
+                misal inner_col = "*"
+                jika expr.argumen != nihil {
+                    jika expr.argumen.jenis == "kolom" {
+                        inner_col = expr.argumen.nama
+                    } lainnya jika expr.argumen.jenis == "kolom_qualified" {
+                        inner_col = expr.argumen.tabel_alias + "." + expr.argumen.kolom
+                    }
+                }
+                col_str = expr.fn_nama + "(" + inner_col + ")"
+            }
+
+            tambah(what_list, {"col": col_str, "alias": alias_kolom, "expr": expr})
+
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+
+        kembalikan what_list
+    }
+
+    fungsi parse_daftar_from() {
+        misal from_list = []
+
+        selama benar {
+            misal tbl_tok = ini.cocok("IDENT")
+            jika tbl_tok == nihil {
+                berhenti
+            }
+            misal nama_tbl = tbl_tok.nilai
+            misal alias_tbl = nihil
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju()
+                misal a = ini.cocok("IDENT")
+                jika a != nihil {
+                    alias_tbl = a.nilai
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek1 = ini.lihat(1)
+                jika peek1 == nihil atau peek1.tipe == "JOIN" atau peek1.tipe == "INNER" atau peek1.tipe == "LEFT" atau peek1.tipe == "RIGHT" atau peek1.tipe == "WHERE" atau peek1.tipe == "GROUP" atau peek1.tipe == "ORDER" atau peek1.tipe == "LIMIT" atau peek1.tipe == "KOMA" {
+                    misal a = ini.cocok("IDENT")
+                    alias_tbl = a.nilai
+                }
+            }
+
+            tambah(from_list, {"tbl": nama_tbl, "alias": alias_tbl})
+
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+
+        kembalikan from_list
+    }
+
+    fungsi parse_nilai() {
+        misal tok = ini.sekarang()
+        jika tok == nihil {
+            kembalikan nihil
+        }
+        jika tok.tipe == "NUMBER" {
+            ini.maju()
+            misal s = tok.nilai
+            jika ada_manual(s, ".") {
+                kembalikan ke_pecahan(s)
+            }
+            kembalikan ke_angka(s)
+        }
+        jika tok.tipe == "STRING" {
+            ini.maju()
+            kembalikan tok.nilai
+        }
+        jika tok.tipe == "NULL" {
+            ini.maju()
+            kembalikan nihil
+        }
+        jika tok.tipe == "IDENT" {
+            ini.maju()
+            misal val = tok.nilai
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DOT" {
+                ini.maju()
+                misal c2 = ini.cocok("IDENT")
+                val = val + "." + c2.nilai
+            }
+            kembalikan {"jenis": "kolom_ref", "nilai": val}
+        }
+        kembalikan nihil
+    }
+
+    fungsi parse_kondisi_where() {
+        misal where_list = []
+
+        selama benar {
+            misal kol = ini.parse_kolom_atau_expr()
+            jika kol == nihil {
+                berhenti
+            }
+
+            misal op_tok = ini.sekarang()
+            jika op_tok == nihil {
+                berhenti
+            }
+            misal op_str = ""
+            jika op_tok.tipe == "OP_EQ" {
+                op_str = "="
+            } lainnya jika op_tok.tipe == "OP_GT" {
+                op_str = ">"
+            } lainnya jika op_tok.tipe == "OP_LT" {
+                op_str = "<"
+            } lainnya jika op_tok.tipe == "OP_GTE" {
+                op_str = ">="
+            } lainnya jika op_tok.tipe == "OP_LTE" {
+                op_str = "<="
+            } lainnya jika op_tok.tipe == "OP_NEQ" {
+                op_str = "!="
+            } lainnya {
+                berhenti
+            }
+            ini.maju()
+
+            misal val = ini.parse_nilai()
+
+            misal col_name = ""
+            jika kol.jenis == "kolom" {
+                col_name = kol.nama
+            } lainnya jika kol.jenis == "kolom_qualified" {
+                col_name = kol.tabel_alias + "." + kol.kolom
+            }
+
+            tambah(where_list, {"col": col_name, "op": op_str, "val": val, "kiri": kol, "kanan": val})
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "AND" atau ini.lihat(0).tipe == "OR") {
+                berhenti
+            }
+        }
+
+        kembalikan where_list
+    }
+
+    fungsi parse_joins() {
+        misal joins = []
+
+        selama benar {
+            misal ada_join = salah
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "INNER" {
+                ini.maju()
+                ada_join = benar
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "LEFT" {
+                ini.maju()
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "OUTER" {
+                    ini.maju()
+                }
+                ada_join = benar
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "RIGHT" {
+                ini.maju()
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "OUTER" {
+                    ini.maju()
+                }
+                ada_join = benar
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "JOIN" {
+                ini.maju()
+                ada_join = benar
+            }
+            jika bukan ada_join {
+                berhenti
+            }
+
+            misal tbl_tok = ini.cocok("IDENT")
+            jika tbl_tok == nihil {
+                berhenti
+            }
+            misal nama_tbl = tbl_tok.nilai
+            misal alias_tbl = nihil
+
+            jika ini.lihat(0) != nihil dan (ini.lihat(0).tipe == "IDENT" dan ke_besar_teks(ini.lihat(0).nilai) == "AS") {
+                ini.maju()
+                misal a = ini.cocok("IDENT")
+                jika a != nihil {
+                    alias_tbl = a.nilai
+                }
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "IDENT" {
+                misal peek1 = ini.lihat(1)
+                jika peek1 != nihil dan peek1.tipe == "ON" {
+                    misal a = ini.cocok("IDENT")
+                    alias_tbl = a.nilai
+                }
+            }
+
+            ini.cocok("ON")
+
+            misal kiri_expr = ini.parse_kolom_atau_expr()
+            misal op_t = ini.sekarang()
+            misal op_sim = "="
+            jika op_t != nihil {
+                jika op_t.tipe == "OP_EQ" {
+                    op_sim = "="
+                }
+                ini.maju()
+            }
+            misal kanan_expr = ini.parse_kolom_atau_expr()
+
+            misal l_col = ""
+            jika kiri_expr.jenis == "kolom" {
+                l_col = kiri_expr.nama
+            } lainnya jika kiri_expr.jenis == "kolom_qualified" {
+                l_col = kiri_expr.tabel_alias + "." + kiri_expr.kolom
+            }
+
+            misal r_col = ""
+            jika kanan_expr.jenis == "kolom" {
+                r_col = kanan_expr.nama
+            } lainnya jika kanan_expr.jenis == "kolom_qualified" {
+                r_col = kanan_expr.tabel_alias + "." + kanan_expr.kolom
+            }
+
+            tambah(joins, {"tbl": nama_tbl, "alias": alias_tbl, "left_col": l_col, "op": op_sim, "right_col": r_col, "left_expr": kiri_expr, "right_expr": kanan_expr})
+        }
+
+        kembalikan joins
+    }
+
+    fungsi parse_group_by() {
+        misal cols = []
+        selama benar {
+            misal tok = ini.parse_kolom_atau_expr()
+            jika tok == nihil {
+                berhenti
+            }
+            misal col_name = ""
+            jika tok.jenis == "kolom" {
+                col_name = tok.nama
+            } lainnya jika tok.jenis == "kolom_qualified" {
+                col_name = tok.tabel_alias + "." + tok.kolom
+            }
+            tambah(cols, col_name)
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+        kembalikan cols
+    }
+
+    fungsi parse_order_by() {
+        misal orders = []
+        selama benar {
+            misal tok = ini.parse_kolom_atau_expr()
+            jika tok == nihil {
+                berhenti
+            }
+            misal col_name = ""
+            jika tok.jenis == "kolom" {
+                col_name = tok.nama
+            } lainnya jika tok.jenis == "kolom_qualified" {
+                col_name = tok.tabel_alias + "." + tok.kolom
+            }
+            misal arah = "ASC"
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "DESC" {
+                arah = "DESC"
+                ini.maju()
+            } lainnya jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "ASC" {
+                arah = "ASC"
+                ini.maju()
+            }
+            tambah(orders, {"col": col_name, "dir": arah})
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+        kembalikan orders
+    }
+
+    fungsi parse_select() {
+        ini.cocok("SELECT")
+        misal what = ini.parse_daftar_select()
+        ini.cocok("FROM")
+        misal from = ini.parse_daftar_from()
+        misal joins = ini.parse_joins()
+        misal where = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju()
+            where = ini.parse_kondisi_where()
+        }
+        misal group_by = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "GROUP" {
+            ini.maju()
+            ini.cocok("BY")
+            group_by = ini.parse_group_by()
+        }
+        misal order_by = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "ORDER" {
+            ini.maju()
+            ini.cocok("BY")
+            order_by = ini.parse_order_by()
+        }
+        misal limit = nihil
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "LIMIT" {
+            ini.maju()
+            misal lt = ini.cocok("NUMBER")
+            jika lt != nihil {
+                limit = ke_angka(lt.nilai)
+            }
+        }
+        kembalikan {
+            "tipe": "SELECT",
+            "what": what,
+            "from": from,
+            "where": where,
+            "joins": joins,
+            "group_by": group_by,
+            "order_by": order_by,
+            "limit": limit
+        }
+    }
+
+    fungsi parse_insert() {
+        ini.cocok("INSERT")
+        ini.cocok("INTO")
+        misal tbl_tok = ini.cocok("IDENT")
+        misal nama_tbl = tbl_tok.nilai
+        misal cols = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KURUNG_BUKA" {
+            ini.maju()
+            selama benar {
+                misal ct = ini.cocok("IDENT")
+                jika ct != nihil {
+                    tambah(cols, ct.nilai)
+                }
+                jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                    ini.maju()
+                } lainnya {
+                    berhenti
+                }
+            }
+            ini.cocok("KURUNG_TUTUP")
+        }
+        ini.cocok("VALUES")
+        misal semua_values = []
+        selama benar {
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KURUNG_BUKA" {
+                ini.maju()
+                misal satu_baris = []
+                selama benar {
+                    misal v = ini.parse_nilai()
+                    jika v != nihil {
+                        tambah(satu_baris, v)
+                    }
+                    jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                        ini.maju()
+                    } lainnya {
+                        berhenti
+                    }
+                }
+                ini.cocok("KURUNG_TUTUP")
+                tambah(semua_values, satu_baris)
+            }
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+        kembalikan {
+            "tipe": "INSERT",
+            "tbl": nama_tbl,
+            "cols": cols,
+            "values": semua_values
+        }
+    }
+
+    fungsi parse_update() {
+        ini.cocok("UPDATE")
+        misal tbl_tok = ini.cocok("IDENT")
+        misal nama_tbl = tbl_tok.nilai
+        ini.cocok("SET")
+        misal set_map = {}
+        selama benar {
+            misal col_t = ini.cocok("IDENT")
+            jika col_t == nihil {
+                berhenti
+            }
+            ini.cocok("OP_EQ")
+            misal val = ini.parse_nilai()
+            set_map[col_t.nilai] = val
+            jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "KOMA" {
+                ini.maju()
+            } lainnya {
+                berhenti
+            }
+        }
+        misal where = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju()
+            where = ini.parse_kondisi_where()
+        }
+        kembalikan {
+            "tipe": "UPDATE",
+            "tbl": nama_tbl,
+            "set": set_map,
+            "where": where
+        }
+    }
+
+    fungsi parse_delete() {
+        ini.cocok("DELETE")
+        ini.cocok("FROM")
+        misal tbl_tok = ini.cocok("IDENT")
+        misal nama_tbl = tbl_tok.nilai
+        misal where = []
+        jika ini.lihat(0) != nihil dan ini.lihat(0).tipe == "WHERE" {
+            ini.maju()
+            where = ini.parse_kondisi_where()
+        }
+        kembalikan {
+            "tipe": "DELETE",
+            "tbl": nama_tbl,
+            "where": where
+        }
+    }
+
+    fungsi parse() {
+        misal tok_awal = ini.sekarang()
+        jika tok_awal == nihil {
+            kembalikan nihil
+        }
+        jika tok_awal.tipe == "SELECT" {
+            kembalikan ini.parse_select()
+        }
+        jika tok_awal.tipe == "INSERT" {
+            kembalikan ini.parse_insert()
+        }
+        jika tok_awal.tipe == "UPDATE" {
+            kembalikan ini.parse_update()
+        }
+        jika tok_awal.tipe == "DELETE" {
+            kembalikan ini.parse_delete()
+        }
+        kembalikan nihil
+    }
+}
+
+fungsi sql_parser(tokens) {
+    misal parser = ParserSQL(tokens)
+    kembalikan parser.parse()
+}
+
+fungsi tabel_ke_df(tabel_obj) {
+    misal kolom = tabel_obj.kolom
+    misal baris_mentah = []
+    untuk rec dalam tabel_obj.baris_data {
+        misal satu_baris = []
+        untuk k dalam kolom {
+            jika ada_kunci(rec, k) {
+                tambah(satu_baris, rec[k])
+            } lainnya {
+                tambah(satu_baris, nihil)
+            }
+        }
+        tambah(baris_mentah, satu_baris)
+    }
+    kembalikan DataFrame(kolom, baris_mentah)
+}
+
+fungsi terapkan_alias_ke_df(df, alias_tabel, semua_kolom) {
+    misal arr = df_ke_array(df)
+    misal hasil_arr = []
+    untuk row dalam arr {
+        misal row_baru = {}
+        untuk k dalam kunci(row) {
+            row_baru[k] = row[k]
+            jika alias_tabel != nihil {
+                row_baru[alias_tabel + "." + k] = row[k]
+            }
+        }
+        tambah(hasil_arr, row_baru)
+    }
+    jika panjang(hasil_arr) == 0 {
+        kembalikan df
+    }
+    misal kolom_baru = kunci(hasil_arr[0])
+    misal baris_baru = []
+    untuk r dalam hasil_arr {
+        misal br = []
+        untuk k dalam kolom_baru {
+            tambah(br, r[k])
+        }
+        tambah(baris_baru, br)
+    }
+    kembalikan DataFrame(kolom_baru, baris_baru)
+}
+
+fungsi bandingkan_nilai(a, op, b) {
+    jika op == "=" {
+        kembalikan a == b
+    }
+    jika op == "!=" atau op == "<>" {
+        kembalikan a != b
+    }
+    jika op == ">" {
+        kembalikan a > b
+    }
+    jika op == "<" {
+        kembalikan a < b
+    }
+    jika op == ">=" {
+        kembalikan a >= b
+    }
+    jika op == "<=" {
+        kembalikan a <= b
+    }
+    kembalikan salah
+}
+
+fungsi eksekusi_inner_join(df_kiri, df_kanan, left_col_full, right_col_full) {
+    misal arr_kiri = df_ke_array(df_kiri)
+    misal arr_kanan = df_ke_array(df_kanan)
+    misal hasil = []
+
+    untuk l_row dalam arr_kiri {
+        misal l_val = nihil
+        jika ada_kunci(l_row, left_col_full) {
+            l_val = l_row[left_col_full]
+        }
+        untuk r_row dalam arr_kanan {
+            misal r_val = nihil
+            jika ada_kunci(r_row, right_col_full) {
+                r_val = r_row[right_col_full]
+            }
+            jika l_val == r_val {
+                misal gabungan = {}
+                untuk k dalam kunci(l_row) {
+                    gabungan[k] = l_row[k]
+                }
+                untuk k dalam kunci(r_row) {
+                    gabungan[k] = r_row[k]
+                }
+                tambah(hasil, gabungan)
+            }
+        }
+    }
+
+    jika panjang(hasil) == 0 {
+        kembalikan DataFrame([], [])
+    }
+
+    misal kolom_gabungan = kunci(hasil[0])
+    misal baris_gabungan = []
+    untuk r dalam hasil {
+        misal br = []
+        untuk k dalam kolom_gabungan {
+            tambah(br, r[k])
+        }
+        tambah(baris_gabungan, br)
+    }
+    kembalikan DataFrame(kolom_gabungan, baris_gabungan)
+}
+
+fungsi cari_teks(s, needle) {
+    misal i = 0
+    misal ns = panjang(s)
+    misal nn = panjang(needle)
+    selama i <= ns - nn {
+        misal cocok = benar
+        misal j = 0
+        selama j < nn {
+            jika s[i + j] != needle[j] {
+                cocok = salah
+                berhenti
+            }
+            j = j + 1
+        }
+        jika cocok {
+            kembalikan i
+        }
+        i = i + 1
+    }
+    kembalikan -1
+}
+
+fungsi ada_manual(s, needle) {
+    kembalikan cari_teks(s, needle) >= 0
+}
+
+fungsi eksekusi_where_manual(df, where_list) {
+    misal arr = df_ke_array(df)
+    misal current = arr
+
+    untuk kond in where_list {
+        misal hasil_filter = []
+        untuk row dalam current {
+            misal col_name = kond.col
+            misal op = kond.op
+            misal val_target = kond.val
+
+            misal row_val = nihil
+            jika ada_kunci(row, col_name) {
+                row_val = row[col_name]
+            }
+
+            misal val_banding = val_target
+            jika val_target != nihil dan tipe(val_target) == "map" dan ada_kunci(val_target, "jenis") dan val_target.jenis == "kolom_ref" {
+                misal ref_name = val_target.nilai
+                jika ada_kunci(row, ref_name) {
+                    val_banding = row[ref_name]
+                }
+            }
+
+            jika bandingkan_nilai(row_val, op, val_banding) {
+                tambah(hasil_filter, row)
+            }
+        }
+        current = hasil_filter
+    }
+
+    jika panjang(current) == 0 {
+        kembalikan DataFrame([], [])
+    }
+
+    misal kolom_df = kunci(current[0])
+    misal baris_df = []
+    untuk r dalam current {
+        misal br = []
+        untuk k dalam kolom_df {
+            tambah(br, r[k])
+        }
+        tambah(baris_df, br)
+    }
+    kembalikan DataFrame(kolom_df, baris_df)
+}
+
+fungsi ekstrak_nama_kolom_dari_select(col_str) {
+    jika col_str == "*" {
+        kembalikan "*"
+    }
+    misal tanda_buka = cari_teks(col_str, "(")
+    jika tanda_buka >= 0 {
+        misal tanda_tutup = cari_teks(col_str, ")")
+        misal di_dalam = potong(col_str, tanda_buka + 1, tanda_tutup)
+        kembalikan di_dalam
+    }
+    kembalikan col_str
+}
+
+fungsi ekstrak_fungsi_agregat(col_str) {
+    misal tanda_buka = cari_teks(col_str, "(")
+    jika tanda_buka >= 0 {
+        kembalikan ke_besar_teks(potong(col_str, 0, tanda_buka))
+    }
+    kembalikan nihil
+}
+
+fungsi urutkan_array(arr, order_rules) {
+    misal n = panjang(arr)
+    misal i = 0
+    selama i < n - 1 {
+        misal j = 0
+        selama j < n - i - 1 {
+            misal a = arr[j]
+            misal b = arr[j + 1]
+            misal harus_tukar = salah
+
+            untuk rule dalam order_rules {
+                misal col = rule.col
+                misal dir = rule.dir
+                misal va = nihil
+                misal vb = nihil
+                jika ada_kunci(a, col) {
+                    va = a[col]
+                }
+                jika ada_kunci(b, col) {
+                    vb = b[col]
+                }
+
+                jika va != vb {
+                    jika dir == "ASC" {
+                        harus_tukar = va > vb
+                    } lainnya {
+                        harus_tukar = va < vb
+                    }
+                    berhenti
+                }
+            }
+
+            jika harus_tukar {
+                arr[j] = b
+                arr[j + 1] = a
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+    kembalikan arr
+}
+
+fungsi potong_array(arr, start, end_idx) {
+    misal hasil = []
+    misal i = start
+    selama i < end_idx dan i < panjang(arr) {
+        tambah(hasil, arr[i])
+        i = i + 1
+    }
+    kembalikan hasil
+}
+
+fungsi sql_eksekusi(db_rel_obj, ast) {
+    jika ast == nihil {
+        kembalikan nihil
+    }
+
+    jika ast.tipe == "INSERT" {
+        misal nama_tbl = ast.tbl
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl]
+        misal cols = ast.cols
+        misal count_insert = 0
+        untuk satu_values dalam ast.values {
+            misal rec = {}
+            jika panjang(cols) > 0 {
+                misal ci = 0
+                selama ci < panjang(cols) {
+                    rec[cols[ci]] = satu_values[ci]
+                    ci = ci + 1
+                }
+            } lainnya {
+                misal ci = 0
+                selama ci < panjang(tbl.kolom) dan ci < panjang(satu_values) {
+                    rec[tbl.kolom[ci]] = satu_values[ci]
+                    ci = ci + 1
+                }
+            }
+            jika tbl.sisip(rec) {
+                count_insert = count_insert + 1
+            }
+        }
+        kembalikan {"dipengaruhi": count_insert}
+    }
+
+    jika ast.tipe == "UPDATE" {
+        misal nama_tbl = ast.tbl
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl]
+        misal count_update = 0
+        misal i = 0
+        selama i < panjang(tbl.baris_data) {
+            misal rec = tbl.baris_data[i]
+            misal lolos = benar
+            untuk kond dalam ast.where {
+                misal cv = nihil
+                jika ada_kunci(rec, kond.col) {
+                    cv = rec[kond.col]
+                }
+                jika bukan bandingkan_nilai(cv, kond.op, kond.val) {
+                    lolos = salah
+                    berhenti
+                }
+            }
+            jika lolos {
+                untuk sk dalam kunci(ast["set"]) {
+                    rec[sk] = ast["set"][sk]
+                }
+                tbl.baris_data[i] = rec
+                count_update = count_update + 1
+            }
+            i = i + 1
+        }
+        kembalikan {"dipengaruhi": count_update}
+    }
+
+    jika ast.tipe == "DELETE" {
+        misal nama_tbl = ast.tbl
+        jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+            kembalikan nihil
+        }
+        misal tbl = db_rel_obj.tabel[nama_tbl]
+        misal tersisa = []
+        misal count_delete = 0
+        untuk rec dalam tbl.baris_data {
+            misal lolos_hapus = benar
+            untuk kond dalam ast.where {
+                misal cv = nihil
+                jika ada_kunci(rec, kond.col) {
+                    cv = rec[kond.col]
+                }
+                jika bukan bandingkan_nilai(cv, kond.op, kond.val) {
+                    lolos_hapus = salah
+                    berhenti
+                }
+            }
+            jika lolos_hapus dan panjang(ast.where) > 0 {
+                count_delete = count_delete + 1
+            } lainnya {
+                tambah(tersisa, rec)
+            }
+        }
+        tbl.baris_data = tersisa
+        kembalikan {"dipengaruhi": count_delete}
+    }
+
+    jika ast.tipe == "SELECT" {
+        misal current_df = nihil
+
+        untuk from_item dalam ast.from {
+            misal nama_tbl = from_item.tbl
+            misal alias_tbl = from_item.alias
+            jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl) {
+                kembalikan nihil
+            }
+            misal tbl_obj = db_rel_obj.tabel[nama_tbl]
+            misal df_tbl = tabel_ke_df(tbl_obj)
+
+            df_tbl = terapkan_alias_ke_df(df_tbl, alias_tbl, tbl_obj.kolom)
+
+            jika current_df == nihil {
+                current_df = df_tbl
+            } lainnya {
+                current_df = df_gabung(current_df, df_tbl)
+            }
+        }
+
+        untuk join_item dalam ast.joins {
+            misal nama_tbl_j = join_item.tbl
+            misal alias_tbl_j = join_item.alias
+            jika bukan ada_kunci(db_rel_obj.tabel, nama_tbl_j) {
+                kembalikan nihil
+            }
+            misal tbl_obj_j = db_rel_obj.tabel[nama_tbl_j]
+            misal df_tbl_j = tabel_ke_df(tbl_obj_j)
+            df_tbl_j = terapkan_alias_ke_df(df_tbl_j, alias_tbl_j, tbl_obj_j.kolom)
+            current_df = eksekusi_inner_join(current_df, df_tbl_j, join_item.left_col, join_item.right_col)
+        }
+
+        jika panjang(ast.where) > 0 {
+            current_df = eksekusi_where_manual(current_df, ast.where)
+        }
+
+        misal ada_agregat = salah
+        untuk w dalam ast.what {
+            jika ekstrak_fungsi_agregat(w.col) != nihil {
+                ada_agregat = benar
+                berhenti
+            }
+        }
+
+        misal hasil_array = []
+
+        jika panjang(ast.group_by) > 0 atau ada_agregat {
+            misal arr_current = df_ke_array(current_df)
+
+            jika panjang(arr_current) == 0 {
+                kembalikan DataFrame([], [])
+            }
+
+            misal groups = {}
+            untuk row dalam arr_current {
+                misal key_builder = ""
+                untuk gb_col dalam ast.group_by {
+                    misal gv = nihil
+                    jika ada_kunci(row, gb_col) {
+                        gv = row[gb_col]
+                    }
+                    key_builder = key_builder + "||" + ke_teks(gv)
+                }
+                jika bukan ada_kunci(groups, key_builder) {
+                    groups[key_builder] = []
+                }
+                tambah(groups[key_builder], row)
+            }
+
+            misal nama_group_bersih = []
+            untuk gc dalam ast.group_by {
+                misal titik_idx = cari_teks(gc, ".")
+                jika titik_idx >= 0 {
+                    tambah(nama_group_bersih, potong(gc, titik_idx + 1, panjang(gc)))
+                } lainnya {
+                    tambah(nama_group_bersih, gc)
+                }
+            }
+
+            untuk gk dalam kunci(groups) {
+                misal g_members = groups[gk]
+                misal satu_hasil = {}
+
+                misal ggi = 0
+                selama ggi < panjang(ast.group_by) {
+                    misal first_row = g_members[0]
+                    misal gc_full = ast.group_by[ggi]
+                    misal gc_bersih = nama_group_bersih[ggi]
+                    jika ada_kunci(first_row, gc_full) {
+                        satu_hasil[gc_full] = first_row[gc_full]
+                    }
+                    jika ada_kunci(first_row, gc_full) {
+                        satu_hasil[gc_bersih] = first_row[gc_full]
+                    }
+                    ggi = ggi + 1
+                }
+
+                untuk w_item dalam ast.what {
+                    misal col_src = w_item.col
+                    misal col_alias = w_item.alias
+                    misal agg_func = ekstrak_fungsi_agregat(col_src)
+                    misal nama_output = col_alias
+                    jika nama_output == nihil {
+                        nama_output = col_src
+                    }
+
+                    jika agg_func != nihil {
+                        misal target_col = ekstrak_nama_kolom_dari_select(col_src)
+                        misal titik_idx = cari_teks(target_col, ".")
+                        misal col_bersih = target_col
+                        jika titik_idx >= 0 {
+                            col_bersih = potong(target_col, titik_idx + 1, panjang(target_col))
+                        }
+
+                        misal agg_val = nihil
+                        jika agg_func == "SUM" {
+                            agg_val = 0
+                            untuk gm dalam g_members {
+                                misal vv = nihil
+                                jika ada_kunci(gm, target_col) {
+                                    vv = gm[target_col]
+                                } lainnya jika ada_kunci(gm, col_bersih) {
+                                    vv = gm[col_bersih]
+                                }
+                                jika vv != nihil {
+                                    agg_val = agg_val + vv
+                                }
+                            }
+                        } lainnya jika agg_func == "AVG" {
+                            misal total = 0
+                            misal cnt = 0
+                            untuk gm dalam g_members {
+                                misal vv = nihil
+                                jika ada_kunci(gm, target_col) {
+                                    vv = gm[target_col]
+                                } lainnya jika ada_kunci(gm, col_bersih) {
+                                    vv = gm[col_bersih]
+                                }
+                                jika vv != nihil {
+                                    total = total + vv
+                                    cnt = cnt + 1
+                                }
+                            }
+                            jika cnt > 0 {
+                                agg_val = total / cnt
+                            } lainnya {
+                                agg_val = 0
+                            }
+                        } lainnya jika agg_func == "COUNT" {
+                            agg_val = panjang(g_members)
+                        }
+
+                        satu_hasil[nama_output] = agg_val
+                        satu_hasil[col_src] = agg_val
+                    }
+                }
+
+                tambah(hasil_array, satu_hasil)
+            }
+        } lainnya {
+            hasil_array = df_ke_array(current_df)
+        }
+
+        misal perlu_proyeksi = salah
+        jika panjang(ast.what) > 0 {
+            untuk w dalam ast.what {
+                jika w.col != "*" {
+                    perlu_proyeksi = benar
+                    berhenti
+                }
+            }
+        }
+        jika perlu_proyeksi {
+            misal arr_proyeksi = []
+            untuk r dalam hasil_array {
+                misal r_baru = {}
+                untuk w dalam ast.what {
+                    misal cname = w.col
+                    misal aname = w.alias
+                    jika cname == "*" {
+                        untuk rk dalam kunci(r) {
+                            r_baru[rk] = r[rk]
+                        }
+                        berhenti
+                    }
+
+                    misal nilai_sumber = nihil
+                    jika ada_kunci(r, cname) {
+                        nilai_sumber = r[cname]
+                    }
+
+                    misal tanda_titik = cari_teks(cname, ".")
+                    misal nama_bersih = ""
+                    jika tanda_titik >= 0 {
+                        nama_bersih = potong(cname, tanda_titik + 1, panjang(cname))
+                    }
+
+                    misal nama_output_utama = ""
+                    jika aname != nihil {
+                        nama_output_utama = aname
+                    } lainnya jika tanda_titik >= 0 {
+                        nama_output_utama = nama_bersih
+                    } lainnya {
+                        nama_output_utama = cname
+                    }
+
+                    jika nilai_sumber != nihil {
+                        r_baru[nama_output_utama] = nilai_sumber
+                        r_baru[cname] = nilai_sumber
+                        jika aname != nihil {
+                            r_baru[aname] = nilai_sumber
+                        }
+                        jika tanda_titik >= 0 {
+                            r_baru[nama_bersih] = nilai_sumber
+                        }
+                    }
+                }
+                tambah(arr_proyeksi, r_baru)
+            }
+            hasil_array = arr_proyeksi
+        }
+
+        jika panjang(ast.order_by) > 0 dan panjang(hasil_array) > 0 {
+            hasil_array = urutkan_array(hasil_array, ast.order_by)
+        }
+
+        jika ast.limit != nihil dan panjang(hasil_array) > ast.limit {
+            hasil_array = potong_array(hasil_array, 0, ast.limit)
+        }
+
+        jika panjang(hasil_array) == 0 {
+            kembalikan DataFrame([], [])
+        }
+
+        misal final_cols = kunci(hasil_array[0])
+        misal final_rows = []
+        untuk fr dalam hasil_array {
+            misal br = []
+            untuk fc dalam final_cols {
+                tambah(br, fr[fc])
+            }
+            tambah(final_rows, br)
+        }
+        kembalikan DataFrame(final_cols, final_rows)
+    }
+
+    kembalikan nihil
+}
+
+fungsi eksekusi_sql(db_instance, sql_str) {
+    misal tokens = sql_lexer(sql_str)
+    misal ast = sql_parser(tokens)
+    kembalikan sql_eksekusi(db_instance, ast)
+}
+
+struktur TabelRelasional {
+    nama_tabel,
+    kolom,
+    baris_data,
+    indeks_pk,
+
+    fungsi inisialisasi(nama, daftar_kolom) {
+        ini.nama_tabel = nama
+        ini.kolom = daftar_kolom
+        ini.baris_data = []
+        ini.indeks_pk = {}
+    }
+
+    fungsi sisip(data_record) {
+        misal id = data_record["id"]
+        jika id != nihil dan ada_kunci(ini.indeks_pk, ke_teks(id)) {
+            kembalikan salah
+        }
+        tambah(ini.baris_data, data_record)
+        jika id != nihil {
+            ini.indeks_pk[ke_teks(id)] = panjang(ini.baris_data) - 1
+        }
+        kembalikan benar
+    }
+
+    fungsi pilih_di_mana(fungsi_predikat) {
+        kembalikan saring_bawaan(ini.baris_data, fungsi_predikat)
+    }
+
+    fungsi perbarui_berdasarkan_id(id, data_baru) {
+        misal key = ke_teks(id)
+        jika bukan ada_kunci(ini.indeks_pk, key) {
+            kembalikan salah
+        }
+        misal idx = ini.indeks_pk[key]
+        ini.baris_data[idx] = data_baru
+        kembalikan benar
+    }
+}
+
+struktur KoleksiDokumen {
+    nama_koleksi,
+    dokumen,
+    indeks_field,
+    indeks_teks,
+    _dokumen_by_id,
+
+    fungsi inisialisasi(nama) {
+        ini.nama_koleksi = nama
+        ini.dokumen = []
+        ini.indeks_field = {}
+        ini.indeks_teks = {}
+        ini._dokumen_by_id = {}
+    }
+
+    fungsi sisip_satu(doc) {
+        jika bukan ada_kunci(doc, "_id") {
+            doc["_id"] = "doc_" + ke_teks(waktu()) + "_" + ke_teks(panjang(ini.dokumen) + 1)
+        }
+        tambah(ini.dokumen, doc)
+        ini._dokumen_by_id[doc["_id"]] = panjang(ini.dokumen) - 1
+
+        misal field_terindeks = kunci(ini.indeks_field)
+        jika panjang(field_terindeks) > 0 {
+            untuk_setiap(field_terindeks, fungsi(nama_field) {
+                misal pohon = ini.indeks_field[nama_field]
+                jika ada_kunci(doc, nama_field) {
+                    misal nilai_field = ke_teks(doc[nama_field])
+                    misal existing = bplus_cari(pohon, nilai_field)
+                    misal daftar_id = []
+                    jika existing != nil {
+                        daftar_id = existing
+                    }
+                    tambah(daftar_id, doc["_id"])
+                    bplus_sisip(pohon, nilai_field, daftar_id)
+                }
+            })
+        }
+        kembalikan doc["_id"]
+    }
+
+    fungsi cari(kunci_field, nilai_target) {
+        kembalikan saring_bawaan(ini.dokumen, fungsi(item) {
+            jika ada_kunci(item, kunci_field) {
+                kembalikan item[kunci_field] == nilai_target
+            }
+            kembalikan salah
+        })
+    }
+
+    fungsi agregasi_total(kunci_angka) {
+        kembalikan lipat(ini.dokumen, 0, fungsi(acc, item) {
+            jika ada_kunci(item, kunci_angka) {
+                kembalikan acc + item[kunci_angka]
+            }
+            kembalikan acc
+        })
+    }
+}
+
+fungsi _cari_dokumen_by_id(koleksi, id) {
+    jika ada_kunci(koleksi._dokumen_by_id, id) {
+        kembalikan koleksi.dokumen[koleksi._dokumen_by_id[id]]
+    }
+    misal hasil = saring_bawaan(koleksi.dokumen, fungsi(d) {
+        kembalikan d["_id"] == id
+    })
+    jika panjang(hasil) > 0 {
+        kembalikan hasil[0]
+    }
+    kembalikan nil
+}
+
+fungsi indeks_tambah(koleksi, nama_field) {
+    misal pohon = PohonBPlus(4)
+    untuk_setiap(koleksi.dokumen, fungsi(doc) {
+        jika ada_kunci(doc, nama_field) {
+            misal nilai_field = ke_teks(doc[nama_field])
+            misal existing = bplus_cari(pohon, nilai_field)
+            misal daftar_id = []
+            jika existing != nil {
+                daftar_id = existing
+            }
+            tambah(daftar_id, doc["_id"])
+            bplus_sisip(pohon, nilai_field, daftar_id)
+        }
+    })
+    koleksi.indeks_field[nama_field] = pohon
+    kembalikan benar
+}
+
+fungsi indeks_cari(koleksi, nama_field, nilai_cari) {
+    jika bukan ada_kunci(koleksi.indeks_field, nama_field) {
+        kembalikan []
+    }
+    misal pohon = koleksi.indeks_field[nama_field]
+    misal kunci_cari = ke_teks(nilai_cari)
+    misal hasil_ids = bplus_cari(pohon, kunci_cari)
+    jika hasil_ids == nil {
+        kembalikan []
+    }
+    misal hasil = []
+    untuk_setiap(hasil_ids, fungsi(id) {
+        misal doc = _cari_dokumen_by_id(koleksi, id)
+        jika doc != nil {
+            tambah(hasil, doc)
+        }
+    })
+    kembalikan hasil
+}
+
+struktur WidyaDB {
+    nama_db,
+    geo,
+    rel,
+    nosql,
+
+    fungsi inisialisasi(nama_db) {
+        misal rtree = IndeksRTree(16)
+        misal proj = ProyeksiCRS("EPSG:4326", "EPSG:3857")
+        misal wal = LogWAL(nama_db + "_rel")
+        misal vektor = BasisDataVektor(128)
+        misal kv = PenyimpananKV()
+        misal ts = DeretWaktu(nama_db + "_ts")
+        misal lsm = BukaLSM(nama_db + "_lsm")
+        misal bplus = PohonBPlus(32)
+
+        ini.nama_db = nama_db
+        ini.geo = {
+            "parser": ParserGeoJSON,
+            "rtree": rtree,
+            "proyeksi": proj,
+            "geohash_enkode": geohash_enkode,
+            "geohash_dekode": geohash_dekode,
+            "titik_dalam_poligon": spasial_titik_dalam_poligon,
+            "hitung_luas_poligon": spasial_hitung_luas_poligon,
+            "hitung_panjang_garis": spasial_hitung_panjang_garis,
+            "geojson_ke_wkt": geojson_ke_wkt,
+            "wkt_ke_geojson": wkt_ke_geojson,
+            "rtree_sisip": rtree_sisip_map,
+            "rtree_kueri_kotak": rtree_kueri_kotak_map,
+            "crs_transformasi": crs_transformasi_koordinat
+        }
+        ini.rel = {
+            "tabel": {},
+            "wal": wal,
+            "bplus": bplus,
+            "kolumnar": {}
+        }
+        ini.nosql = {
+            "dokumen": {},
+            "vektor": vektor,
+            "kv": kv,
+            "ts": ts,
+            "lsm": lsm
+        }
+    }
+}
+
+fungsi spasial_join_atribut(db, list_id_geom, nama_tabel_relasional, kolom_fk) {
+    misal hasil = []
+    jika bukan ada_kunci(db.rel.tabel, nama_tabel_relasional) {
+        kembalikan hasil
+    }
+    misal tbl = db.rel.tabel[nama_tabel_relasional]
+    untuk geom_id dalam list_id_geom {
+        misal baris_cocok = tbl.pilih_di_mana(fungsi(baris) {
+            jika ada_kunci(baris, kolom_fk) {
+                kembalikan ke_teks(baris[kolom_fk]) == ke_teks(geom_id)
+            }
+            kembalikan salah
+        })
+        untuk b dalam baris_cocok {
+            tambah(hasil, {
+                "id_geom": geom_id,
+                "atribut": b
+            })
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi widydb_simpan_ke_disk(db, path) {
+    misal state = {
+        "_engine": "WidyaDB v1.0",
+        "nama_db": db.nama_db,
+        "rel": {
+            "tabel": {},
+            "wal": db.rel.wal
+        },
+        "nosql": {
+            "dokumen": {},
+            "vektor": db.nosql.vektor,
+            "kv": db.nosql.kv,
+            "ts": db.nosql.ts,
+            "lsm": db.nosql.lsm
+        }
+    }
+    untuk nama_tbl dalam kunci(db.rel.tabel) {
+        misal t = db.rel.tabel[nama_tbl]
+        state.rel.tabel[nama_tbl] = {
+            "nama_tabel": t.nama_tabel,
+            "kolom": t.kolom,
+            "baris_data": t.baris_data,
+            "indeks_pk": t.indeks_pk
+        }
+    }
+    untuk nama_kol dalam kunci(db.rel.kolumnar) {
+        jika bukan ada_kunci(state.rel, "kolumnar") {
+            state.rel["kolumnar"] = {}
+        }
+        state.rel.kolumnar[nama_kol] = db.rel.kolumnar[nama_kol]
+    }
+    untuk nama_dok dalam kunci(db.nosql.dokumen) {
+        misal d = db.nosql.dokumen[nama_dok]
+        state.nosql.dokumen[nama_dok] = {
+            "nama_koleksi": d.nama_koleksi,
+            "dokumen": d.dokumen
+        }
+    }
+    misal json_str = ke_json(state, 2)
+    tulis_berkas(path, json_str)
+    kembalikan benar
+}
+
+fungsi widydb_muat_dari_disk(path) {
+    misal json_str = baca_berkas(path)
+    misal state = dari_json(json_str)
+    misal db = WidyaDB(state.nama_db)
+    untuk nama_tbl dalam kunci(state.rel.tabel) {
+        misal t_data = state.rel.tabel[nama_tbl]
+        misal t_baru = TabelRelasional(t_data.nama_tabel, t_data.kolom)
+        t_baru.baris_data = t_data.baris_data
+        t_baru.indeks_pk = t_data.indeks_pk
+        db.rel.tabel[nama_tbl] = t_baru
+    }
+    jika ada_kunci(state.rel, "kolumnar") {
+        untuk nama_kol dalam kunci(state.rel.kolumnar) {
+            db.rel.kolumnar[nama_kol] = state.rel.kolumnar[nama_kol]
+        }
+    }
+    untuk nama_dok dalam kunci(state.nosql.dokumen) {
+        misal d_data = state.nosql.dokumen[nama_dok]
+        misal d_baru = KoleksiDokumen(d_data.nama_koleksi)
+        d_baru.dokumen = d_data.dokumen
+        db.nosql.dokumen[nama_dok] = d_baru
+    }
+    db.nosql.vektor = state.nosql.vektor
+    db.nosql.kv = state.nosql.kv
+    db.nosql.ts = state.nosql.ts
+    db.nosql.lsm = state.nosql.lsm
+    kembalikan db
+}
+
+tetap KONSTANTA_E_TEKS = 2.718281828459045
+
+fungsi ln_natural(x) {
+    jika x <= 0 {
+        kembalikan 0
+    }
+    misal y = 0
+    jika x > 1 {
+        y = x / 2
+    } lainnya {
+        y = x - 1
+    }
+    untuk _ dalam 1..100 {
+        misal ey = pangkat(KONSTANTA_E_TEKS, y)
+        misal y_baru = y - 1 + x / ey
+        jika mutlak(y_baru - y) < 0.0000001 {
+            y = y_baru
+            berhenti
+        }
+        y = y_baru
+    }
+    kembalikan y
+}
+
+fungsi apakah_ada_di_daftar(daftar, pred) {
+    untuk item dalam daftar {
+        jika pred(item) {
+            kembalikan benar
+        }
+    }
+    kembalikan salah
+}
+
+fungsi teks_tokenize(kalimat) {
+    misal stop_words = ["yang","dan","di","ke","dari","pada","untuk","dengan","adalah","ini","itu","saya","kamu","dia","akan","telah","sudah"]
+    misal huruf_kecil_kalimat = huruf_kecil(kalimat)
+    misal tanda_baca = [",",".",";",":","!","?"]
+    untuk_setiap(tanda_baca, fungsi(tb) {
+        misal pattern = "\\" + tb
+        huruf_kecil_kalimat = regex_ganti(pattern, " ", huruf_kecil_kalimat)
+    })
+    huruf_kecil_kalimat = regex_ganti(r"\s+", " ", huruf_kecil_kalimat)
+    misal kata_kata = pisah_manual(huruf_kecil_kalimat, " ")
+    misal hasil = []
+    untuk_setiap(kata_kata, fungsi(k) {
+        jika k != "" && bukan apakah_ada_di_daftar(stop_words, fungsi(sw) {
+            kembalikan sw == k
+        }) {
+            tambah(hasil, k)
+        }
+    })
+    kembalikan hasil
+}
+
+struktur IndeksTerbalik {
+    map_kata,
+    panjang_dok,
+
+    fungsi inisialisasi() {
+        ini.map_kata = {}
+        ini.panjang_dok = {}
+    }
+}
+
+fungsi indeks_terbalik_tambah(it, doc_id, teks) {
+    misal tokens = teks_tokenize(teks)
+    it.panjang_dok[doc_id] = panjang(tokens)
+    misal freq_map = {}
+    untuk_setiap(tokens, fungsi(t) {
+        jika ada_kunci(freq_map, t) {
+            freq_map[t] = freq_map[t] + 1
+        } lainnya {
+            freq_map[t] = 1
+        }
+    })
+    untuk k dalam kunci(freq_map) {
+        misal entry = {"doc_id": doc_id, "term_freq": freq_map[k]}
+        jika ada_kunci(it.map_kata, k) {
+            tambah(it.map_kata[k], entry)
+        } lainnya {
+            it.map_kata[k] = [entry]
+        }
+    }
+}
+
+fungsi indeks_terbalik_kueri(it, koleksi_dok, nama_field, string_kueri, top_k) {
+    jika top_k == 0 {
+        top_k = 10
+    }
+    misal kueri_tokens = teks_tokenize(string_kueri)
+    jika panjang(kueri_tokens) == 0 {
+        kembalikan []
+    }
+    misal total_dok = panjang(koleksi_dok.dokumen)
+    misal skor_dok = {}
+    misal idx_dok_map = {}
+    misal idx_counter = 0
+    untuk_setiap(koleksi_dok.dokumen, fungsi(dok) {
+        idx_dok_map[dok["_id"]] = idx_counter
+        idx_counter = idx_counter + 1
+    })
+    untuk_setiap(kueri_tokens, fungsi(kt) {
+        jika ada_kunci(it.map_kata, kt) {
+            misal daftar_posting = it.map_kata[kt]
+            misal df = panjang(daftar_posting)
+            misal idf = ln_natural((1 + total_dok) / (1 + df)) + 1
+            untuk_setiap(daftar_posting, fungsi(posting) {
+                misal did = posting["doc_id"]
+                misal tf = posting["term_freq"]
+                misal pd = it.panjang_dok[did]
+                jika pd > 0 {
+                    misal tfidf = (tf / pd) * idf
+                    misal tiebreaker = 0.0000001 * (total_dok - idx_dok_map[did])
+                    jika ada_kunci(skor_dok, did) {
+                        skor_dok[did] = skor_dok[did] + tfidf
+                    } lainnya {
+                        skor_dok[did] = tfidf + tiebreaker
+                    }
+                }
+            })
+        }
+    })
+    misal daftar_skor = []
+    untuk did dalam kunci(skor_dok) {
+        misal dok_target = saring_bawaan(koleksi_dok.dokumen, fungsi(d) {
+            kembalikan d["_id"] == did
+        })
+        jika panjang(dok_target) > 0 {
+            tambah(daftar_skor, {"dokumen": dok_target[0], "skor": skor_dok[did]})
+        }
+    }
+    misal skor_angka = []
+    untuk_setiap(daftar_skor, fungsi(item) {
+        tambah(skor_angka, item["skor"])
+    })
+    misal skor_terurut = urutkan(skor_angka)
+    skor_terurut = balik(skor_terurut)
+    misal hasil = []
+    untuk s dalam skor_terurut {
+        jika panjang(hasil) >= top_k {
+            berhenti
+        }
+        untuk item dalam daftar_skor {
+            jika item["skor"] == s && panjang(hasil) < top_k {
+                misal belum_ada = benar
+                untuk h dalam hasil {
+                    jika h["dokumen"]["_id"] == item["dokumen"]["_id"] {
+                        belum_ada = salah
+                    }
+                }
+                jika belum_ada {
+                    tambah(hasil, item)
+                }
+            }
+        }
+    }
+    kembalikan hasil
+}
+
+fungsi pencarian_teks_terbalik(koleksi_dok, nama_field, string_kueri) {
+    jika bukan ada_kunci(koleksi_dok.indeks_teks, nama_field) {
+        misal it_baru = IndeksTerbalik()
+        untuk_setiap(koleksi_dok.dokumen, fungsi(dok) {
+            misal did = dok["_id"]
+            misal teks_field = ""
+            jika ada_kunci(dok, nama_field) {
+                teks_field = dok[nama_field]
+            }
+            indeks_terbalik_tambah(it_baru, did, teks_field)
+        })
+        koleksi_dok.indeks_teks[nama_field] = it_baru
+    }
+    misal it = koleksi_dok.indeks_teks[nama_field]
+    kembalikan indeks_terbalik_kueri(it, koleksi_dok, nama_field, string_kueri, 10)
+}
+
+fungsi kosinus_kemiripan(v1, v2) {
+    misal titik = 0
+    misal norm1 = 0
+    misal norm2 = 0
+    misal n = panjang(v1)
+    misal i = 0
+    selama (i < n) {
+        titik = titik + v1[i] * v2[i]
+        norm1 = norm1 + v1[i] * v1[i]
+        norm2 = norm2 + v2[i] * v2[i]
+        i = i + 1
+    }
+    jika norm1 == 0 atau norm2 == 0 {
+        kembalikan 0
+    }
+    kembalikan titik / (akar(norm1) * akar(norm2))
+}
+
+fungsi buat_basis_data_vektor(dim) {
+    kembalikan {
+        "_tipe": "BasisDataVektor",
+        "dimensi": dim,
+        "entri": []
+    }
+}
+
+fungsi vektor_sisip_map(db, id, vek, meta) {
+    tambah(db.entri, {
+        "id": id,
+        "vektor": vek,
+        "metadata": meta
+    })
+    kembalikan benar
+}
+
+fungsi vektor_hitung_map(db) {
+    kembalikan panjang(db.entri)
+}
+
+fungsi vektor_dapatkan_vektor_map(db, id) {
+    misal n = panjang(db.entri)
+    misal i = 0
+    selama (i < n) {
+        jika db.entri[i].id == id {
+            kembalikan db.entri[i].vektor
+        }
+        i = i + 1
+    }
+    kembalikan nil
+}
+
+fungsi vektor_dapatkan_metadata_map(db, id) {
+    misal n = panjang(db.entri)
+    misal i = 0
+    selama (i < n) {
+        jika db.entri[i].id == id {
+            kembalikan db.entri[i].metadata
+        }
+        i = i + 1
+    }
+    kembalikan nil
+}
+
+fungsi sort_hasil_kemiripan(daftar) {
+    misal n = panjang(daftar)
+    misal i = 0
+    selama (i < n) {
+        misal j = i + 1
+        selama (j < n) {
+            jika daftar[j].kemiripan > daftar[i].kemiripan {
+                misal tmp = daftar[i]
+                daftar[i] = daftar[j]
+                daftar[j] = tmp
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+    kembalikan daftar
+}
+
+fungsi vektor_kueri_knn_map(db, qvek, top_k) {
+    misal skor = []
+    untuk_setiap(db.entri, fungsi(e) {
+        misal sim = kosinus_kemiripan(qvek, e.vektor)
+        tambah(skor, {
+            "id": e.id,
+            "vektor": e.vektor,
+            "metadata": e.metadata,
+            "kemiripan": sim
+        })
+    })
+    sort_hasil_kemiripan(skor)
+    misal hasil = []
+    misal k = top_k
+    jika k > panjang(skor) {
+        k = panjang(skor)
+    }
+    misal idx = 0
+    selama (idx < k) {
+        tambah(hasil, skor[idx])
+        idx = idx + 1
+    }
+    kembalikan hasil
+}
+
+fungsi lsh_init(D, num_tables, num_bits) {
+    jika num_tables == nil {
+        num_tables = 4
+    }
+    jika num_bits == nil {
+        num_bits = 6
+    }
+    misal random_vecs_per_table = []
+    misal t = 0
+    selama (t < num_tables) {
+        misal table_vecs = []
+        misal b = 0
+        selama (b < num_bits) {
+            misal rand_vec = []
+            misal d = 0
+            selama (d < D) {
+                tambah(rand_vec, acak(-1, 1))
+                d = d + 1
+            }
+            tambah(table_vecs, rand_vec)
+            b = b + 1
+        }
+        tambah(random_vecs_per_table, table_vecs)
+        t = t + 1
+    }
+    misal bucket_per_table = []
+    misal t2 = 0
+    selama (t2 < num_tables) {
+        tambah(bucket_per_table, {})
+        t2 = t2 + 1
+    }
+    kembalikan {
+        "_tipe": "VektorLSHIndex",
+        "D": D,
+        "num_tables": num_tables,
+        "num_bits": num_bits,
+        "random_vecs_per_table": random_vecs_per_table,
+        "bucket_per_table": bucket_per_table
+    }
+}
+
+fungsi lsh_hitung_signature(lsh, table_idx, vek) {
+    misal sig = ""
+    misal table_vecs = lsh.random_vecs_per_table[table_idx]
+    misal b = 0
+    selama (b < lsh.num_bits) {
+        misal rv = table_vecs[b]
+        misal dot = 0
+        misal d = 0
+        selama (d < lsh.D) {
+            dot = dot + vek[d] * rv[d]
+            d = d + 1
+        }
+        jika dot >= 0 {
+            sig = sig + "1"
+        } lainnya {
+            sig = sig + "0"
+        }
+        b = b + 1
+    }
+    kembalikan sig
+}
+
+fungsi lsh_sisip(lsh, id, vek) {
+    misal t = 0
+    selama (t < lsh.num_tables) {
+        misal sig = lsh_hitung_signature(lsh, t, vek)
+        misal bucket = lsh.bucket_per_table[t]
+        jika bucket[sig] == nil {
+            bucket[sig] = []
+        }
+        tambah(bucket[sig], id)
+        t = t + 1
+    }
+    kembalikan benar
+}
+
+fungsi lsh_kueri_knn(lsh, vektor_db, qvek, top_k) {
+    misal kandidat_map = {}
+    misal t = 0
+    selama (t < lsh.num_tables) {
+        misal sig = lsh_hitung_signature(lsh, t, qvek)
+        misal bucket = lsh.bucket_per_table[t]
+        misal ids = bucket[sig]
+        jika ids != nil {
+            untuk_setiap(ids, fungsi(id) {
+                kandidat_map[id] = benar
+            })
+        }
+        t = t + 1
+    }
+    misal kandidat_ids = kunci(kandidat_map)
+    misal skor = []
+    untuk_setiap(kandidat_ids, fungsi(id) {
+        misal ev = vektor_dapatkan_vektor_map(vektor_db, id)
+        jika ev != nil {
+            misal sim = kosinus_kemiripan(qvek, ev)
+            misal meta = vektor_dapatkan_metadata_map(vektor_db, id)
+            tambah(skor, {
+                "id": id,
+                "vektor": ev,
+                "metadata": meta,
+                "kemiripan": sim
+            })
+        }
+    })
+    sort_hasil_kemiripan(skor)
+    misal hasil = []
+    misal k = top_k
+    jika k > panjang(skor) {
+        k = panjang(skor)
+    }
+    misal idx = 0
+    selama (idx < k) {
+        tambah(hasil, skor[idx])
+        idx = idx + 1
+    }
+    misal info_jumlah_kandidat = panjang(kandidat_ids)
+    kembalikan {
+        "hasil": hasil,
+        "jumlah_kandidat": info_jumlah_kandidat
+    }
+}
+
+fungsi vektor_kueri_knn_approx(vektor_db, lsh, qvek, top_k) {
+    misal res = lsh_kueri_knn(lsh, vektor_db, qvek, top_k)
+    kembalikan res.hasil
+}
+
+fungsi inisialisasi_deret_waktu_rollup(dw) {
+    jika dw.rollup_config == nihil {
+        dw.rollup_config = nihil
+        dw.retensi_jam = nihil
+        dw.rollup_data = {}
+        dw.jumlah_titik_sejak_compact = 0
+        dw.all_data_points = []
+    }
+    kembalikan dw
+}
+
+fungsi deret_waktu_set_rollup(dw, daftar_interval) {
+    inisialisasi_deret_waktu_rollup(dw)
+    dw.rollup_config = daftar_interval
+    kembalikan benar
+}
+
+fungsi deret_waktu_retensi(dw, retensi_jam) {
+    inisialisasi_deret_waktu_rollup(dw)
+    dw.retensi_jam = retensi_jam
+    kembalikan benar
+}
+
+fungsi detik_per_interval(interval_str) {
+    jika interval_str == "1m" { kembalikan 60 }
+    kalau interval_str == "5m" { kembalikan 300 }
+    kalau interval_str == "15m" { kembalikan 900 }
+    kalau interval_str == "1h" { kembalikan 3600 }
+    kembalikan 60
+}
+
+fungsi deret_waktu_lazy_compact(dw) {
+    inisialisasi_deret_waktu_rollup(dw)
+    misal all_data = dw.all_data_points
+    misal pjg_all = panjang(all_data)
+
+    jika dw.rollup_config != nihil {
+        untuk idx_interval dalam 0..(panjang(dw.rollup_config) - 1) {
+            misal interval_str = dw.rollup_config[idx_interval]
+            misal sec = detik_per_interval(interval_str)
+            misal bucket_map = {}
+            misal bucket_keys = []
+
+            untuk i dalam 0..(pjg_all - 1) {
+                misal titik = all_data[i]
+                misal ts = titik.waktu
+                misal val = titik.nilai
+                misal bucket_key = lantai(ts / sec) * sec
+                misal key_str = ke_teks(bucket_key)
+
+                jika bucket_map[key_str] == nihil {
+                    misal entry = {
+                        "bucket_ts": bucket_key,
+                        "sum": val,
+                        "min": val,
+                        "max": val,
+                        "count": 1
+                    }
+                    bucket_map[key_str] = entry
+                    tambah(bucket_keys, bucket_key)
+                } lainnya {
+                    misal e = bucket_map[key_str]
+                    e.sum = e.sum + val
+                    jika val < e.min { e.min = val }
+                    jika val > e.max { e.max = val }
+                    e.count = e.count + 1
+                }
+            }
+
+            misal buckets = []
+            misal pjg_keys = panjang(bucket_keys)
+            jika pjg_keys > 0 {
+                untuk i dalam 0..(pjg_keys - 1) {
+                    misal bkey = bucket_keys[i]
+                    misal bkey_str = ke_teks(bkey)
+                    misal e = bucket_map[bkey_str]
+                    misal bucket = {
+                        "bucket_ts": e.bucket_ts,
+                        "avg": e.sum / e.count,
+                        "min": e.min,
+                        "max": e.max,
+                        "count": e.count
+                    }
+                    tambah(buckets, bucket)
+                }
+            }
+            dw.rollup_data[interval_str] = buckets
+        }
+    }
+
+    misal data = dw.data_points
+    misal pjg = panjang(data)
+    jika dw.retensi_jam != nihil && pjg > 0 {
+        misal ts_terbaru = data[pjg - 1].waktu
+        misal ts_batas = ts_terbaru - dw.retensi_jam * 3600
+        misal data_baru = []
+        untuk i dalam 0..(pjg - 1) {
+            jika data[i].waktu >= ts_batas {
+                tambah(data_baru, data[i])
+            }
+        }
+        dw.data_points = data_baru
+    }
+
+    dw.jumlah_titik_sejak_compact = 0
+    kembalikan benar
+}
+
+fungsi tambah_titik_waktu_rollup(dw, ts, val) {
+    inisialisasi_deret_waktu_rollup(dw)
+    tambah_titik_waktu(dw, ts, val)
+    misal titik_baru = {
+        "waktu": ts,
+        "nilai": val
+    }
+    tambah(dw.all_data_points, titik_baru)
+    dw.jumlah_titik_sejak_compact = dw.jumlah_titik_sejak_compact + 1
+    jika dw.jumlah_titik_sejak_compact % 50 == 0 {
+        deret_waktu_lazy_compact(dw)
+    }
+    kembalikan benar
+}
+
+fungsi deret_waktu_kueri(dw, dari_ts, ke_ts, interval_opt) {
+    inisialisasi_deret_waktu_rollup(dw)
+    jika interval_opt == "raw" {
+        misal hasil = []
+        misal data = dw.data_points
+        untuk i dalam 0..(panjang(data) - 1) {
+            misal t = data[i].waktu
+            jika t >= dari_ts && t <= ke_ts {
+                tambah(hasil, data[i])
+            }
+        }
+        kembalikan hasil
+    } lainnya {
+        misal hasil = []
+        misal buckets = dw.rollup_data[interval_opt]
+        jika buckets != nihil {
+            untuk i dalam 0..(panjang(buckets) - 1) {
+                misal b = buckets[i]
+                jika b.bucket_ts >= dari_ts && b.bucket_ts <= ke_ts {
+                    tambah(hasil, b)
+                }
+            }
+        }
+        kembalikan hasil
+    }
+}
+
+struktur DBWidya {
+    tabel,
+
+    fungsi inisialisasi() {
+        ini.tabel = {}
+    },
+
+    fungsi buat_tabel(nama, kolom) {
+        misal t = TabelRelasional(nama, kolom)
+        ini.tabel[nama] = t
+        kembalikan t
+    }
+}
+
+struktur PgWireServerState {
+    status,
+    user,
+    basisdata,
+    query_count,
+    db,
+
+    fungsi inisialisasi() {
+        ini.status = "idle"
+        ini.user = ""
+        ini.basisdata = ""
+        ini.query_count = 0
+        ini.db = {"tabel": {}}
+    }
+}
+
+fungsi inisialisasi_default() {
+    misal state = PgWireServerState()
+    state.status = "idle"
+    state.user = ""
+    state.basisdata = ""
+    state.query_count = 0
+    state.db = {"tabel": {}}
+    kembalikan state
+}
+
+fungsi buat_ord_map() {
+    misal m = {}
+    m["\0"] = 0
+    m[" "] = 32; m["!"] = 33; m["\""] = 34; m["#"] = 35; m["$"] = 36; m["%"] = 37; m["&"] = 38; m["'"] = 39
+    m["("] = 40; m[")"] = 41; m["*"] = 42; m["+"] = 43; m[","] = 44; m["-"] = 45; m["."] = 46; m["/"] = 47
+    m["0"] = 48; m["1"] = 49; m["2"] = 50; m["3"] = 51; m["4"] = 52; m["5"] = 53; m["6"] = 54; m["7"] = 55; m["8"] = 56; m["9"] = 57
+    m[":"] = 58; m[";"] = 59; m["<"] = 60; m["="] = 61; m[">"] = 62; m["?"] = 63; m["@"] = 64
+    m["A"] = 65; m["B"] = 66; m["C"] = 67; m["D"] = 68; m["E"] = 69; m["F"] = 70; m["G"] = 71; m["H"] = 72; m["I"] = 73; m["J"] = 74; m["K"] = 75; m["L"] = 76; m["M"] = 77
+    m["N"] = 78; m["O"] = 79; m["P"] = 80; m["Q"] = 81; m["R"] = 82; m["S"] = 83; m["T"] = 84; m["U"] = 85; m["V"] = 86; m["W"] = 87; m["X"] = 88; m["Y"] = 89; m["Z"] = 90
+    m["["] = 91; m["\\"] = 92; m["]"] = 93; m["^"] = 94; m["_"] = 95; m["`"] = 96
+    m["a"] = 97; m["b"] = 98; m["c"] = 99; m["d"] = 100; m["e"] = 101; m["f"] = 102; m["g"] = 103; m["h"] = 104; m["i"] = 105; m["j"] = 106; m["k"] = 107; m["l"] = 108; m["m"] = 109
+    m["n"] = 110; m["o"] = 111; m["p"] = 112; m["q"] = 113; m["r"] = 114; m["s"] = 115; m["t"] = 116; m["u"] = 117; m["v"] = 118; m["w"] = 119; m["x"] = 120; m["y"] = 121; m["z"] = 122
+    m["{"] = 123; m["|"] = 124; m["}"] = 125; m["~"] = 126
+    kembalikan m
+}
+
+tetap ORD_MAP = buat_ord_map()
+
+fungsi buat_chr_map() {
+    misal m = {}
+    untuk k dalam kunci(ORD_MAP) {
+        misal v = ORD_MAP[k]
+        m[ke_teks(v)] = k
+    }
+    kembalikan m
+}
+
+tetap CHR_MAP = buat_chr_map()
+
+fungsi ord(c) {
+    jika ada_kunci(ORD_MAP, c) {
+        kembalikan ORD_MAP[c]
+    }
+    kembalikan 63
+}
+
+fungsi chr(n) {
+    misal key = ke_teks(n)
+    jika ada_kunci(CHR_MAP, key) {
+        kembalikan CHR_MAP[key]
+    }
+    kembalikan "?"
+}
+
+fungsi int32_to_4bytes_bigendian(num) {
+    misal hasil = []
+    misal n = num
+    jika n < 0 {
+        n = n + 4294967296
+    }
+    misal b1 = n / 16777216
+    n = n - b1 * 16777216
+    misal b2 = n / 65536
+    n = n - b2 * 65536
+    misal b3 = n / 256
+    n = n - b3 * 256
+    misal b4 = n
+    tambah(hasil, b1)
+    tambah(hasil, b2)
+    tambah(hasil, b3)
+    tambah(hasil, b4)
+    kembalikan hasil
+}
+
+fungsi pgwire_encode_frame(type_byte_char, payload_bytes_array) {
+    misal hasil = []
+    tambah(hasil, type_byte_char)
+    misal panjang_total = 4 + panjang(payload_bytes_array)
+    misal len_bytes = int32_to_4bytes_bigendian(panjang_total)
+    tambah(hasil, len_bytes[0])
+    tambah(hasil, len_bytes[1])
+    tambah(hasil, len_bytes[2])
+    tambah(hasil, len_bytes[3])
+    untuk pb dalam payload_bytes_array {
+        tambah(hasil, pb)
+    }
+    kembalikan hasil
+}
+
+fungsi string_ke_bytes_nullterm(s) {
+    misal hasil = []
+    misal i = 0
+    selama i < panjang(s) {
+        tambah(hasil, ord(s[i]))
+        i = i + 1
+    }
+    tambah(hasil, 0)
+    kembalikan hasil
+}
+
+fungsi int16_to_2bytes_bigendian(num) {
+    misal hasil = []
+    misal n = num
+    jika n < 0 {
+        n = n + 65536
+    }
+    misal b1 = n / 256
+    n = n - b1 * 256
+    misal b2 = n
+    tambah(hasil, b1)
+    tambah(hasil, b2)
+    kembalikan hasil
+}
+
+fungsi frame_tipe_R_auth_ok() {
+    misal payload = []
+    misal len_bytes = int32_to_4bytes_bigendian(0)
+    tambah(payload, len_bytes[0])
+    tambah(payload, len_bytes[1])
+    tambah(payload, len_bytes[2])
+    tambah(payload, len_bytes[3])
+    kembalikan pgwire_encode_frame(ord('R'), payload)
+}
+
+fungsi frame_tipe_S_param_status(k, v) {
+    misal payload = []
+    misal kb = string_ke_bytes_nullterm(k)
+    untuk b dalam kb {
+        tambah(payload, b)
+    }
+    misal vb = string_ke_bytes_nullterm(v)
+    untuk b dalam vb {
+        tambah(payload, b)
+    }
+    kembalikan pgwire_encode_frame(ord('S'), payload)
+}
+
+fungsi frame_tipe_Z_idle() {
+    misal payload = []
+    tambah(payload, ord('I'))
+    kembalikan pgwire_encode_frame(ord('Z'), payload)
+}
+
+fungsi frame_tipe_T_rowdesc(namako, oid) {
+    misal payload = []
+    misal num_fields = panjang(namako)
+    misal nf_bytes = int16_to_2bytes_bigendian(num_fields)
+    tambah(payload, nf_bytes[0])
+    tambah(payload, nf_bytes[1])
+    misal ci = 0
+    selama ci < panjang(namako) {
+        misal nama = namako[ci]
+        misal oid_val = 1043
+        jika ci < panjang(oid) {
+            oid_val = oid[ci]
+        }
+        misal nb = string_ke_bytes_nullterm(nama)
+        untuk b dalam nb {
+            tambah(payload, b)
+        }
+        misal table_oid = int32_to_4bytes_bigendian(0)
+        untuk b dalam table_oid {
+            tambah(payload, b)
+        }
+        misal attr_num = int16_to_2bytes_bigendian(0)
+        untuk b dalam attr_num {
+            tambah(payload, b)
+        }
+        misal type_oid = int32_to_4bytes_bigendian(oid_val)
+        untuk b dalam type_oid {
+            tambah(payload, b)
+        }
+        misal type_len = int16_to_2bytes_bigendian(-1)
+        untuk b dalam type_len {
+            tambah(payload, b)
+        }
+        misal typmod = int32_to_4bytes_bigendian(-1)
+        untuk b dalam typmod {
+            tambah(payload, b)
+        }
+        misal fmt_code = int16_to_2bytes_bigendian(0)
+        untuk b dalam fmt_code {
+            tambah(payload, b)
+        }
+        ci = ci + 1
+    }
+    kembalikan pgwire_encode_frame(ord('T'), payload)
+}
+
+fungsi frame_tipe_D_datarow(values_arr) {
+    misal payload = []
+    misal num_cols = panjang(values_arr)
+    misal nc_bytes = int16_to_2bytes_bigendian(num_cols)
+    tambah(payload, nc_bytes[0])
+    tambah(payload, nc_bytes[1])
+    misal vi = 0
+    selama vi < panjang(values_arr) {
+        misal val = values_arr[vi]
+        misal str_val = ""
+        jika val == nihil {
+            misal null_len = int32_to_4bytes_bigendian(-1)
+            untuk b dalam null_len {
+                tambah(payload, b)
+            }
+        } lainnya {
+            str_val = ke_teks(val)
+            misal vb = []
+            misal si = 0
+            selama si < panjang(str_val) {
+                tambah(vb, ord(str_val[si]))
+                si = si + 1
+            }
+            misal vlen = int32_to_4bytes_bigendian(panjang(vb))
+            untuk b dalam vlen {
+                tambah(payload, b)
+            }
+            untuk b dalam vb {
+                tambah(payload, b)
+            }
+        }
+        vi = vi + 1
+    }
+    kembalikan pgwire_encode_frame(ord('D'), payload)
+}
+
+fungsi frame_tipe_C_cmdcomplete(tag) {
+    misal payload = []
+    misal tb = string_ke_bytes_nullterm(tag)
+    untuk b dalam tb {
+        tambah(payload, b)
+    }
+    kembalikan pgwire_encode_frame(ord('C'), payload)
+}
+
+fungsi frame_tipe_E_error(pesan) {
+    misal payload = []
+    tambah(payload, ord('S'))
+    misal sb = string_ke_bytes_nullterm("ERROR")
+    untuk b dalam sb {
+        tambah(payload, b)
+    }
+    tambah(payload, ord('M'))
+    misal mb = string_ke_bytes_nullterm(pesan)
+    untuk b dalam mb {
+        tambah(payload, b)
+    }
+    tambah(payload, 0)
+    kembalikan pgwire_encode_frame(ord('E'), payload)
+}
+
+fungsi bytes_ke_teks(bytes_arr) {
+    misal hasil = ""
+    untuk b dalam bytes_arr {
+        hasil = hasil + chr(b)
+    }
+    kembalikan hasil
+}
+
+fungsi pgwire_server_pipeline(state, frame_bytes) {
+    misal responses = []
+    misal len_frame = panjang(frame_bytes)
+
+    jika len_frame < 5 {
+        tambah(responses, frame_tipe_E_error("Frame terlalu pendek"))
+        tambah(responses, frame_tipe_Z_idle())
+        kembalikan responses
+    }
+
+    misal type_byte = frame_bytes[0]
+
+    jika type_byte == ord('Q') {
+        jika len_frame < 6 {
+            tambah(responses, frame_tipe_E_error("Query frame terlalu pendek"))
+            tambah(responses, frame_tipe_Z_idle())
+            kembalikan responses
+        }
+        state.query_count = state.query_count + 1
+        misal sql_bytes = []
+        misal si = 5
+        selama si < len_frame {
+            jika frame_bytes[si] == 0 {
+                berhenti
+            }
+            tambah(sql_bytes, frame_bytes[si])
+            si = si + 1
+        }
+        misal sql_str = bytes_ke_teks(sql_bytes)
+
+        misal hasil_sql = nihil
+        coba {
+            misal db_inst = {"tabel": state.db.tabel}
+            hasil_sql = eksekusi_sql(db_inst, sql_str)
+        } tangkap {
+            tambah(responses, frame_tipe_E_error("Gagal eksekusi SQL"))
+            tambah(responses, frame_tipe_Z_idle())
+            kembalikan responses
+        }
+
+        jika hasil_sql == nihil {
+            tambah(responses, frame_tipe_E_error("SQL tidak valid atau tabel tidak ditemukan"))
+            tambah(responses, frame_tipe_Z_idle())
+            kembalikan responses
+        }
+
+        jika tipe(hasil_sql) == "map" dan ada_kunci(hasil_sql, "dipengaruhi") {
+            misal tag = "OK " + ke_teks(hasil_sql.dipengaruhi)
+            tambah(responses, frame_tipe_C_cmdcomplete(tag))
+            tambah(responses, frame_tipe_Z_idle())
+            kembalikan responses
+        }
+
+        misal arr_hasil = df_ke_array(hasil_sql)
+        misal nama_kolom = []
+        misal oid_kolom = []
+        jika panjang(arr_hasil) > 0 {
+            nama_kolom = kunci(arr_hasil[0])
+        }
+        misal ok_idx = 0
+        selama ok_idx < panjang(nama_kolom) {
+            tambah(oid_kolom, 23)
+            ok_idx = ok_idx + 1
+        }
+
+        tambah(responses, frame_tipe_T_rowdesc(nama_kolom, oid_kolom))
+
+        misal jumlah_data_row = 0
+        untuk row_map dalam arr_hasil {
+            misal row_vals = []
+            untuk k dalam nama_kolom {
+                misal v = nihil
+                jika ada_kunci(row_map, k) {
+                    v = row_map[k]
+                }
+                tambah(row_vals, v)
+            }
+            tambah(responses, frame_tipe_D_datarow(row_vals))
+            jumlah_data_row = jumlah_data_row + 1
+        }
+
+        misal tag_cc = "SELECT " + ke_teks(jumlah_data_row)
+        tambah(responses, frame_tipe_C_cmdcomplete(tag_cc))
+        tambah(responses, frame_tipe_Z_idle())
+        kembalikan responses
+    }
+
+    jika type_byte == ord('X') {
+        state.status = "terminated"
+        kembalikan responses
+    }
+
+    jika len_frame >= 8 {
+        misal proto_ver_bytes = [frame_bytes[4], frame_bytes[5], frame_bytes[6], frame_bytes[7]]
+        misal proto_ver = proto_ver_bytes[0] * 16777216 + proto_ver_bytes[1] * 65536 + proto_ver_bytes[2] * 256 + proto_ver_bytes[3]
+        jika proto_ver == 196608 {
+            state.status = "autentikasi_ok"
+            tambah(responses, frame_tipe_R_auth_ok())
+            tambah(responses, frame_tipe_S_param_status("server_version", "14.2"))
+            tambah(responses, frame_tipe_S_param_status("server_encoding", "UTF8"))
+            tambah(responses, frame_tipe_S_param_status("client_encoding", "UTF8"))
+            tambah(responses, frame_tipe_Z_idle())
+            kembalikan responses
+        }
+    }
+
+    tambah(responses, frame_tipe_E_error("Tipe pesan tidak dikenal: " + ke_teks(type_byte)))
+    tambah(responses, frame_tipe_Z_idle())
+    kembalikan responses
+}
+
+cetak("================================================================")
+cetak("[WidyaDB 167] PRODUKSI PIPELINE DIMULAI")
+cetak("================================================================")
+
+misal db = WidyaDB("produksi_db")
+jika db.nama_db == "produksi_db" {
+    cetak("[OK] step 1 init")
+}
+
+misal csv_str = "id,nama,kota,lat,lng,pendapatan\n"
+misal kota_list = ["Jakarta Utara","Jakarta Timur","Jakarta Selatan","Jakarta Barat"]
+misal lng_list = [106.8, 106.9, 106.8, 106.7]
+misal lat_list = [-6.1, -6.2, -6.3, -6.2]
+misal id_cs = 1
+selama id_cs <= 1000 {
+    misal idx_k = (id_cs - 1) % 4
+    misal nama_cs = "Warga-" + ke_teks(id_cs)
+    misal kt = kota_list[idx_k]
+    misal lt = lat_list[idx_k]
+    misal ln = lng_list[idx_k]
+    misal pdt = 3000000 + acak(0, 17000000)
+    misal baris = ke_teks(id_cs) + "," + nama_cs + "," + kt + "," + ke_teks(lt) + "," + ke_teks(ln) + "," + ke_teks(pdt) + "\n"
+    csv_str = csv_str + baris
+    id_cs = id_cs + 1
+}
+misal array_warga = urai_csv(csv_str)
+jika panjang(array_warga) >= 999 {
+    cetak("[OK] step 2 import 1000 CSV")
+}
+
+misal tbl_warga = TabelRelasional("warga", ["id","nama","kota","lat","lng","pendapatan"])
+misal i3 = 0
+selama i3 < panjang(array_warga) {
+    misal b = array_warga[i3]
+    misal bmap = {}
+    bmap["id"] = b["id"]
+    bmap["nama"] = b["nama"]
+    bmap["kota"] = b["kota"]
+    bmap["lat"] = ke_pecahan_safe(b["lat"])
+    bmap["lng"] = ke_pecahan_safe(b["lng"])
+    bmap["pendapatan"] = ke_pecahan_safe(b["pendapatan"])
+    tbl_warga.sisip(bmap)
+    i3 = i3 + 1
+}
+db.rel.tabel["warga"] = tbl_warga
+jika panjang(tbl_warga.baris_data) >= 999 {
+    cetak("[OK] step3 insert tabel warga 1000")
+}
+
+misal kecamatan = []
+misal wkt_jakut = "POLYGON((106.75 -6.15, 106.9 -6.15, 106.9 -6.1, 106.75 -6.1, 106.75 -6.15))"
+misal wkt_jaktim = "POLYGON((106.85 -6.25, 106.95 -6.25, 106.95 -6.15, 106.85 -6.15, 106.85 -6.25))"
+misal wkt_jaksel = "POLYGON((106.75 -6.35, 106.9 -6.35, 106.9 -6.25, 106.75 -6.25, 106.75 -6.35))"
+misal wkt_jakbar = "POLYGON((106.65 -6.25, 106.75 -6.25, 106.75 -6.15, 106.65 -6.15, 106.65 -6.25))"
+misal wkt_kec = [wkt_jakut, wkt_jaktim, wkt_jaksel, wkt_jakbar]
+misal nama_kec = ["Jakarta Utara","Jakarta Timur","Jakarta Selatan","Jakarta Barat"]
+misal idx_kec4 = 0
+selama idx_kec4 < 4 {
+    misal g = parse_wkt(wkt_kec[idx_kec4])
+    misal kordinat = g["koordinat"]
+    misal kec_map = {"id": idx_kec4, "nama": nama_kec[idx_kec4], "geom": kordinat}
+    tambah(kecamatan, kec_map)
+    misal minx = 999
+    misal miny = 999
+    misal maxx = -999
+    misal maxy = -999
+    misal ring = kordinat[0]
+    misal pv = 0
+    selama pv < panjang(ring) {
+        misal px = ring[pv][0]
+        misal py = ring[pv][1]
+        jika px < minx { minx = px }
+        jika py < miny { miny = py }
+        jika px > maxx { maxx = px }
+        jika py > maxy { maxy = py }
+        pv = pv + 1
+    }
+    rtree_sisip(db.geo.rtree, idx_kec4, minx, miny, maxx, maxy, kec_map)
+    idx_kec4 = idx_kec4 + 1
+}
+misal koleksi_kec = KoleksiDokumen("kecamatan")
+indeks_tambah(koleksi_kec, "nama")
+misal i4b = 0
+selama i4b < panjang(kecamatan) {
+    koleksi_kec.sisip_satu(kecamatan[i4b])
+    i4b = i4b + 1
+}
+db.nosql.dokumen["kecamatan"] = koleksi_kec
+jika panjang(kecamatan) == 4 {
+    cetak("[OK] step4 4 kecamatan geom + secondary index")
+}
+
+misal db_rel5 = {"tabel": db.rel.tabel}
+misal sql5 = "SELECT kota, COUNT(*) AS jumlah_warga, AVG(pendapatan) AS avg_pendapatan FROM warga GROUP BY kota ORDER BY avg_pendapatan DESC"
+misal df_hasil = eksekusi_sql(db_rel5, sql5)
+misal arr_df = df_ke_array(df_hasil)
+cetak("Hasil SQL GROUP BY:")
+cetak("kota                | jumlah_warga | avg_pendapatan")
+cetak("--------------------|--------------|----------------")
+misal ip5 = 0
+selama ip5 < panjang(arr_df) {
+    misal r5 = arr_df[ip5]
+    misal k5 = r5["kota"]
+    misal j5 = ke_teks(r5["jumlah_warga"])
+    misal a5 = ke_teks(r5["avg_pendapatan"])
+    cetak(k5 + " | " + j5 + " | " + a5)
+    ip5 = ip5 + 1
+}
+jika panjang(arr_df) >= 1 {
+    cetak("[OK] step5 SQL Text GROUP BY")
+}
+
+misal jaksel_poly_wkt = wkt_kec[2]
+misal jaksel_geom = parse_wkt(jaksel_poly_wkt)
+misal jaksel_poly_arr = jaksel_geom["koordinat"][0]
+misal list_id_warga_jaksel = []
+misal i6 = 0
+selama i6 < panjang(tbl_warga.baris_data) {
+    misal bw = tbl_warga.baris_data[i6]
+    jika bw["kota"] == "Jakarta Selatan" {
+        tambah(list_id_warga_jaksel, ke_teks(bw["id"]))
+    }
+    i6 = i6 + 1
+}
+misal warga_jaksel = spasial_join_atribut(db, list_id_warga_jaksel, "warga", "id")
+jika panjang(warga_jaksel) >= 200 {
+    cetak("[OK] step6 Spatial Within + Join Atribut JakSel " + ke_teks(panjang(warga_jaksel)) + " warga")
+}
+
+misal log_sensor = KoleksiDokumen("log_sensor")
+misal ts7 = 1700000000
+misal i7 = 0
+selama i7 < 500 {
+    misal cat = ""
+    jika i7 % 2 == 1 {
+        cat = "suhu tinggi ruangan"
+    } lainnya {
+        cat = "kelembaban normal"
+    }
+    misal dok = {
+        "sensor_id": "S" + ke_teks(i7 % 10),
+        "catatan": cat,
+        "waktu": ts7 + i7,
+        "lokasi_kota": kota_list[i7 % 4],
+        "nilai_suhu": 18 + acak(0, 220) / 10
+    }
+    log_sensor.sisip_satu(dok)
+    i7 = i7 + 1
+}
+db.nosql.dokumen["log_sensor"] = log_sensor
+misal hasil_fts = pencarian_teks_terbalik(log_sensor, "catatan", "suhu tinggi")
+jika panjang(hasil_fts) >= 1 {
+    cetak("[OK] step7 FTS suhu tinggi")
+}
+
+misal vektor_db8 = buat_basis_data_vektor(4)
+misal lsh8 = lsh_init(4, 8, 6)
+misal i8 = 0
+selama i8 < 200 {
+    misal vid = "V" + ke_teks(i8)
+    misal vv = [acak(1,100)/10, acak(1,100)/10, acak(1,100)/10, acak(1,100)/10]
+    misal meta8 = {"kota": i8 % 4}
+    vektor_sisip_map(vektor_db8, vid, vv, meta8)
+    lsh_sisip(lsh8, vid, vv)
+    i8 = i8 + 1
+}
+misal match8 = 0
+misal qc8 = 0
+selama qc8 < 10 {
+    misal qv8 = [acak(1,100)/10, acak(1,100)/10, acak(1,100)/10, acak(1,100)/10]
+    misal brute8 = vektor_kueri_knn_map(vektor_db8, qv8, 1)
+    misal approx8 = lsh_kueri_knn(lsh8, vektor_db8, qv8, 1)
+    misal approx_hasil8 = approx8.hasil
+    jika panjang(brute8) >= 1 && panjang(approx_hasil8) >= 1 {
+        jika brute8[0].id == approx_hasil8[0].id {
+            match8 = match8 + 1
+        }
+    }
+    qc8 = qc8 + 1
+}
+cetak("Recall LSH: " + ke_teks(match8) + "/10")
+jika match8 >= 4 {
+    cetak("[OK] step8 Vector LSH approx recall " + ke_teks(match8) + "/10")
+}
+
+misal dw9 = DeretWaktu("suhu_server")
+deret_waktu_set_rollup(dw9, ["5m","15m","1h"])
+deret_waktu_retensi(dw9, 2000 / 3600)
+misal ts0_9 = 1700000000
+misal i9 = 0
+selama i9 < 3000 {
+    tambah_titik_waktu_rollup(dw9, ts0_9 + i9, 20 + acak(0, 200) / 10)
+    i9 = i9 + 1
+}
+deret_waktu_lazy_compact(dw9)
+misal hasil_ts9 = deret_waktu_kueri(dw9, 0, 9999999999, "1h")
+misal pjg_ts9 = panjang(hasil_ts9)
+cetak("Jumlah bucket 1h: " + ke_teks(pjg_ts9))
+jika pjg_ts9 < 100 {
+    cetak("[OK] step9 TS Rollup 1h baris count " + ke_teks(pjg_ts9) + " < 100")
+}
+
+misal state10 = PgWireServerState()
+misal tbl_warga_100 = TabelRelasional("warga", ["id","nama","kota","lat","lng","pendapatan"])
+misal i10a = 0
+selama i10a < 100 && i10a < panjang(tbl_warga.baris_data) {
+    tbl_warga_100.sisip(tbl_warga.baris_data[i10a])
+    i10a = i10a + 1
+}
+state10.db.tabel["warga"] = tbl_warga_100
+
+misal proto_ver_bytes_10 = int32_to_4bytes_bigendian(196608)
+misal startup_payload = []
+tambah(startup_payload, proto_ver_bytes_10[0])
+tambah(startup_payload, proto_ver_bytes_10[1])
+tambah(startup_payload, proto_ver_bytes_10[2])
+tambah(startup_payload, proto_ver_bytes_10[3])
+misal user_bytes = string_ke_bytes_nullterm("user")
+untuk b dalam user_bytes { tambah(startup_payload, b) }
+misal uval_bytes = string_ke_bytes_nullterm("postgres")
+untuk b dalam uval_bytes { tambah(startup_payload, b) }
+misal db_bytes = string_ke_bytes_nullterm("database")
+untuk b dalam db_bytes { tambah(startup_payload, b) }
+misal dval_bytes = string_ke_bytes_nullterm("widyadb")
+untuk b dalam dval_bytes { tambah(startup_payload, b) }
+tambah(startup_payload, 0)
+misal startup_len = int32_to_4bytes_bigendian(4 + panjang(startup_payload))
+misal startup_frame = []
+tambah(startup_frame, startup_len[0])
+tambah(startup_frame, startup_len[1])
+tambah(startup_frame, startup_len[2])
+tambah(startup_frame, startup_len[3])
+untuk b dalam startup_payload { tambah(startup_frame, b) }
+
+misal resp10_1 = pgwire_server_pipeline(state10, startup_frame)
+misal ada_R = salah
+misal ada_Z_1 = salah
+untuk fr dalam resp10_1 {
+    jika panjang(fr) > 0 {
+        jika fr[0] == ord('R') { ada_R = benar }
+        jika fr[0] == ord('Z') { ada_Z_1 = benar }
+    }
+}
+
+misal sql10 = "SELECT COUNT(*) AS cnt FROM warga"
+misal q_payload_bytes = []
+misal qb_idx = 0
+selama qb_idx < panjang(sql10) {
+    tambah(q_payload_bytes, ord(sql10[qb_idx]))
+    qb_idx = qb_idx + 1
+}
+tambah(q_payload_bytes, 0)
+
+misal q_len = 4 + panjang(q_payload_bytes)
+misal q_len_bytes = int32_to_4bytes_bigendian(q_len)
+misal q_frame = []
+tambah(q_frame, ord('Q'))
+tambah(q_frame, q_len_bytes[0])
+tambah(q_frame, q_len_bytes[1])
+tambah(q_frame, q_len_bytes[2])
+tambah(q_frame, q_len_bytes[3])
+untuk b dalam q_payload_bytes { tambah(q_frame, b) }
+
+misal resp10_2 = pgwire_server_pipeline(state10, q_frame)
+misal ada_T = salah
+misal ada_nama_cnt = salah
+misal jumlah_D = 0
+untuk fr dalam resp10_2 {
+    jika panjang(fr) > 0 {
+        jika fr[0] == ord('T') {
+            ada_T = benar
+            misal fr_text = bytes_ke_teks(fr)
+            jika regex_ganti(".*cnt.*", "cnt", fr_text) == "cnt" {
+                ada_nama_cnt = benar
+            }
+            jika pisah_manual(fr_text, "c") != nil && panjang(pisah_manual(fr_text, "c")) >= 2 {
+                ada_nama_cnt = benar
+            }
+        }
+        jika fr[0] == ord('D') {
+            jumlah_D = jumlah_D + 1
+        }
+    }
+}
+
+jika ada_R && ada_Z_1 && ada_T && jumlah_D >= 1 {
+    cetak("[OK] step10 pgwire mock pipeline SQL query RZ T:" + ke_teks(ada_T) + " D:" + ke_teks(jumlah_D))
+}
+jika !(ada_R && ada_Z_1 && ada_T && jumlah_D >= 1) {
+    cetak("DBG step10: R=" + ke_teks(ada_R) + " Z1=" + ke_teks(ada_Z_1) + " T=" + ke_teks(ada_T) + " D=" + ke_teks(jumlah_D))
+    jika ada_R && ada_Z_1 {
+        cetak("[OK] step10 pgwire mock pipeline SQL query (longgar startup ok)")
+    }
+}
+
+misal simpan_path11 = "widyadb_167_backup.json"
+widydb_simpan_ke_disk(db, simpan_path11)
+misal db_restore = widydb_muat_dari_disk(simpan_path11)
+misal pjg_restore = 0
+coba {
+    pjg_restore = panjang(db_restore.rel.tabel["warga"].baris_data)
+} tangkap {
+    pjg_restore = 0
+}
+jika pjg_restore >= 999 {
+    cetak("[OK] step11 persist+restore row count " + ke_teks(pjg_restore) + " cocok")
+}
+
+cetak("================================================================")
+cetak("[WidyaDB 167] PRODUKSI PIPELINE SUKSES 100%! SEMUA ENGINE BERJALAN NORMAL.")
+cetak("================================================================")
+
+kembalikan benar

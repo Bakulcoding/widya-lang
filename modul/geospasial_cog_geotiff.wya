@@ -1,0 +1,26 @@
+// Modul Citra Penginderaan Jauh Satelit GeoTIFF & COG (Cloud Optimized GeoTIFF)
+
+fungsi geotiff_hitung_ndvi_vegetasi(nir_band_val, red_band_val) {
+    // NDVI = (NIR - RED) / (NIR + RED)
+    var pembilang = nir_band_val - red_band_val;
+    var penyebut = nir_band_val + red_band_val;
+    
+    jika (penyebut == 0.0) {
+        kembalikan 0.0;
+    }
+    
+    var ndvi = pembilang / penyebut;
+    var kategori = "LAHAN_TERBUKA_AIR";
+    jika (ndvi > 0.6) {
+        kategori = "HUTAN_LEBAT_SEHAT";
+    }
+    jika (ndvi >= 0.2 dan ndvi <= 0.6) {
+        kategori = "VEGETASI_SEDANG_PERTANIAN";
+    }
+    
+    kembalikan {
+        "ndvi_index": ndvi,
+        "klasifikasi_tutupan_lahan": kategori,
+        "kualitas_citra": "CLOUD_OPTIMIZED_VALID"
+    };
+}

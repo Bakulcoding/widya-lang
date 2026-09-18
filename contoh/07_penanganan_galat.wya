@@ -1,0 +1,23 @@
+// ==========================================
+// Contoh 07: Penanganan Galat (Coba, Tangkap, Lempar)
+// ==========================================
+
+fungsi validasi_umur(umur) {
+    jika umur < 0 {
+        lempar "Umur tidak boleh negatif (" + ke_teks(umur) + ")";
+    } kalau umur > 150 {
+        lempar "Umur tidak realistis (" + ke_teks(umur) + ")";
+    }
+    kembalikan "Umur valid: " + ke_teks(umur) + " tahun";
+}
+
+misal daftar_umur = [25, -5, 18, 200, 30];
+
+untuk u dalam daftar_umur {
+    coba {
+        misal hasil = validasi_umur(u);
+        cetak("✅ Sukses:", hasil);
+    } tangkap pesan_galat {
+        cetak("❌ Galat tertangkap:", pesan_galat);
+    }
+}

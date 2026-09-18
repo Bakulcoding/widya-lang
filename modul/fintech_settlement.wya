@@ -1,0 +1,39 @@
+// Modul Fintech, Kuantitatif & Settlement Pasar Modal Widya-Lang
+// Mengintegrasikan Order Book L2, AMM Pool, Black-Scholes Risk, dan Decimal Currency
+
+fungsi buat_mesin_bursa_pasar(simbol_aset) {
+    var ob = BukuPesananL2(simbol_aset);
+    var amm = PoolLikuiditas("WIDYA", "USDT", 100000.0, 100000.0);
+    
+    kembalikan {
+        "simbol": simbol_aset,
+        "buku_pesanan": ob,
+        "pool_likuiditas": amm,
+        "total_volume": 0.0
+    };
+}
+
+fungsi eksekusi_pesanan_limit(bursa, sisi, harga, jumlah) {
+    var id_order = "ORD_1";
+    orderbook_tambah_pesanan(bursa["buku_pesanan"], id_order, sisi, harga, jumlah);
+    bursa["total_volume"] = bursa["total_volume"] + jumlah;
+    var hasil_match = orderbook_cocokkan(bursa["buku_pesanan"]);
+    kembalikan hasil_match;
+}
+
+fungsi kalkulasi_risiko_opsi(harga_spot, harga_strike, waktu_kedaluwarsa_tahun, volatilitas, suku_bunga) {
+    var opsi_call = OpsiEropa("CALL", harga_spot, harga_strike, waktu_kedaluwarsa_tahun, suku_bunga, volatilitas);
+    var bs_call = opsi_hitung_harga(opsi_call);
+    var greeks = opsi_hitung_greeks(opsi_call);
+    
+    var opsi_put = OpsiEropa("PUT", harga_spot, harga_strike, waktu_kedaluwarsa_tahun, suku_bunga, volatilitas);
+    var bs_put = opsi_hitung_harga(opsi_put);
+    
+    kembalikan {
+        "harga_call": bs_call,
+        "harga_put": bs_put,
+        "delta": greeks.delta,
+        "gamma": greeks.gamma,
+        "vega": greeks.vega
+    };
+}

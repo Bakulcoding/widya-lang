@@ -1,0 +1,22 @@
+/// Perulangan for dan while
+
+// For loop sederhana
+cetak("=== For Loop ===")
+untuk i dalam rentang(1, 6) {
+    cetak("Iterasi ke-", i)
+}
+
+// While loop
+cetak("\n=== While Loop ===")
+var counter = 1
+selama counter <= 5 {
+    cetak("Counter:", counter)
+    counter = counter + 1
+}
+
+// Loop dengan array
+cetak("\n=== Loop Array ===")
+var buah = ["apel", "jeruk", "mangga", "pisang"]
+untuk i dalam rentang(0, panjang(buah)) {
+    cetak("Buah:", buah[i])
+}

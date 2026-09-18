@@ -1,0 +1,5 @@
+/// Program Hello World pertama di Widya-Lang
+/// Menampilkan pesan ke layar
+
+cetak("Halo, dunia!")
+cetak("Selamat datang di Widya-Lang!")

@@ -1,0 +1,53 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 66 - Grammar DSL Generator & Macro Quasiquote
+// Demonstrasi pembuatan Domain-Specific Language (DSL) berbasis tata bahasa EBNF dan ekspansi makro higienis quasiquoting.
+
+tulis("=== [WIDYA METAPROGRAMMING] GRAMMAR DSL & MAKRO QUASIQUOTE ===");
+
+// 1. EBNF Grammar Parser Generator (Domain-Specific Language Engine)
+tulis("--- GENERATOR PARSER TATA BAHASA EBNF (DSL BARU) ---");
+var dsl = MesinTataBahasaDSL("KueriKeuanganDSL");
+
+// Daftarkan Aturan-Aturan Produksi EBNF
+grammar_tambah_aturan_produksi(dsl, "Pernyataan", "Kueri | Penugasan | Perhitungan");
+grammar_tambah_aturan_produksi(dsl, "Kueri", "'AMBIL' Kolom 'DARI' Tabel ('DI_MANA' Kondisi)?");
+grammar_tambah_aturan_produksi(dsl, "Perhitungan", "'HITUNG' 'PAJAK' Identitas Nilai");
+
+// Kompilasi Tata Bahasa Menjadi Parser Deterministik PEG
+var status_parser = grammar_bangun_parser(dsl);
+tulis("Aturan Terkompilasi : " + status_parser["total_aturan_terkompilasi"]);
+tulis("Algoritma Parser    : " + status_parser["algoritma_parser"]);
+tulis("Status Sistem       : " + status_parser["status"]);
+
+// Urai Kode Sumber DSL Baru Menjadi Pohon Sintaksis Abstrak (AST)
+var ast_dsl = grammar_urai_kode_ke_ast(dsl, "AMBIL laba_bersih DARI laporan_tahunan DI_MANA kuartal == 4");
+tulis("Tipe Root AST       : " + ast_dsl["_tipe_ast"]);
+tulis("Jumlah Token parsed : " + ast_dsl["panjang_token"]);
+tulis("Validasi AST        : " + ast_dsl["status_parsing"]);
+
+// 2. Hygienic Procedural Macro & AST Code Splicing
+tulis("\n--- EKSPANSI MAKRO HIGIENIS & QUASIQUOTE SPLICING ---");
+var makro_engine = MesinMakroHigienis();
+
+// Daftarkan Template Quasiquote dengan Code Splicing #(var)
+makro_daftarkan_pola_ekspansi(
+    makro_engine,
+    "buat_properti_getter",
+    "nama_bidang",
+    "fungsi ambil_#(bidang)() { kembalikan ini.#(bidang); }"
+);
+
+// Evaluasi Code Splice Template
+var slot_splice = {"bidang": "saldo_kas"};
+var hasil_ekspansi = makro_evaluasi_quasiquote_splice(
+    makro_engine,
+    "fungsi ambil_#(bidang)() { kembalikan ini.#(bidang); }",
+    slot_splice
+);
+tulis("Kode Terekspansi    : " + hasil_ekspansi["kode_terekspansi"]);
+tulis("Higienis / Bebas Bug: " + hasil_ekspansi["higienis"]);
+
+// Transformasi Pohon AST Waktu Kompilasi (Compile-Time AST Rewriting)
+var ast_transformasi = makro_ekspansi_sintaksis(makro_engine, ast_dsl);
+tulis("Status Transformasi : " + ast_transformasi["status_makro"]);
+
+tulis("\n[WIDYA METAPROGRAMMING] Grammar DSL & Macro Quasiquote Berhasil Diverifikasi!");

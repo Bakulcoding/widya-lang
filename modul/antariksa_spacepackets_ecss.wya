@@ -1,0 +1,26 @@
+// Modul Antariksa ESA ECSS PUS & CCSDS Space Packets (Telemetri & Telekomando Satelit)
+
+fungsi ecss_pus_buat_telecommand(service_type, subservice_type, apid, sequence_count, payload_data) {
+    // ECSS-E-ST-70-41C Packet Utilization Standard:
+    // Header Telecommand (TC): APID (11-bit), Sequence Count (14-bit), PUS Service (8-bit), PUS Subservice (8-bit)
+    kembalikan {
+        "apid": apid,
+        "seq_count": sequence_count,
+        "service_type": service_type, // Misal Service 3 = Housekeeping, Service 8 = Function Management
+        "subservice_type": subservice_type,
+        "payload": payload_data,
+        "crc16": "0x4B3A",
+        "waktu_generate": waktu()
+    };
+}
+
+fungsi ecss_pus_proses_telemetry(apid, service_type, subservice_type, housekeeping_params) {
+    kembalikan {
+        "apid": apid,
+        "service": service_type,
+        "subservice": subservice_type,
+        "parameter_satelit": housekeeping_params,
+        "status_wahana": "NOMINAL_ORBIT",
+        "waktu_telemetri": waktu()
+    };
+}

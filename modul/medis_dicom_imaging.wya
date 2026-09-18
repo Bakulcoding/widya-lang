@@ -1,0 +1,37 @@
+// Modul Citra Radiologi Medis DICOM (Digital Imaging and Communications in Medicine)
+
+fungsi dicom_parse_dataset_tags(patient_name, patient_id, modality, study_date, rows, cols) {
+    // Tag DICOM Standar:
+    // (0010,0010) PatientName
+    // (0010,0020) PatientID
+    // (0008,0060) Modality (MR, CT, US, CR, DX)
+    // (0008,0020) StudyDate
+    // (0028,0010) Rows, (0028,0011) Columns
+    
+    kembalikan {
+        "tag_0010_0010_nama": patient_name,
+        "tag_0010_0020_id": patient_id,
+        "tag_0008_0060_modalitas": modality,
+        "tag_0008_0020_tgl_studi": study_date,
+        "tag_0028_0010_resolusi_baris": rows,
+        "tag_0028_0011_resolusi_kolom": cols,
+        "total_piksel": rows * cols,
+        "status_pacs": "TERREGISTER_DI_SERVER_PACS"
+    };
+}
+
+fungsi dicom_hitung_windowing_hu(pixel_value, window_center, window_width) {
+    // Hounsfield Unit (HU) windowing untuk kontras CT-Scan jaringan lunak / tulang
+    var low_limit = window_center - (window_width / 2);
+    var high_limit = window_center + (window_width / 2);
+    
+    jika (pixel_value <= low_limit) {
+        kembalikan 0; // Hitam pekat
+    }
+    jika (pixel_value >= high_limit) {
+        kembalikan 255; // Putih pekat
+    }
+    
+    var normalized = ((pixel_value - low_limit) / window_width) * 255.0;
+    kembalikan normalized;
+}

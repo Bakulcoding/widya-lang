@@ -1,0 +1,32 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 54 - HDL & Sintesis RTL (Verilog & VHDL)
+// Demonstrasi pembuatan modul RTL perangkat keras ALU & Register 8-bit, lalu ekspor kode HDL.
+
+tulis("=== [WIDYA EDA] PILAR SINTESIS PERANGKAT KERAS (RTL SYNTHESIS) ===");
+
+// 1. Inisialisasi Modul RTL Penghitung Biner 8-Bit (Counter)
+var alu_modul = ModulRTL("PenghitungBiner8Bit");
+
+// 2. Deklarasikan Port I/O Perangkat Keras
+rtl_tambah_port(alu_modul, "clk", "input", 1);
+rtl_tambah_port(alu_modul, "rst_n", "input", 1);
+rtl_tambah_port(alu_modul, "enable", "input", 1);
+rtl_tambah_port(alu_modul, "data_out", "output", 8);
+
+// 3. Tambahkan Penugasan Kombinasional (Continuous Assignment)
+rtl_tambah_penugasan(alu_modul, "data_out_next", "data_out + 8'h01");
+
+// 4. Tambahkan Blok Sekuensial (Clock Synchronous Always Block)
+var badan_sekuensial = "if (!rst_n) data_out <= 8'h00; else if (enable) data_out <= data_out + 1;";
+rtl_tambah_blok_sekuensial(alu_modul, "posedge clk or negedge rst_n", badan_sekuensial);
+
+// 5. Ekspor Desain ke Standar IEEE 1364 Verilog HDL
+var kode_verilog = rtl_ekspor_verilog(alu_modul);
+tulis("--- KODE VERILOG TERSINTESIS ---");
+tulis(kode_verilog);
+
+// 6. Ekspor Desain ke Standar IEEE 1076 VHDL
+var kode_vhdl = rtl_ekspor_vhdl(alu_modul);
+tulis("--- KODE VHDL TERSINTESIS ---");
+tulis(kode_vhdl);
+
+tulis("[WIDYA EDA] Sintesis Hardware RTL HDL Berhasil Sempurna!");

@@ -1,0 +1,52 @@
+// Contoh 60: WidyaUUIDv6 & WidyaTriePrefix
+// Pengujian UUID v6 Terurut Waktu Gregorian & Autocomplete Prefix Tree (Trie)
+
+fungsi utama() {
+    tulis("=== CONTOH 60: UUID V6 & PREFIX TREE (TRIE) ===");
+
+    // 1. WidyaUUIDv6: Time-Ordered Gregorian UUID
+    tulis("\n--- 1. WidyaUUIDv6 (Monotonic Gregorian Time UUID) ---");
+
+    var id1 = uuid_v6();
+    var id2 = uuid_v6();
+
+    tulis("   UUID v6 (1): " + id1);
+    tulis("   UUID v6 (2): " + id2);
+
+    var ts1 = uuid_v6_ke_timestamp(id1);
+    tulis("   Timestamp terurai dari UUID v6 (ms): " + teks(ts1));
+
+    var cmp = uuid_v6_bandingkan(id1, id2);
+    tulis("   Urutan Monotonik (ID1 vs ID2): " + teks(cmp) + " (-1 jika ID1 dibuat lebih awal)");
+
+    var comb_guid = uuid_ke_comb(id1, ts1);
+    tulis("   COMB GUID (Optimasi Index B-Tree SQL): " + comb_guid);
+
+    // 2. WidyaTriePrefix: Kamus Prefix Tree & Autocomplete
+    tulis("\n--- 2. WidyaTriePrefix (Radix Prefix Tree Autocomplete) ---");
+
+    var trie = PohonPrefix();
+
+    tulis("   Menyisipkan kata: 'widya', 'widuri', 'wiraswasta', 'wisata', 'wawasan', 'komputer'...");
+    trie_prefix_sisip(trie, "widya", "Bahasa Pemrograman");
+    trie_prefix_sisip(trie, "widuri", "Bunga");
+    trie_prefix_sisip(trie, "wiraswasta", "Profesi");
+    trie_prefix_sisip(trie, "wisata", "Aktivitas");
+    trie_prefix_sisip(trie, "wawasan", "Pengetahuan");
+    trie_prefix_sisip(trie, "komputer", "Perangkat");
+
+    tulis("   Total kata tersimpan : " + teks(trie_prefix_jumlah_kata(trie)));
+    tulis("   Pencarian persis 'widya': " + teks(trie_prefix_cari(trie, "widya")));
+    tulis("   Pencarian persis 'robot': " + teks(trie_prefix_cari(trie, "robot")));
+
+    // Autocomplete Suggestions
+    var saran_wi = trie_prefix_cocok_awalan(trie, "wi", 10);
+    tulis("\n   Saran Autocomplete untuk awalan 'wi': " + teks(saran_wi));
+
+    var saran_wid = trie_prefix_cocok_awalan(trie, "wid", 10);
+    tulis("   Saran Autocomplete untuk awalan 'wid': " + teks(saran_wid));
+
+    tulis("\n=== SELESAI CONTOH 60 ===");
+}
+
+utama();

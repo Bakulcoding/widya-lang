@@ -1,0 +1,68 @@
+// ========================================================================
+// CONTOH 32: Digital Sound Synthesis (WidyaAudio) & TimeSeries (WidyaTimeSeries)
+// Widya-Lang Generasi Terbaru
+// ========================================================================
+
+cetak("========================================================================")
+cetak("✨ DEMO PILAR 1 & 2: WidyaAudio (DSP Synthesis) & WidyaTimeSeries (Analytics)")
+cetak("========================================================================")
+
+// ------------------------------------------------------------------------
+// 1. WidyaAudio: DSP Sound Synthesis, ADSR Envelope & WAV Export
+// ------------------------------------------------------------------------
+cetak("\n🎵 [1] Mensintesis Gelombang Nada Audio Digital (WidyaAudio)...")
+
+// Buat nada nada harmonik (Nada A4 = 440 Hz, Nada E5 = 659.25 Hz)
+var nada_a4 = buat_nada(440.0, "SINUS", 0.5, 0.8)
+var nada_e5 = buat_nada(659.25, "SEGITIGA", 0.5, 0.7)
+
+cetak("  * Total sampel nada A4 (440 Hz Sinus): " + ke_teks(panjang(nada_a4)) + " sampel")
+cetak("  * Total sampel nada E5 (659 Hz Segitiga): " + ke_teks(panjang(nada_e5)) + " sampel")
+
+// Terapkan envelope ADSR (Attack: 10%, Decay: 15%, Sustain: 70%, Release: 20%)
+var nada_a4_adsr = terapkan_adsr(nada_a4, 0.1, 0.15, 0.7, 0.2)
+cetak("  * Envelope ADSR berhasil diterapkan pada sinyal audio.")
+
+// Ekspor ke berkas audio biner RIFF/WAV
+var berkas_wav = "nada_sintesis_widya.wav"
+ekspor_wav(nada_a4_adsr, berkas_wav)
+cetak("  * Berkas audio berhasil diekspor ke: " + berkas_wav)
+
+// Render pemutar HTML5 Audio Web
+var pemutar_html = render_pemutar_audio_html(nada_a4_adsr, "Synthesizer Widya DSP")
+cetak("  * Kode pemutar audio HTML dihasilkan (" + ke_teks(panjang(pemutar_html)) + " byte)")
+
+// ------------------------------------------------------------------------
+// 2. WidyaTimeSeries: Rolling Moving Average, Anomaly Detection & Forecasting
+// ------------------------------------------------------------------------
+cetak("\n📈 [2] Analisis Deret Waktu & Peramalan Tren (WidyaTimeSeries)...")
+
+var ts_metrik = DeretWaktu("metrik_transaksi_qps")
+
+// Tambahkan titik data tren naik (dengan 1 lonjakan anomali)
+var data_mentah = [100.0, 105.0, 110.0, 108.0, 115.0, 120.0, 350.0, 122.0, 128.0, 130.0]
+
+untuk i dalam 0..(panjang(data_mentah) - 1) {
+    tambah_titik_waktu(ts_metrik, i * 60, data_mentah[i])
+}
+
+// 1. Simple Moving Average (Jendela = 3)
+var sma_3 = rata_rata_bergerak(data_mentah, 3)
+cetak("  * Rolling Moving Average (SMA Jendela 3):")
+cetak("    " + ke_teks(sma_3))
+
+// 2. Deteksi Anomali Spasial / Statistik Z-score (> 2.0 Sigma)
+var anomali = deteksi_anomali_deret(data_mentah, 2.0)
+cetak("  * Deteksi Anomali Terdeteksi: " + ke_teks(panjang(anomali)) + " titik")
+jika panjang(anomali) > 0 {
+    cetak("    -> Lonjakan Anomali pada indeks " + ke_teks(anomali[0].indeks) + " bernilai: " + ke_teks(anomali[0].nilai))
+}
+
+// 3. Peramalan Tren Eksponensial (Exponential Smoothing Forecaster)
+var prediksi_depan = prediksi_eksponensial(data_mentah, 0.35, 3)
+cetak("  * Peramalan 3 Langkah ke Depan (Forecasting):")
+cetak("    " + ke_teks(prediksi_depan))
+
+cetak("\n========================================================================")
+cetak("✅ Selesai mengeksekusi WidyaAudio & WidyaTimeSeries!")
+cetak("========================================================================")

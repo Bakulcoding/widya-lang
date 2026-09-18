@@ -1,0 +1,37 @@
+// =========================================================================
+// Contoh 97: Pilar Aplikasi Desktop & Antarmuka Pengguna (Dialog & Sinyal)
+// WidyaNativeDialog & WidyaReactiveState
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO NATIVE DIALOG & REAKTIF STATE WIDYA ===");
+
+    // 1. Native File & Message Dialog
+    var berkas_buka = dialog_buka_berkas("*.wya");
+    cetak("Dialog Buka Berkas: " + berkas_buka);
+
+    var berkas_simpan = dialog_simpan_berkas("laporan_reaktif.txt");
+    cetak("Dialog Simpan Berkas: " + berkas_simpan);
+
+    var pesan = dialog_pesan("Info", "Peringatan Sistem", "Operasi berhasil diselesaikan.");
+    cetak("Dialog Pesan: [" + pesan.tipe + "] " + pesan.judul + " -> Respons: " + pesan.ditekan);
+
+    // 2. Reactive State & Signal Management
+    var counter = SinyalReaktif(10);
+    cetak("Nilai Sinyal Awal: " + ke_teks(sinyal_ambil(counter)));
+
+    // Daftarkan Efek Reaktif (Listener / Subscriber)
+    efek_reaktif(counter, fungsi(val) {
+        cetak(">> Efek Reaktif Terpicu! Nilai Terbaru: " + ke_teks(val));
+    });
+
+    // Perbarui Nilai Sinyal
+    sinyal_perbarui(counter, 25);
+    sinyal_perbarui(counter, 50);
+
+    cetak("Versi Sinyal Akhir: " + ke_teks(counter.versi));
+    cetak("Nilai Sinyal Akhir: " + ke_teks(sinyal_ambil(counter)));
+    cetak("=== UJI DIALOG & SINYAL REAKTIF SUKSES ===");
+}
+
+utama();

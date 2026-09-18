@@ -1,0 +1,39 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 58 - Citra Astronomi FITS & Sistem Koordinat WCS
+// Demonstrasi pembuatan berkas FITS CCD, metadata kartu HDU, dan konversi piksel ke koordinat langit RA/Dec J2000.
+
+tulis("=== [WIDYA ASTROINFORMATIKA] CITRA ASTRONOMI FITS & WCS ===");
+
+// 1. Inisialisasi Citra FITS 64x64 piksel (32-bit floating point)
+var fits = CitraFITS(64, 64, -32);
+
+// Tambahkan Kartu Metadata Header FITS (Standar NASA/IAU)
+fits_tambah_kartu_header(fits, "TELESCOP", "James Webb Space Telescope (JWST)", "Observatorium Luar Angkasa");
+fits_tambah_kartu_header(fits, "INSTRUME", "NIRCam", "Near-Infrared Camera");
+fits_tambah_kartu_header(fits, "OBJECT", "Galaksi Pusaran M51", "Objek Target Pengamatan");
+fits_tambah_kartu_header(fits, "CRVAL1", 202.469575, "Right Ascension Referensi (derajat)");
+fits_tambah_kartu_header(fits, "CRVAL2", 47.195258, "Declination Referensi (derajat)");
+fits_tambah_kartu_header(fits, "CDELT1", -0.0001, "Skala piksel RA per sumbu X");
+fits_tambah_kartu_header(fits, "CDELT2", 0.0001, "Skala piksel Dec per sumbu Y");
+fits_tambah_kartu_header(fits, "CRPIX1", 32.0, "Piksel Referensi X");
+fits_tambah_kartu_header(fits, "CRPIX2", 32.0, "Piksel Referensi Y");
+
+// 2. Isi Fluks Sumber Titik Inti Galaksi (Intensitas Foton)
+fits_set_piksel(fits, 32, 32, 125000.0); // Inti Galaksi Terang
+fits_set_piksel(fits, 33, 32, 85000.0);
+fits_set_piksel(fits, 31, 32, 83000.0);
+
+tulis("Header FITS & Matriks Fluks CCD Berhasil Diinisialisasi.");
+
+// 3. Konversi Koordinat Piksel CCD ke World Coordinate System (WCS RA/Dec)
+var pusat_langit = fits_konversi_piksel_ke_langit_wcs(fits, 32.0, 32.0);
+tulis("\n--- HASIL TRANSLASI WCS ASTROMETRI (Pusat Inti Piksel [32, 32]) ---");
+tulis("Right Ascension (RA)  : " + pusat_langit["ra_derajat"] + " deg");
+tulis("Declination (Dec)     : " + pusat_langit["dec_derajat"] + " deg");
+tulis("Standar Ekuinoks      : " + pusat_langit["ekuinoks"]);
+
+var sudut_offset = fits_konversi_piksel_ke_langit_wcs(fits, 42.0, 52.0);
+tulis("\nTranslasi Piksel Offset [42, 52]:");
+tulis("RA Offset  : " + sudut_offset["ra_derajat"] + " deg");
+tulis("Dec Offset : " + sudut_offset["dec_derajat"] + " deg");
+
+tulis("\n[WIDYA ASTROINFORMATIKA] FITS Parser & Translasi WCS Berhasil!");

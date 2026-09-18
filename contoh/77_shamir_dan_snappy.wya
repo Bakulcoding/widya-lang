@@ -1,0 +1,40 @@
+// ===================================================================
+// CONTOH 77: SHAMIR'S SECRET SHARING & SNAPPY STREAMING CODEC
+// Widya-Lang Advanced Cryptographic Thresholds & High-Speed Compression
+// ===================================================================
+
+cetak("=== DEMO SHAMIR'S (k, n) THRESHOLD SECRET SHARING ===")
+var pesan_rahasia = "WIDYA-QUANTUM-VAULT-PASSPHRASE-2026-XYZ"
+cetak("Pesan Rahasia Asli : " + pesan_rahasia)
+
+// Skema 3-dari-5 (Threshold = 3, Total Bagian = 5)
+var shares = shamir_bagi_rahasia(pesan_rahasia, 3, 5)
+cetak("Total share terdistribusi: " + teks(panjang(shares)))
+
+untuk_setiap(shares, fungsi(s) {
+    cetak(" - Share " + teks(s.x) + " [HEX]: " + potong(s.data_hex, 0, 16) + "...")
+})
+
+// Rekonstruksi menggunakan 3 share acak (share 1, share 3, share 5)
+var subset_sah = [shares[0], shares[2], shares[4]]
+var pesan_pulih = shamir_gabung_rahasia(subset_sah)
+cetak("Hasil rekonstruksi dari 3 share sah : " + pesan_pulih)
+pastikan(pesan_pulih == pesan_rahasia, "Pesan yang dipulihkan harus identik")
+
+cetak("")
+cetak("=== DEMO SNAPPY COMPRESSION & STREAMING CODEC ===")
+var payload = "WIDYA_SNAPPY_HIGH_THROUGHPUT_STREAM_PACKET_COMPRESSOR_WIDYA_SNAPPY_HIGH_THROUGHPUT_STREAM_PACKET_COMPRESSOR_WIDYA_SNAPPY"
+cetak("Panjang payload asli     : " + teks(panjang(payload)) + " bytes")
+
+var compressed_hex = snappy_kompres(payload)
+cetak("Ukuran terkompresi (hex) : " + teks(panjang(compressed_hex) / 2) + " bytes")
+
+var rasio_hemat = snappy_rasio_hemat(payload)
+cetak("Rasio penghematan byte   : " + teks(bulat(rasio_hemat * 100)) + "%")
+
+var decompressed = snappy_dekompres(compressed_hex)
+cetak("Hasil dekompresi identik : " + teks(decompressed == payload))
+pastikan(decompressed == payload, "Hasil dekompresi Snappy harus sama persis dengan aslinya")
+
+cetak("")
+cetak("✔ Seluruh pengujian Shamir Secret Sharing & Snappy Codec berhasil 100%!")

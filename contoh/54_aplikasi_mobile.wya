@@ -1,0 +1,55 @@
+// Contoh Aplikasi Mobile Widya-Lang
+// Memanfaatkan WidyaUI (Flutter-like Declarative) & Device Native APIs
+
+fungsi format_status_baterai(level, sedang_cas) {
+    jika sedang_cas {
+        kembalikan "Baterai: " + ke_teks(level * 100) + "% (Sedang Mengisi Daya ⚡)";
+    }
+    kembalikan "Baterai: " + ke_teks(level * 100) + "% (Baterai Sehat)";
+}
+
+fungsi utama() {
+    misal nama_aplikasi = "WidyaPay Mobile";
+    misal saldo_pengguna = 2500000;
+    misal info_baterai = format_status_baterai(0.95, benar);
+    
+    kembalikan Aplikasi({
+        "judul": nama_aplikasi,
+        "tema": "indigo",
+        "badan": Halaman({
+            "badan": Kolom([
+                Kartu({
+                    "isi": Kolom([
+                        TeksWidget("💳 " + nama_aplikasi),
+                        TeksWidget("Saldo Aktif: Rp " + ke_teks(saldo_pengguna)),
+                        Pemisah(),
+                        Baris([
+                            Tombol("Transfer", fungsi() {
+                                cetak("Buka menu transfer dana");
+                            }),
+                            Tombol("Top Up", fungsi() {
+                                cetak("Buka menu topup saldo");
+                            })
+                        ])
+                    ])
+                }),
+                Kartu({
+                    "isi": Kolom([
+                        TeksWidget("📱 Telemetri Perangkat:"),
+                        TeksWidget(info_baterai),
+                        TeksWidget("Koneksi: 5G Telco Ultra-Fast"),
+                        TeksWidget("Lokasi: Jakarta Pusat, ID (-6.2088, 106.8456)"),
+                        Pemisah(),
+                        Tombol("Kunci dengan Biometrik", fungsi() {
+                            cetak("Meminta otentikasi sidik jari / FaceID");
+                        })
+                    ])
+                }),
+                BidangTeks("Catatan transaksi baru..."),
+                Tombol("Kirim Pembayaran", fungsi() {
+                    cetak("Transaksi berhasil diproses via Mobile Native Bridge!");
+                })
+            ])
+        })
+    });
+}

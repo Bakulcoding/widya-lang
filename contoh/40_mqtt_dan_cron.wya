@@ -1,0 +1,61 @@
+// ========================================================================
+// 📡 & ⏰ CONTOH 40: WIDYAMQTT & WIDYACRON
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaMQTT (IoT Pub/Sub) & WidyaCron (Scheduler)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYAMQTT: BROKER IOT DENGAN WILDCARD TOPICS
+// ------------------------------------------------------------------------
+cetak("");
+cetak("📡 [1] IoT Messaging & Topic Subscription Wildcard (WidyaMQTT)...");
+
+tetap broker = BrokerMQTT();
+
+// Subscriber 1: Mendengarkan semua sensor suhu (sensor/+/suhu)
+fungsi handle_suhu(topik, payload) {
+    cetak("  [Sub Suhu] Pesan diterima dari " + topik + " -> Nilai: " + ke_teks(payload) + " °C");
+}
+mqtt_langganan(broker, "klien_suhu", "sensor/+/suhu", handle_suhu);
+
+// Subscriber 2: Mendengarkan seluruh log pabrik (pabrik/#)
+fungsi handle_pabrik(topik, payload) {
+    cetak("  [Sub Pabrik Global] Event: " + topik + " -> Data: " + ke_teks(payload));
+}
+mqtt_langganan(broker, "klien_pabrik", "pabrik/#", handle_pabrik);
+
+// Publikasi Pesan
+cetak("  * Mempublikasikan data sensor & pabrik:");
+mqtt_publikasi(broker, "sensor/ruang_tamu/suhu", 24.5);
+mqtt_publikasi(broker, "sensor/dapur/suhu", 28.2);
+mqtt_publikasi(broker, "pabrik/mesin1/status", "NORMAL_RUNNING");
+
+// ------------------------------------------------------------------------
+// [2] WIDYACRON: PENJADWAL TUGAS PERIODIK DENGAN EKSPRESI CRON
+// ------------------------------------------------------------------------
+cetak("");
+cetak("⏰ [2] Penjadwalan Tugas Periodik (WidyaCron)...");
+
+tetap scheduler = PenjadwalCron();
+
+// Jadwalkan tugas setiap menit genap (* / 2 * * * *)
+fungsi tugas_pembersihan() {
+    cetak("  [Cron Action] Tugas Pembersihan Log Sistem Dijalankan!");
+}
+cron_jadwalkan(scheduler, "job_clean", "*/2 * * * *", tugas_pembersihan);
+
+// Evaluasi kecocokan ekspresi
+cetak("  * Apakah '*/2 * * * *' cocok pada menit 4? ->", cron_cocok_waktu("*/2 * * * *", 4, 10));
+cetak("  * Apakah '*/2 * * * *' cocok pada menit 5? ->", cron_cocok_waktu("*/2 * * * *", 5, 10));
+
+// Simulasikan pemicu langkah scheduler pada menit ke-4
+cetak("  * Memproses pemicu waktu Cron pada menit ke-4...");
+tetap total_eksekusi = cron_jalankan_langkah(scheduler, 4, 10);
+cetak("  * Total Tugas Terpicu:", total_eksekusi);
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaMQTT & WidyaCron!");
+cetak("========================================================================");

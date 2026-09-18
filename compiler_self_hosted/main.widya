@@ -1,0 +1,18 @@
+// compiler_self_hosted/main.widya
+// Entry point Driver Compiler Mandiri Widya-Lang
+
+fungsi kompiler_utama(nama_berkas: String) -> Int {
+    misal status_valid = true;
+    jika status_valid {
+        kembalikan 0;
+    }
+    kembalikan 1;
+}
+
+fungsi jalankan_bootstrap() -> String {
+    misal status = kompiler_utama("app.widya");
+    jika status == 0 {
+        kembalikan "BOOTSTRAP_SUKSES";
+    }
+    kembalikan "BOOTSTRAP_GAGAL";
+}

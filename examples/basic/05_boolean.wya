@@ -1,0 +1,36 @@
+/// Operasi boolean dan logika
+
+var a = benar
+var b = salah
+
+// Operasi AND
+cetak("benar dan benar =", benar dan benar)     // benar
+cetak("benar dan salah =", benar dan salah)     // salah
+
+// Operasi OR
+cetak("benar atau salah =", benar atau salah)   // benar
+cetak("salah atau salah =", salah atau salah)   // salah
+
+// Operasi NOT
+cetak("bukan benar =", bukan benar)             // salah
+cetak("bukan salah =", bukan salah)             // benar
+
+// Perbandingan
+var x = 10
+var y = 5
+
+cetak("\n=== Perbandingan ===")
+cetak("10 == 5:", x == y)    // salah
+cetak("10 != 5:", x != y)    // benar
+cetak("10 > 5:", x > y)      // benar
+cetak("10 < 5:", x < y)      // salah
+cetak("10 >= 5:", x >= y)    // benar
+cetak("10 <= 5:", x <= y)    // salah
+
+// Kombinasi kondisi
+var umur = 20
+var punya_sim = benar
+
+jika umur >= 17 dan punya_sim {
+    cetak("\nBoleh menyetir mobil")
+}

@@ -1,0 +1,37 @@
+// =========================================================================
+// Contoh 103: Pilar Pengembangan Game (Tilemap, A* Pathfinding & Audio)
+// WidyaTilemap & WidyaGameAudio
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR PENGEMBANGAN GAME: TILEMAP & A* PATHFINDING ===");
+
+    // 1. Inisialisasi Peta Grid Tilemap 2D (10x10 Ubin, 32px per Ubin)
+    var peta = PetaUbinTilemap(10, 10, 32.0);
+
+    // Pasang Rintangan Tembok (Batu / Wall) pada Baris 5 Kolom 0-7
+    tilemap_set_ubin(peta, 5, 3, "TembokBatu", benar);
+    tilemap_set_ubin(peta, 5, 4, "TembokBatu", benar);
+    tilemap_set_ubin(peta, 5, 5, "TembokBatu", benar);
+
+    var rintangan_cek = tilemap_apakah_rintangan(peta, 5, 4);
+    cetak("Status Ubin (Baris 5, Kolom 4) Adalah Rintangan: " + ke_teks(rintangan_cek));
+
+    // 2. Navigasi AI/NPC Menggunakan Algoritma A* (A-Star Pathfinding)
+    // Dari Titik (0, 0) ke Target (8, 8)
+    var jalur_ai = astar_cari_jalur(peta, 0, 0, 8, 8);
+    cetak("Jumlah Titik Langkah Rute A* Pathfinding: " + ke_teks(panjang(jalur_ai)));
+
+    // 3. Game Audio SFX & Pengatur Frame Loop
+    var sfx_ledakan = SuaraGame("sfx_explosion.wav", 0.85, salah);
+    audio_putar(sfx_ledakan);
+    cetak("Status Audio SFX: Sedang Memutar = " + ke_teks(sfx_ledakan.sedang_memutar));
+
+    var frame_ctrl = PengaturFrameGame(60.0);
+    var dt = frame_hitung_delta(frame_ctrl);
+    cetak("Game Loop Delta Time: " + ke_teks(dt) + " detik (FPS: " + ke_teks(frame_ctrl.target_fps) + ")");
+
+    cetak("=== UJI TILEMAP, A* & GAME LOOP SUKSES ===");
+}
+
+utama();

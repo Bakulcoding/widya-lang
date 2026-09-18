@@ -1,0 +1,43 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 63 - Claytronics Modular Catoms & Perakitan Mandiri Molekuler
+// Demonstrasi rekonfigurasi topologi materi catom 3D dan perakitan kristal polimer nanometrik Winfree aTAM.
+
+tulis("=== [WIDYA PROGRAMMABLE MATTER] CLAYTRONICS & SELF-ASSEMBLY ===");
+
+// 1. Sistem Materi Claytronics (Catoms Shape Morphing)
+tulis("--- SISTEM MATERI MODULAR CLAYTRONICS CATOMS ---");
+var materi = SistemMateriCatom();
+
+// Daftarkan unit-unit Catom pada kisi dasar
+catom_tambah_unit(materi, "Catom_01", 0.0, 0.0, 0.0);
+catom_tambah_unit(materi, "Catom_02", 1.0, 0.0, 0.0);
+catom_tambah_unit(materi, "Catom_03", 0.0, 1.0, 0.0);
+catom_tambah_unit(materi, "Catom_04", 1.0, 1.0, 0.0);
+
+// Atur polaritas adhesi magnetik mikro
+catom_atur_adhesi_magnetik(materi, "Catom_01", "Z_POSITIF", 1.0);
+catom_atur_adhesi_magnetik(materi, "Catom_02", "Z_POSITIF", 1.0);
+
+// Eksekusi Rekonfigurasi Bentuk Materi ke Struktur Piramida
+var morph = catom_eksekusi_rekonfigurasi_bentuk(materi, "PIRAMIDA_3D");
+tulis("Bentuk Materi Terkini   : " + morph["bentuk_tercapai"]);
+tulis("Jumlah Catom Bergerak   : " + morph["total_catom_berpindah"]);
+tulis("Status Struktur Topologi: " + morph["status_materi"]);
+
+// 2. Perakitan Mandiri Molekuler (Winfree Abstract Tile Assembly Model - aTAM)
+tulis("\n--- PERAKITAN MANDIRI MOLEKULER (TILE SELF-ASSEMBLY) ---");
+var sam = PerakitanMandiriMolekul(2.0); // Ambang termodinamika tau = 2
+
+// Daftarkan Tipe Ubin dengan Sticky-Ends Sisi [N, E, S, W]
+self_assembly_tambah_ubin_tile(sam, "Tile_A", "glue_1", "glue_2", "glue_0", "glue_0");
+self_assembly_tambah_ubin_tile(sam, "Tile_B", "glue_0", "glue_1", "glue_2", "glue_1");
+
+// Letakkan Benih Awal (Seed Nucleation Tile)
+self_assembly_atur_benih_awal(sam, "Tile_Seed_Origin", 0, 0);
+
+// Simulasi Pertumbuhan Perakitan Mandiri Nanometrik
+var tumbuh = self_assembly_simulasi_pertumbuhan(sam, 10);
+tulis("Total Ubin Terakit   : " + tumbuh["total_ubin_terakit"]);
+tulis("Kekuatan Kisi Kristal: " + tumbuh["kekuatan_kisi_kristal"] + " k_B*T");
+tulis("Status Perakitan     : " + tumbuh["status_perakitan"]);
+
+tulis("\n[WIDYA PROGRAMMABLE MATTER] Claytronics & Self-Assembly Berhasil Diverifikasi!");

@@ -1,0 +1,53 @@
+// Modul Cloud-Native Microservice Stack Widya-Lang
+// Mengintegrasikan API Gateway, Load Balancer, Circuit Breaker, Rate Limiter, dan Distributed Tracing
+
+fungsi buat_mesh_layanan(nama_cluster) {
+    var lb = PenyeimbangBeban("round_robin");
+    var cb = PemutusSirkuit(3, 5000.0);
+    var rl = PembatasLaju(100.0, 10.0);
+    var otel = TracerTelemetry(nama_cluster, "trace-init");
+    
+    kembalikan {
+        "nama": nama_cluster,
+        "load_balancer": lb,
+        "circuit_breaker": cb,
+        "rate_limiter": rl,
+        "tracer": otel,
+        "layanan_terdaftar": []
+    };
+}
+
+fungsi daftarkan_node_backend(mesh, id_node, url_node, bobot) {
+    lb_tambah_server(mesh["load_balancer"], id_node, url_node, bobot);
+    mesh["layanan_terdaftar"] = mesh["layanan_terdaftar"] + [url_node];
+    kembalikan benar;
+}
+
+fungsi eksekusi_panggilan_resilient(mesh, rute_aksi, payload_req) {
+    var span_id = trace_mulai_span(mesh["tracer"], "RPC:" + rute_aksi);
+    
+    // 1. Rate Limiting Check
+    var izin_lewat = izinkan_permintaan(mesh["rate_limiter"], 1.0);
+    jika (!izin_lewat) {
+        trace_tambah_tag(mesh["tracer"], span_id, "status", "RATE_LIMITED");
+        trace_akhiri_span(mesh["tracer"], span_id);
+        kembalikan {
+            "status": 429.0,
+            "pesan": "Permintaan terlalu padat (Rate Limited)",
+            "span_id": span_id
+        };
+    }
+    
+    // 2. Load Balancing Selection
+    var target_node = lb_pilih_server(mesh["load_balancer"]);
+    
+    trace_tambah_tag(mesh["tracer"], span_id, "node", target_node["id"]);
+    trace_akhiri_span(mesh["tracer"], span_id);
+    
+    kembalikan {
+        "status": 200.0,
+        "pesan": "Berhasil dialihkan ke backend",
+        "node_terpilih": target_node["id"],
+        "span_id": span_id
+    };
+}

@@ -1,0 +1,29 @@
+// Modul Otomotif Komunikasi Nirkabel V2X & C-ITS CAM (ETSI EN 302 637-2)
+
+fungsi v2x_buat_cooperative_awareness_message(station_id, lat_deg, lon_deg, speed_kmh, heading_deg) {
+    kembalikan {
+        "header": {
+            "protocolVersion": 2,
+            "messageID": 2, // 2 = CAM
+            "stationID": station_id
+        },
+        "cam": {
+            "generationDeltaTime": waktu() % 65536,
+            "camParameters": {
+                "basicContainer": {
+                    "stationType": 5, // 5 = Passenger Car
+                    "referencePosition": {
+                        "latitude": lat_deg,
+                        "longitude": lon_deg
+                    }
+                },
+                "highFrequencyContainer": {
+                    "heading": heading_deg,
+                    "speed": speed_kmh,
+                    "driveDirection": 0 // Forward
+                }
+            }
+        },
+        "status_v2x": "C_ITS_BROADCAST_ACTIVE"
+    };
+}

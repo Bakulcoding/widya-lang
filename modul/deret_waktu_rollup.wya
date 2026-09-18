@@ -1,0 +1,172 @@
+fungsi inisialisasi_deret_waktu_rollup(dw) {
+    jika dw.rollup_config == nihil {
+        dw.rollup_config = nihil;
+        dw.retensi_jam = nihil;
+        dw.rollup_data = {};
+        dw.jumlah_titik_sejak_compact = 0;
+        dw.all_data_points = [];
+    }
+    kembalikan dw;
+}
+
+fungsi deret_waktu_set_rollup(dw, daftar_interval) {
+    inisialisasi_deret_waktu_rollup(dw);
+    dw.rollup_config = daftar_interval;
+    kembalikan benar;
+}
+
+fungsi deret_waktu_retensi(dw, retensi_jam) {
+    inisialisasi_deret_waktu_rollup(dw);
+    dw.retensi_jam = retensi_jam;
+    kembalikan benar;
+}
+
+fungsi detik_per_interval(interval_str) {
+    jika interval_str == "1m" { kembalikan 60; }
+    kalau interval_str == "5m" { kembalikan 300; }
+    kalau interval_str == "1h" { kembalikan 3600; }
+    kembalikan 60;
+}
+
+fungsi deret_waktu_lazy_compact(dw) {
+    inisialisasi_deret_waktu_rollup(dw);
+    misal all_data = dw.all_data_points;
+    misal pjg_all = panjang(all_data);
+
+    jika dw.rollup_config != nihil {
+        untuk idx_interval dalam 0..(panjang(dw.rollup_config) - 1) {
+            misal interval_str = dw.rollup_config[idx_interval];
+            misal sec = detik_per_interval(interval_str);
+            misal bucket_map = {};
+            misal bucket_keys = [];
+
+            untuk i dalam 0..(pjg_all - 1) {
+                misal titik = all_data[i];
+                misal ts = titik.waktu;
+                misal val = titik.nilai;
+                misal bucket_key = lantai(ts / sec) * sec;
+                misal key_str = ke_teks(bucket_key);
+
+                jika bucket_map[key_str] == nihil {
+                    misal entry = {
+                        "bucket_ts": bucket_key,
+                        "sum": val,
+                        "min": val,
+                        "max": val,
+                        "count": 1
+                    };
+                    bucket_map[key_str] = entry;
+                    tambah(bucket_keys, bucket_key);
+                } lainnya {
+                    misal e = bucket_map[key_str];
+                    e.sum = e.sum + val;
+                    jika val < e.min { e.min = val; }
+                    jika val > e.max { e.max = val; }
+                    e.count = e.count + 1;
+                }
+            }
+
+            misal buckets = [];
+            misal pjg_keys = panjang(bucket_keys);
+            jika pjg_keys > 0 {
+                untuk i dalam 0..(pjg_keys - 1) {
+                    misal bkey = bucket_keys[i];
+                    misal bkey_str = ke_teks(bkey);
+                    misal e = bucket_map[bkey_str];
+                    misal bucket = {
+                        "bucket_ts": e.bucket_ts,
+                        "avg": e.sum / e.count,
+                        "min": e.min,
+                        "max": e.max,
+                        "count": e.count
+                    };
+                    tambah(buckets, bucket);
+                }
+            }
+            dw.rollup_data[interval_str] = buckets;
+        }
+    }
+
+    misal data = dw.data_points;
+    misal pjg = panjang(data);
+    jika dw.retensi_jam != nihil && pjg > 0 {
+        misal ts_terbaru = data[pjg - 1].waktu;
+        misal ts_batas = ts_terbaru - dw.retensi_jam * 3600;
+        misal data_baru = [];
+        untuk i dalam 0..(pjg - 1) {
+            jika data[i].waktu >= ts_batas {
+                tambah(data_baru, data[i]);
+            }
+        }
+        dw.data_points = data_baru;
+    }
+
+    dw.jumlah_titik_sejak_compact = 0;
+    kembalikan benar;
+}
+
+fungsi tambah_titik_waktu_rollup(dw, ts, val) {
+    inisialisasi_deret_waktu_rollup(dw);
+    tambah_titik_waktu(dw, ts, val);
+    misal titik_baru = {
+        "waktu": ts,
+        "nilai": val
+    };
+    tambah(dw.all_data_points, titik_baru);
+    dw.jumlah_titik_sejak_compact = dw.jumlah_titik_sejak_compact + 1;
+    jika dw.jumlah_titik_sejak_compact % 50 == 0 {
+        deret_waktu_lazy_compact(dw);
+    }
+    kembalikan benar;
+}
+
+fungsi deret_waktu_kueri(dw, dari_ts, ke_ts, interval_opt) {
+    inisialisasi_deret_waktu_rollup(dw);
+    jika interval_opt == "raw" {
+        misal hasil = [];
+        misal data = dw.data_points;
+        untuk i dalam 0..(panjang(data) - 1) {
+            misal t = data[i].waktu;
+            jika t >= dari_ts && t <= ke_ts {
+                tambah(hasil, data[i]);
+            }
+        }
+        kembalikan hasil;
+    } lainnya {
+        misal hasil = [];
+        misal buckets = dw.rollup_data[interval_opt];
+        jika buckets != nihil {
+            untuk i dalam 0..(panjang(buckets) - 1) {
+                misal b = buckets[i];
+                jika b.bucket_ts >= dari_ts && b.bucket_ts <= ke_ts {
+                    tambah(hasil, b);
+                }
+            }
+        }
+        kembalikan hasil;
+    }
+}
+
+misal dw = DeretWaktu("suhu");
+deret_waktu_set_rollup(dw, ["1m", "5m"]);
+deret_waktu_retensi(dw, 0.2);
+
+misal ts_awal = 1000000000;
+untuk i dalam 0..1999 {
+    misal ts = ts_awal + i;
+    misal val = acak(20.0, 30.0);
+    tambah_titik_waktu_rollup(dw, ts, val);
+}
+
+misal bucket_1m = dw.rollup_data["1m"];
+misal pjg_bucket_1m = panjang(bucket_1m);
+pastikan(pjg_bucket_1m >= 30 && pjg_bucket_1m <= 35, "Jumlah bucket 1m harus antara 30-35, tapi: " + ke_teks(pjg_bucket_1m));
+
+misal pjg_raw = panjang(dw.data_points);
+pastikan(pjg_raw <= 1000, "Jumlah titik RAW harus <= 1000, tapi: " + ke_teks(pjg_raw));
+
+misal kueri_1m = deret_waktu_kueri(dw, 0, 9999999999, "1m");
+pastikan(panjang(kueri_1m) >= 30, "Kueri 1m harus >= 30, tapi: " + ke_teks(panjang(kueri_1m)));
+
+cetak("[OK] DeretWaktu Rollup+Retensi self-test");
+kembalikan benar;

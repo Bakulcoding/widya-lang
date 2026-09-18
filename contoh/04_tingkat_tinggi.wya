@@ -1,0 +1,46 @@
+// ==========================================
+// Contoh 04: Fungsi Tingkat Tinggi & Closure
+// ==========================================
+
+// Fungsi yang menerima fungsi lain (Higher-Order Function)
+fungsi petakan(daftar, transformator) {
+    misal hasil = [];
+    untuk item dalam daftar {
+        tambah(hasil, transformator(item));
+    }
+    kembalikan hasil;
+}
+
+fungsi saring(daftar, predikat) {
+    misal hasil = [];
+    untuk item dalam daftar {
+        jika predikat(item) {
+            tambah(hasil, item);
+        }
+    }
+    kembalikan hasil;
+}
+
+misal angka = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+cetak("Angka Awal:", angka);
+
+// Kuadratkan setiap angka menggunakan lambda/closure
+misal kuadrat = petakan(angka, fungsi(x) { kembalikan x * x; });
+cetak("Hasil Kuadrat:", kuadrat);
+
+// Saring hanya angka genap
+misal genap = saring(angka, fungsi(x) { kembalikan x % 2 == 0; });
+cetak("Angka Genap:", genap);
+
+// Factory Fungsi (Closure Generator)
+fungsi buat_pengali(faktor) {
+    kembalikan fungsi(x) {
+        kembalikan x * faktor;
+    };
+}
+
+misal kali3 = buat_pengali(3);
+misal kali10 = buat_pengali(10);
+
+cetak("7 dikali 3 =", kali3(7));
+cetak("7 dikali 10 =", kali10(7));

@@ -1,0 +1,54 @@
+// Modul Otomotif CAN Bus & UDS Diagnostic (Controller Area Network & ISO 14229)
+
+fungsi buat_can_frame(can_id, is_extended, data_bytes) {
+    kembalikan {
+        "can_id": can_id,
+        "is_extended": is_extended,
+        "dlc": panjang(data_bytes),
+        "data": data_bytes
+    };
+}
+
+fungsi uds_build_service_request(sid, sub_function, data_params) {
+    // SID: Misal 0x22 (ReadDataByIdentifier), 0x19 (ReadDTCInformation), 0x10 (DiagnosticSessionControl)
+    var payload = [sid];
+    jika (sub_function != Kosong() dan tipe(sub_function) != "nil") {
+        payload = tambah(payload, buka(sub_function));
+    }
+    untuk d dalam data_params {
+        payload = tambah(payload, d);
+    }
+    
+    kembalikan buat_can_frame(2016, salah, payload); // 0x7E0 (Standard OBD-II / ECU Diagnostic Request ID)
+}
+
+fungsi uds_parse_diagnostic_response(can_frame) {
+    var data = can_frame["data"];
+    jika (panjang(data) < 2) {
+        kembalikan { "status": "INVALID_FRAME", "sukses": salah };
+    }
+    
+    var response_sid = data[0];
+    // Positive response: SID + 0x40 (misal 0x22 -> 0x62)
+    jika (response_sid >= 64) {
+        kembalikan {
+            "status": "POSITIVE_RESPONSE",
+            "sukses": benar,
+            "original_sid": response_sid - 64,
+            "payload": data
+        };
+    }
+    
+    // Negative response: 0x7F [Rejected SID] [NRC]
+    jika (response_sid == 127) {
+        var nrc = data[2];
+        kembalikan {
+            "status": "NEGATIVE_RESPONSE",
+            "sukses": salah,
+            "nrc_code": nrc,
+            "alasan": "UDS NRC: Layanan Ditolak atau Kondisi Tidak Terpenuhi"
+        };
+    }
+    
+    kembalikan { "status": "UNKNOWN", "sukses": salah };
+}

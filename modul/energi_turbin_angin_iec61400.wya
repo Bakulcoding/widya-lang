@@ -1,0 +1,25 @@
+// Modul Pembangkit Listrik Tenaga Angin IEC 61400-25 & SCADA Turbin
+
+fungsi turbin_hitung_daya_aerodinamis(kecepatan_angin_ms, jari_jari_rotor_m, massa_jenis_udara, koefisien_daya_cp) {
+    // Rumus: P = 0.5 * rho * A * v^3 * Cp
+    // Luas area rotor: A = PI * r^2
+    var area_m2 = PI * (jari_jari_rotor_m * jari_jari_rotor_m);
+    var v_kubik = kecepatan_angin_ms * kecepatan_angin_ms * kecepatan_angin_ms;
+    var daya_watt = 0.5 * massa_jenis_udara * area_m2 * v_kubik * koefisien_daya_cp;
+    
+    var status_operasi = "NORMAL_GENERATING";
+    jika (kecepatan_angin_ms > 25.0) {
+        status_operasi = "CUT_OUT_STORM_PROTECTION";
+    }
+    jika (kecepatan_angin_ms < 3.0) {
+        status_operasi = "CUT_IN_STANDBY";
+    }
+    
+    kembalikan {
+        "kecepatan_angin_ms": kecepatan_angin_ms,
+        "luas_sapuan_rotor_m2": area_m2,
+        "daya_listrik_kw": daya_watt / 1000.0,
+        "daya_listrik_mw": daya_watt / 1000000.0,
+        "status_turbin": status_operasi
+    };
+}

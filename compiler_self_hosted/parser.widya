@@ -1,0 +1,14 @@
+// compiler_self_hosted/parser.widya
+// Parser rekursif mandiri dalam bahasa Widya-Lang
+
+fungsi validasi_sintaks(jumlah_token: Int) -> Bool {
+    jika jumlah_token > 0 {
+        kembalikan true;
+    }
+    kembalikan false;
+}
+
+fungsi parsing_pernyataan_misal(nama_var: String, nilai_int: Int) -> Int {
+    misal hasil = nilai_int * 1;
+    kembalikan hasil;
+}

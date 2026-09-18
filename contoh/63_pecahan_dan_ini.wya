@@ -1,0 +1,54 @@
+// ==========================================
+// ➗ Widya-Lang: Pecahan (BigRat) & File Konfigurasi INI
+// ==========================================
+
+cetak("================================================")
+cetak("➗ WIDYA BIGRAT & INI CONFIGURATION ENGINE")
+cetak("================================================")
+
+// 1. Uji Coba WidyaBigRat
+cetak("\n--- 1. Arbitrary-Precision Rational Numbers (Pecahan) ---")
+
+var r1 = Pecahan(1, 3)
+var r2 = Pecahan(1, 6)
+
+cetak("Pecahan 1: " + pecahan_ke_string(r1))
+cetak("Pecahan 2: " + pecahan_ke_string(r2))
+
+var rTambah = pecahan_tambah(r1, r2)
+cetak("1/3 + 1/6 = " + pecahan_ke_string(rTambah) + " (Desimal: " + teks(pecahan_ke_desimal(rTambah)) + ")")
+
+var rKurang = pecahan_kurang(r1, r2)
+cetak("1/3 - 1/6 = " + pecahan_ke_string(rKurang))
+
+var rKali = pecahan_kali(r1, r2)
+cetak("1/3 * 1/6 = " + pecahan_ke_string(rKali))
+
+var rBagi = pecahan_bagi(r1, r2)
+cetak("1/3 / 1/6 = " + pecahan_ke_string(rBagi))
+
+var rDariString = Pecahan("3/9")
+cetak("Pecahan dari string '3/9' setelah reduksi FPB: " + pecahan_ke_string(rDariString))
+
+// 2. Uji Coba WidyaIniConfig
+cetak("\n--- 2. INI Configuration Parser & Serializer ---")
+
+var teksIni = "[server]\nhost = 127.0.0.1\nport = 8080\nenabled = benar\n\n[database]\nuser = widya_admin\nmax_koneksi = 50\n"
+
+cetak("Mem-parse format INI:")
+var cfg = ini_parse(teksIni)
+
+var host = ini_ambil_nilai(cfg, "server", "host")
+var port = ini_ambil_nilai(cfg, "server", "port")
+var dbUser = ini_ambil_nilai(cfg, "database", "user")
+
+cetak("Host Server   : " + teks(host))
+cetak("Port Server   : " + teks(port))
+cetak("User Database : " + teks(dbUser))
+
+// Serialisasi kembali ke string INI
+cetak("\nSerialisasi ulang konfigurasi INI:")
+var serialized = ini_serialize(cfg)
+cetak(serialized)
+
+cetak("\n✅ DEMO PECAHAN & INI CONFIG BERHASIL!")

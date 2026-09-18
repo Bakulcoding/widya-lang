@@ -1,0 +1,42 @@
+// =========================================================================
+// Contoh 124: Pilar Komputasi Neuro-morfik (Neuron LIF & Plastisitas STDP)
+// WidyaSpikingNeuron & WidyaSTDPPlasticity
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR NEURO-MORFIK: NEURON LIF & BELAJAR STDP ===");
+
+    // 1. Model Neuron Biologis Leaky Integrate-and-Fire (LIF)
+    // V_rest = -70 mV, V_thresh = -55 mV, R = 10 MOhm, C = 1 nF, T_ref = 2 ms
+    var neuron = NeuronLIF(-70.0, -55.0, 10.0, 1.0, 2.0);
+    cetak("Neuron LIF Diinisialisasi: V_rest = " + ke_teks(neuron.v_rest_mv) + " mV, V_thresh = " + ke_teks(neuron.v_thresh_mv) + " mV");
+
+    // Berikan Injeksi Arus Listrik Stimulasi 2.5 nA selama 10 langkah waktu
+    cetak("\n--- Simulasi Stimulasi Injeksi Arus Listrik ---");
+    untuk langkah dalam 0..10 {
+        var status_spike = neuron_stimulasi_arus(neuron, 2.5, 1.0);
+        jika status_spike.spike {
+            cetak("⚡ [Spike Potensial Aksi Terjadi!] V_mem = " + ke_teks(status_spike.potensial_v) + " mV");
+        }
+    }
+    cetak("Total Spike Terpancar dari SOMA Neuron: " + ke_teks(neuron.total_spike));
+
+    // 2. Plastisitas Sinaptik STDP (Spike-Timing-Dependent Plasticity)
+    // Bobot Awal = 0.4, Bobot Maks = 1.0, A+ = 0.02, A- = 0.025, Tau = 20 ms
+    var sinapsis = SinapsisSTDP(0.4, 1.0, 0.02, 0.025, 20.0);
+    cetak("\nSinapsis STDP Dibuat: Bobot Awal W = " + ke_teks(sinapsis.bobot));
+
+    // Skenario 1: Pre-Spike mendahului Post-Spike (LTP - Long Term Potentiation / Memori Menguat)
+    // T_pre = 10 ms, T_post = 15 ms (Delta T = +5 ms)
+    var update_ltp = stdp_perbarui_bobot(sinapsis, 10.0, 15.0);
+    cetak("Skenario LTP (Δt = +5ms): Bobot Menguat Menjadi W = " + ke_teks(update_ltp.bobot_baru) + " (ΔW = +" + ke_teks(update_ltp.perubahan_dw) + ")");
+
+    // Skenario 2: Post-Spike terjadi sebelum Pre-Spike (LTD - Long Term Depression / Memori Melemah)
+    // T_pre = 25 ms, T_post = 20 ms (Delta T = -5 ms)
+    var update_ltd = stdp_perbarui_bobot(sinapsis, 25.0, 20.0);
+    cetak("Skenario LTD (Δt = -5ms): Bobot Melemah Menjadi W = " + ke_teks(update_ltd.bobot_baru) + " (ΔW = " + ke_teks(update_ltd.perubahan_dw) + ")");
+
+    cetak("=== UJI NEURON LIF & BELAJAR STDP SUKSES ===");
+}
+
+utama();

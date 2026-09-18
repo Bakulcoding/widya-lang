@@ -1,0 +1,16 @@
+// Contoh 21: Aplikasi Multiplatform & Native Mobile Bridge (Widya-Lang)
+
+cetak("=== 📱 1. Integrasi Native Mobile & Desktop Bridge ===");
+
+// Memeriksa informasi sistem dan kapabilitas perangkat
+misal info = DapatkanInfoPerangkat();
+cetak("Platform: " + info.platform);
+cetak("Sistem Operasi: " + info.os);
+cetak("Arsitektur CPU: " + info.arch);
+cetak("Status Baterai: " + string(info.baterai_persen) + "%");
+
+// Mengirim pesan IPC langsung ke platform container native
+KirimPesanAsli("sensor/gps", "permintaan_lokasi_terkini");
+KirimPesanAsli("notifikasi", "Aplikasi Widya Multiplatform Berhasil Dimuat!");
+
+cetak("=== 🚀 Selesai Menjalankan Native Mobile Bridge Demo ===");

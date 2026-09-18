@@ -1,0 +1,24 @@
+/// Operasi dengan array/daftar
+
+// Membuat array
+var angka = [1, 2, 3, 4, 5]
+var buah = ["apel", "jeruk", "mangga"]
+var campur = [1, "dua", 3.0, benar]
+
+// Mengakses elemen
+cetak("Elemen pertama:", angka[0])
+cetak("Elemen kedua:", buah[1])
+
+// Panjang array
+cetak("Panjang angka:", panjang(angka))
+cetak("Panjang buah:", panjang(buah))
+
+// Menambah elemen
+push(buah, "pisang")
+cetak("Setelah push:", buah)
+
+// Iterasi array
+cetak("\n=== Isi Array ===")
+untuk i dalam rentang(0, panjang(angka)) {
+    cetak("angka[", i, "] =", angka[i])
+}

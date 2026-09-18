@@ -1,0 +1,63 @@
+// contoh/44_jwt_dan_warna.wya
+// Demonstrasi Pilar Mutakhir: WidyaJWT & WidyaColor
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaJWT (Token Auth) & WidyaColor (WCAG Contrast)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaJWT (JSON Web Token Sign & Verify)
+cetak("🔐 [1] Otentikasi JSON Web Token HMAC-SHA256 (WidyaJWT)...");
+misal kunci_rahasia = "widya-secret-super-kunci-2026";
+misal payload = {
+    "sub": "usr_99812",
+    "nama": "Farhan Developer",
+    "peran": "SuperAdmin",
+    "lingkup": "baca:tulis:kelola"
+};
+
+misal token = buat_jwt(payload, kunci_rahasia, 3600); // 1 jam durasi
+cetak("  * Token JWT Terbuat: " + token);
+
+misal verifikasi = verifikasi_jwt(token, kunci_rahasia);
+cetak("  * Verifikasi Token dengan Kunci Asli: ");
+cetak("    - Sah? -> " + teks(verifikasi.sah));
+cetak("    - Subjek: " + verifikasi.payload.sub);
+cetak("    - Nama: " + verifikasi.payload.nama);
+cetak("    - Peran: " + verifikasi.payload.peran);
+
+misal verifikasi_palsu = verifikasi_jwt(token, "kunci-salah-123");
+cetak("  * Verifikasi Token dengan Kunci Palsu: ");
+cetak("    - Sah? -> " + teks(verifikasi_palsu.sah));
+cetak("    - Alasan: " + verifikasi_palsu.alasan);
+cetak("");
+
+// 2. WidyaColor (Color Spaces & Accessibility Contrast)
+cetak("🎨 [2] Manipulasi Ruang Warna & Kontras Aksesibilitas WCAG (WidyaColor)...");
+misal hex_warna = "#3498db"; // Biru cerah
+misal rgb = hex_ke_rgb(hex_warna);
+cetak("  * Konversi HEX '#3498db' ke RGB -> R: " + teks(rgb.r) + ", G: " + teks(rgb.g) + ", B: " + teks(rgb.b));
+
+misal hsl = rgb_ke_hsl(rgb.r, rgb.g, rgb.b);
+cetak("  * Konversi ke HSL -> H: " + teks(hsl.h) + "°, S: " + teks(hsl.s) + "%, L: " + teks(hsl.l) + "%");
+
+misal hex_balik = rgb_ke_hex(rgb.r, rgb.g, rgb.b);
+cetak("  * Konversi kembali RGB ke HEX -> " + hex_balik);
+
+// Evaluasi Kontras Keterbacaan WCAG
+misal hitam = "#000000";
+misal putih = "#ffffff";
+misal kuning = "#ffeb3b";
+
+misal kontras_putih_hitam = hitung_kontras_wcag(putih, hitam);
+misal kontras_kuning_putih = hitung_kontras_wcag(kuning, putih);
+misal kontras_biru_putih = hitung_kontras_wcag(hex_warna, putih);
+
+cetak("  * Rasio Kontras WCAG (Teks Putih di Latar Hitam) -> " + teks(kontras_putih_hitam) + ":1 (Sangat Tinggi)");
+cetak("  * Rasio Kontras WCAG (Teks Kuning di Latar Putih) -> " + teks(kontras_kuning_putih) + ":1 (Tidak Terbaca)");
+cetak("  * Rasio Kontras WCAG (Teks Biru di Latar Putih)   -> " + teks(kontras_biru_putih) + ":1 (Lolos AA)");
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaJWT & WidyaColor!");
+cetak("========================================================================");

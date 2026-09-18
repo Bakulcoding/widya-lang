@@ -1,0 +1,52 @@
+// ==========================================
+// 🔄 Widya-Lang: Consistent Hash Ring & TOML Parser
+// ==========================================
+
+cetak("================================================")
+cetak("🔄 WIDYA CONSISTENT HASH RING & TOML PARSER")
+cetak("================================================")
+
+// 1. Uji Coba WidyaConsistentHash
+cetak("\n--- 1. Distributed Consistent Hash Ring (Virtual Nodes) ---")
+
+var cincin = CincinHash(50)
+
+cincin_tambah_node(cincin, "server-alfa")
+cincin_tambah_node(cincin, "server-beta")
+cincin_tambah_node(cincin, "server-gamma")
+
+var daftarServer = cincin_daftar_node(cincin)
+cetak("Daftar node server terdaftar: " + teks(daftarServer))
+
+var kunciKueri = ["user_1001", "session_abc", "order_992", "product_404", "invoice_881"]
+var batasKueri = panjang(kunciKueri) - 1
+untuk i dalam 0..batasKueri {
+    var k = kunciKueri[i]
+    var serverTujuan = cincin_dapatkan_node(cincin, k)
+    cetak("  Kunci '" + k + "' diarahkan ke -> " + teks(serverTujuan))
+}
+
+// 2. Uji Coba WidyaTOML
+cetak("\n--- 2. TOML Configuration Parser & Serializer ---")
+
+var teksToml = "[paket]\nnama = \"widya_proyek\"\nversi = \"2.0.0\"\nedisi = 2026\n\n[server.database]\nhost = \"10.0.0.1\"\nport = 5432\naktif = benar\n"
+
+cetak("Parsing teks format TOML:")
+var config = toml_parse(teksToml)
+
+var appName = toml_ambil_nilai(config, "paket.nama")
+var appVersion = toml_ambil_nilai(config, "paket.versi")
+var dbHost = toml_ambil_nilai(config, "server.database.host")
+var dbPort = toml_ambil_nilai(config, "server.database.port")
+
+cetak("Nama Paket  : " + teks(appName))
+cetak("Versi Paket : " + teks(appVersion))
+cetak("Host DB     : " + teks(dbHost))
+cetak("Port DB     : " + teks(dbPort))
+
+// Serialisasi kembali ke string TOML
+cetak("\nSerialisasi ulang struktur map ke TOML:")
+var serialized = toml_serialize(config)
+cetak(serialized)
+
+cetak("\n✅ DEMO CONSISTENT HASH RING & TOML BERHASIL!")

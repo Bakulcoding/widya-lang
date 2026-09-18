@@ -1,0 +1,27 @@
+// Contoh 20: WidyaSIMD & Dynamic JIT Optimizing Engine (Widya-Lang)
+
+cetak("=== ⚡ 1. Komputasi Vektorisasi Berkecepatan Tinggi (WidyaSIMD) ===");
+
+// Inisialisasi dua register vektor 4-elemen
+misal v1 = VektorF32x4(10.0, 20.0, 30.0, 40.0);
+misal v2 = VektorF32x4(2.0, 3.0, 4.0, 5.0);
+
+cetak("Vektor A: " + string(v1.x) + ", " + string(v1.y) + ", " + string(v1.z) + ", " + string(v1.w));
+cetak("Vektor B: " + string(v2.x) + ", " + string(v2.y) + ", " + string(v2.z) + ", " + string(v2.w));
+
+// Operasi SIMD Paralel
+misal v_tambah = simd_tambah(v1, v2);
+misal v_kali = simd_kali(v1, v2);
+misal hasil_dot = simd_dot(v1, v2);
+misal jarak = simd_jarak(v1, v2);
+
+cetak("Hasil SIMD Tambah (A + B): " + string(v_tambah.x) + ", " + string(v_tambah.y) + ", " + string(v_tambah.z) + ", " + string(v_tambah.w));
+cetak("Hasil SIMD Kali (A * B): " + string(v_kali.x) + ", " + string(v_kali.y) + ", " + string(v_kali.z) + ", " + string(v_kali.w));
+cetak("SIMD Dot Product: " + string(hasil_dot));
+cetak("SIMD Jarak Euclidean (||A - B||): " + string(jarak));
+
+// Konversi ke larik standar
+misal daftar_vektor = simd_ke_daftar(v_tambah);
+cetak("Larik standar dari SIMD: " + string(daftar_vektor));
+
+cetak("=== 🚀 Selesai Menjalankan SIMD & JIT Demo ===");

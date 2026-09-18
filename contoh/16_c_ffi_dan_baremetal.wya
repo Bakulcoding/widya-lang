@@ -1,0 +1,42 @@
+// Contoh 16: Interoperabilitas C-FFI & Pemrograman Bare-Metal (Widya-Lang)
+
+cetak("=== 1. Interoperabilitas C-FFI (C Foreign Function Interface) ===");
+
+// Mendeklarasikan fungsi eksternal dari standar C runtime / Dynamic Library
+eksternal "C" {
+    fungsi puts(teks: Teks) -> Angka;
+    fungsi abs(angka: Angka) -> Angka;
+    fungsi sqrt(angka: Angka) -> Angka;
+    fungsi sqlite3_open(nama_db: Teks, penunjuk: Penunjuk) -> Angka;
+    fungsi sqlite3_close(penunjuk: Penunjuk) -> Angka;
+}
+
+// Memanggil C ABI langsung
+puts("Halo dari C-FFI puts() yang dipanggil langsung oleh Widya-Lang!");
+misal nilai_akar = sqrt(144);
+cetak("Hasil C sqrt(144):", nilai_akar);
+
+misal db_status = sqlite3_open("aplikasi_bisnis.db", nihil);
+cetak("Status SQLite3 Open (0 = Sukses):", db_status);
+sqlite3_close(nihil);
+
+cetak("");
+cetak("=== 2. Pemrograman Bare-Metal (Akses Memori Volatil Langsung) ===");
+
+// Alamat register perangkat keras (Hardware Register Port / GPIO Base)
+misal GPIO_PORT_A_ADDR = 0x40020000;
+misal REG_DATA_DIR = 0x40020004;
+
+// Tulis langsung ke memori perangkat keras (Volatile Write)
+tulis_volatil(GPIO_PORT_A_ADDR, 0xFF); // Konfigurasi semua pin ke status HIGH (255)
+tulis_volatil(REG_DATA_DIR, 0x01);     // Konfigurasi pin sebagai output
+
+// Baca status terkini dari register secara volatil (Volatile Read)
+misal status_port = volatil GPIO_PORT_A_ADDR;
+cetak("Nilai Register Hardware GPIO Port A:", status_port);
+
+misal buffer = alokasi_buffer_mentah(64);
+cetak("Buffer Mentah Dialokasikan pada Alamat:", buffer["alamat"]);
+cetak("Ukuran Buffer (Byte):", buffer["ukuran_byte"]);
+
+cetak("✅ Demonstrasi C-FFI dan Bare-Metal Embedded Berhasil!");

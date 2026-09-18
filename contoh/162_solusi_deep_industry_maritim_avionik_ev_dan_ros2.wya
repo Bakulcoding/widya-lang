@@ -1,0 +1,73 @@
+// Contoh 162: Navigasi Maritim AIS, Avionika ARINC 429, SPKLU EV, Smart Grid IEC 61850, 5G Diameter, DICOM, SEG-Y, dan ROS2
+impor "modul/maritim_ais_nmea0183.wya";
+impor "modul/avionika_arinc429_nav.wya";
+impor "modul/ev_charging_ocpp_iso15118.wya";
+impor "modul/smartgrid_iec61850_goose.wya";
+impor "modul/telco_5g_diameter_gtp.wya";
+impor "modul/medis_dicom_imaging.wya";
+impor "modul/geofisika_segy_seismik.wya";
+impor "modul/robotika_cdr_ros2_dds.wya";
+
+cetak("==================================================================");
+cetak("🌐 WIDYA DEEP INDUSTRIAL: MARITIME, AVIONICS, EV, 5G, DICOM & ROS2");
+cetak("==================================================================");
+
+// 1. Maritim AIS & GPS NMEA 0183
+cetak("\n[1] Pelacakan Navigasi Maritim & GPS Kapal:");
+var nmea_gps = parse_nmea_gprmc("$GPRMC,081522,A,0610.123,S,10649.456,E,14.5,090.0,150926,001.0,W*68");
+cetak("  - Status GPS Kapal:", nmea_gps["tipe"], "Valid:", nmea_gps["sah"]);
+cetak("  - Kecepatan Kapal:", nmea_gps["kecepatan_knot"], "knot (", nmea_gps["kecepatan_kmh"], "km/jam)");
+
+var ais_pos = decode_ais_posisi_kapal("525001234", -6.1012, 106.8245, 14.5, 90.0, "KM NUSANTARA BAHARI");
+cetak("  - AIS Transponder MMSI:", ais_pos["mmsi"], "-", ais_pos["nama_kapal"], "[" + ais_pos["status_navigasi"] + "]");
+
+// 2. Avionika ARINC 429 Instrumen Kokpit Pesawat
+cetak("\n[2] Avionika ARINC 429 Kokpit Altimeter:");
+var arinc_word = arinc429_encode_word(204, "NORMAL", 35000.0, 0);
+var altimeter = arinc429_decode_altimeter(arinc_word);
+cetak("  - Altimeter Status:", altimeter["status"]);
+cetak("  - Ketinggian Terbang:", altimeter["ketinggian_kaki"], "feet (", altimeter["ketinggian_meter"], "meter)");
+
+// 3. Pengisian Daya EV SPKLU (OCPP 2.0.1)
+cetak("\n[3] SPKLU Pengisian Daya Kendaraan Listrik (OCPP 2.0.1):");
+var auth_ev = ocpp_authorize_id_tag("RFID_CARD_099182", "SPKLU_PLN_SENAYAN_01");
+cetak("  - Izin Otorisasi Pengisian:", auth_ev["izin_pengisian"], "[ID Token:", auth_ev["status_id_token"] + "]");
+var meter_ev = ocpp_meter_values_report(1, 45.5, 400.0, 82.0);
+cetak("  - Telemetri Daya:", meter_ev["status"], "| Daya Aktif: 45.5 kW | Baterai SoC: 82.0%");
+
+// 4. Smart Grid IEC 61850 GOOSE Trip Proteksi
+cetak("\n[4] Smart Grid Gardu Induk IEC 61850 GOOSE:");
+var gocb = iec61850_buat_goose_control_block("GARDU_INDUK_CB1", 1001, "DS_PROTEKSI_DAYA");
+var trip_res = iec61850_kirim_sinyal_trip_proteksi(gocb, "CB_LINE_500KV", benar);
+cetak("  - Status Transmisi GOOSE:", trip_res["status_jaringan"]);
+cetak("  - Waktu Eksekusi Relay Proteksi:", trip_res["pdu"]["waktu_eksekusi_ms"], "ms (Standar Ultra Cepat < 4ms)");
+
+// 5. 5G Core Diameter OCS Billing
+cetak("\n[5] Telekomunikasi 5G Core Diameter OCS Real-Time Charging:");
+var ccr = diameter_buat_ccr_charging_request("SESSION_5G_009981", "510890123456789", 101, 500);
+var cca = diameter_proses_cca_charging_response(ccr, 2048.0);
+cetak("  - Status OCS Charging:", cca["status_kuota"], "| Result Code:", cca["result_code"]);
+cetak("  - Kuota Diberikan:", cca["granted_service_unit"]["kuota_mb"], "MB");
+
+// 6. Radiologi Medis DICOM
+cetak("\n[6] Citra Radiologi Medis DICOM PACS:");
+var dicom = dicom_parse_dataset_tags("HARYANTO^BUDI", "RM-88712", "CT", "20260915", 512, 512);
+cetak("  - Pasien PACS:", dicom["tag_0010_0010_nama"], "| Modalitas:", dicom["tag_0008_0060_modalitas"]);
+var hu_val = dicom_hitung_windowing_hu(40.0, 40.0, 400.0); // CT Soft Tissue
+cetak("  - Hasil Windowing HU Jaringan Lunak (0-255):", hu_val);
+
+// 7. Geofisika Seismik SEG-Y
+cetak("\n[7] Geofisika & Eksplorasi Seismik SEG-Y:");
+var segy_hdr = segy_buat_binary_file_header(1001, 405, 2000, 1500);
+cetak("  - SEG-Y Job ID:", segy_hdr["job_id"], "| Line:", segy_hdr["line_number"], "| Format:", segy_hdr["tipe_format"]);
+var seismic_trace = segy_proses_seismic_trace(1, 106.82, -6.17, [12.0, 35.0, 68.0, 92.0, 45.0]);
+cetak("  - Seismik Trace RMS:", seismic_trace["amplitudo_rms"], "| Anomali Hidrokarbon:", seismic_trace["anomali_refleksi"]);
+
+// 8. Robotika Industri ROS2 DDS
+cetak("\n[8] Robotika Industri ROS2 DDS Wire Serialization:");
+var twist = ros2_serialize_twist_message(1.2, 0.0, 0.0, 0.0, 0.0, 0.45);
+var pub_res = ros2_dispatch_cmd_vel("node_navigasi_agv", twist);
+cetak("  - ROS2 Publisher Status:", pub_res["status"]);
+cetak("  - Topic:", pub_res["topic"], "| Kecepatan Linier:", pub_res["linear_speed"], "m/s | Belokan:", pub_res["angular_turn"], "rad/s");
+
+cetak("\n=== SELURUH DOMAIN INDUSTRI DUNIA TELAH TERCATAT LENGKAP & SEMPURNA ===");

@@ -1,0 +1,83 @@
+// ==============================================================================
+// CONTOH 85: WIDYA-LANG - BLAKE3 TREE HASHING & RUN-LENGTH ADAPTIVE CODEC
+// Gelombang 33: High-Throughput Cryptographic Hashing & Stream/Signal RLE
+// ==============================================================================
+
+cetak("================================================================")
+cetak("🔐 CONTOH 85: BLAKE3 CRYPTOGRAPHIC TREE HASH & RUN-LENGTH CODEC")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: WIDYA BLAKE3 (High-Throughput Cryptographic Tree-Hash & KDF)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: BLAKE3 TREE HASH & KDF ---")
+
+var pesan_1 = "Widya-Lang: Bahasa Pemrograman Modern Kelas Dunia Berbasis Bahasa Indonesia."
+var hash_standar = blake3_hash(pesan_1)
+
+cetak("1. BLAKE3 Standard Hash (256-bit Hex):")
+cetak("   Pesan : '" + pesan_1 + "'")
+cetak("   Digest: " + hash_standar)
+
+// Keyed Hash (Otentikasi MAC berbasis Kunci 32-byte)
+var kunci_rahasia = "kunci_otentikasi_rahasia_32_byte"
+var keyed_mac_1 = blake3_keyed_hash(pesan_1, kunci_rahasia)
+var keyed_mac_2 = blake3_keyed_hash("Pesan berbeda untuk uji MAC", kunci_rahasia)
+
+cetak("\n2. BLAKE3 Keyed Hash (MAC Authentication):")
+cetak("   Kunci : '" + kunci_rahasia + "'")
+cetak("   MAC 1 : " + keyed_mac_1)
+cetak("   MAC 2 : " + keyed_mac_2)
+cetak("   Apakah MAC Berbeda: " + teks(keyed_mac_1 != keyed_mac_2))
+
+// Key Derivation Function (KDF)
+var konteks_aplikasi = "widya.network.handshake.v1"
+var materi_kunci = "master_entropy_seed_widya_lang_blockchain_2026"
+var kunci_turunan = blake3_turunkan_kunci(konteks_aplikasi, materi_kunci)
+
+cetak("\n3. BLAKE3 Key Derivation Function (KDF):")
+cetak("   Konteks      : " + konteks_aplikasi)
+cetak("   Materi Kunci : " + materi_kunci)
+cetak("   Kunci Turunan: " + kunci_turunan)
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: RUN-LENGTH ADAPTIVE CODEC (Byte-Level & Bit-Plane RLE Compressor)
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: RUN-LENGTH ENCODING (RLE CODEC) ---")
+
+// Pola data dengan perulangan berulang (seperti baris bitmap, telemetri, sparse stream)
+var data_pola = "AAAAABBBBBBBCCCCCCCCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEEEEEFFFFF"
+var hasil_rle = rle_kompres(data_pola)
+
+cetak("1. Kompresi RLE Data Berpola:")
+cetak("   Data Asli            : " + data_pola)
+cetak("   Ukuran Asli          : " + teks(hasil_rle["panjang_asli"]) + " byte")
+cetak("   Ukuran Terkompresi   : " + teks(hasil_rle["panjang_terkompresi"]) + " byte")
+cetak("   Data Hex Terkompresi : " + hasil_rle["data_hex"])
+
+var rasio_hemat = rle_rasio_hemat(hasil_rle)
+cetak("   Persentase Penghematan: " + teks(rasio_hemat) + "%")
+
+// Dekompresi RLE
+var hasil_dekompres = rle_dekompres(hasil_rle)
+cetak("\n2. Dekompresi RLE:")
+cetak("   Panjang Dekompresi : " + teks(hasil_dekompres["panjang"]) + " byte")
+cetak("   Teks Terdekode     : " + teks(hasil_dekompres["teks"]))
+cetak("   Integritas Data    : " + teks(hasil_dekompres["teks"] == data_pola))
+
+// Uji Kompresi Array Byte Acak / Telemetri Sinyal Biner
+var sinyal_sensor = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 255, 255, 255, 255, 255, 0, 0, 0]
+var kompresi_sinyal = rle_kompres(sinyal_sensor)
+var dekompresi_sinyal = rle_dekompres(kompresi_sinyal)
+
+cetak("\n3. Kompresi Stream Sinyal Sensor Telemetri:")
+cetak("   Sinyal Asli  : " + teks(sinyal_sensor))
+cetak("   Hex RLE      : " + kompresi_sinyal["data_hex"])
+cetak("   Byte Array   : " + teks(kompresi_sinyal["byte_array"]))
+cetak("   Rekonstruksi : " + teks(dekompresi_sinyal["byte_array"]))
+cetak("   Status Valid : " + teks(kompresi_sinyal["panjang_asli"] == dekompresi_sinyal["panjang"]))
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI BLAKE3 & RUN-LENGTH CODEC BERHASIL 100%!")
+cetak("================================================================")

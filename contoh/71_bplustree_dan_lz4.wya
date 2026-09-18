@@ -1,0 +1,58 @@
+// Contoh 71: WidyaBPTree & WidyaLZ4Codec
+// B+ Tree Database Storage Indexing & Ultra-Fast LZ4 Block Compression
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 26: B+ Tree & LZ4 Codec")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaBPTree: Database Storage Index
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaBPTree: Indeks Database B+ Tree ---")
+
+let tree = PohonBPlus(4)
+
+// Menyisipkan kunci dan data
+bplus_sisip(tree, "akun:001", { "nama": "Budi", "saldo": 500000 })
+bplus_sisip(tree, "akun:003", { "nama": "Candra", "saldo": 1200000 })
+bplus_sisip(tree, "akun:002", { "nama": "Ani", "saldo": 850000 })
+bplus_sisip(tree, "akun:005", { "nama": "Eka", "saldo": 300000 })
+bplus_sisip(tree, "akun:004", { "nama": "Dewi", "saldo": 950000 })
+
+cetak("Pencarian Langsung bplus_cari('akun:003'):")
+let akun3 = bplus_cari(tree, "akun:003")
+cetak("  Nama:", akun3.nama, "| Saldo:", akun3.saldo)
+
+// Pemindaian Rentang Terurut (Fast Range Scan)
+cetak("\nPemindaian Rentang bplus_rentang('akun:002', 'akun:004'):")
+let rentang = bplus_rentang(tree, "akun:002", "akun:004")
+untuk_setiap(rentang, fungsi(item) {
+    let data = item.nilai
+    cetak("  -> Kunci:", item.kunci, "| Nama:", data.nama, "| Saldo:", data.saldo)
+})
+
+// ----------------------------------------------------
+// 2. WidyaLZ4Codec: Ultra-Fast Block Compression
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaLZ4Codec: Kompresi Blok Kilat ---")
+
+let data_mentah = "WIDYA_LANG_HIGH_PERFORMANCE_SYSTEM_WIDYA_LANG_HIGH_PERFORMANCE_SYSTEM_WIDYA_LANG_HIGH_PERFORMANCE_SYSTEM"
+cetak("Teks Mentah Asli (Panjang:", panjang(data_mentah), "karakter)")
+
+// Kompresi data dengan LZ4
+let paket = lz4_kompres(data_mentah)
+cetak("Hasil Kompresi LZ4:")
+cetak("  Ukuran Asli     :", paket.ukuran_asli, "byte")
+cetak("  Ukuran Terkompresi:", paket.ukuran_kompresi, "byte")
+cetak("  Data Hex Terkompresi:", paket.data_hex)
+
+// Menghitung rasio penghematan
+let rasio = lz4_rasio_hemat(data_mentah)
+cetak("  Rasio Penghematan Ruang:", bulat(rasio * 100), "%")
+
+// Dekompresi kembali
+let teks_pulih = lz4_dekompres(paket)
+cetak("\nHasil Dekompresi LZ4:", teks_pulih)
+pastikan(teks_pulih == data_mentah, "Data setelah dekompresi LZ4 harus sama persis dengan aslinya!")
+
+cetak("\n[SUKSES] Seluruh fitur B+ Tree Index & LZ4 Codec berjalan luar biasa!")

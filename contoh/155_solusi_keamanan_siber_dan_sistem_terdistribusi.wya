@@ -1,0 +1,34 @@
+// Contoh 155: Solusi Keamanan Siber SIEM, Forensik & Konsensus Terdistribusi
+// Mengintegrasikan sistem deteksi intrusi dan replikasi konsensus Raft
+
+impor "modul/keamanan_siber_forensik.wya";
+impor "modul/sistem_terdistribusi.wya";
+
+cetak("==================================================================");
+cetak("🛡️ WIDYA CYBERSECURITY OPERATIONS & DISTRIBUTED CONSENSUS PIPELINE");
+cetak("==================================================================");
+
+// 1. Inisialisasi SOC (Security Operations Center)
+var soc = buat_pusat_operasi_keamanan();
+
+var daftar_log = [
+    { "ip": "192.168.1.50", "uri": "/dashboard", "status": 200 },
+    { "ip": "185.220.101.5", "uri": "/login?user=admin' OR '1'='1", "status": 200 },
+    { "ip": "185.220.101.5", "uri": "/login", "status": 401 },
+    { "ip": "185.220.101.5", "uri": "/login", "status": 401 }
+];
+
+cetak("🔍 Menganalisis Log Server Real-Time...");
+var anal_res = analisa_keamanan_log(soc, daftar_log, 2);
+cetak("⚠️ Serangan Web Terdeteksi:", panjang(anal_res["serangan_web"]));
+cetak("🚨 Skor Risiko Keamanan:", anal_res["skor_risiko"]);
+
+// 2. Inisialisasi Klaster Konsensus Terdistribusi untuk Audit Trail
+cetak("\n🌐 Mereplikasi Catatan Insiden ke Klaster Raft Terdistribusi...");
+var klaster = buat_klaster_konsensus("Node_Security_1", ["Node_Security_1", "Node_Security_2", "Node_Security_3"]);
+var hasil_tx = usulkan_transaksi_terdistribusi(klaster, "AUDIT_LOG_ALERT_BLOCK_IP_185.220.101.5");
+
+cetak("✅ Status Replikasi Raft Log:", hasil_tx["sukses"]);
+cetak("⏱️ Vector Clock Saat Ini:", hasil_tx["vector_clock"]);
+
+cetak("\n🎉 Pipeline Keamanan Siber & Terdistribusi Berhasil Berjalan 100%!");

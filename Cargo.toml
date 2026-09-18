@@ -1,0 +1,38 @@
+[package]
+name = "widya"
+version = "1.0.0-beta.1"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+colored = "2.1"
+rustyline = "14.0"
+rand = "0.8"
+serde_json = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+hmac = "0.12"
+regex = "1.10"
+ureq = { version = "2.12", features = ["json"] }
+sha1 = "0.10"
+base64 = "0.22"
+libloading = "0.8"
+zeroize = { version = "1.7", features = ["zeroize_derive"] }
+aes-gcm = "0.10"
+chacha20poly1305 = "0.10"
+rsa = "0.9"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+argon2 = "0.5"
+sha3 = "0.10"
+serde_bytes = "0.11"
+rustls = "0.23"
+webpki = "0.22"
+uuid = { version = "1.8", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+
+[lints.rust]
+dead_code = "allow"
+unused_variables = "allow"
+unused_imports = "allow"

@@ -1,0 +1,74 @@
+// Modul Standar Interoperabilitas Kesehatan HL7 FHIR (Fast Healthcare Interoperability Resources)
+
+fungsi buat_fhir_patient(id_pasien, nama_lengkap, tgl_lahir, gender) {
+    kembalikan {
+        "resourceType": "Patient",
+        "id": id_pasien,
+        "name": [
+            {
+                "use": "official",
+                "text": nama_lengkap
+            }
+        ],
+        "gender": gender,
+        "birthDate": tgl_lahir,
+        "active": benar
+    };
+}
+
+fungsi buat_fhir_observation(id_obs, id_pasien, kode_loinc, display, nilai_angka, unit) {
+    kembalikan {
+        "resourceType": "Observation",
+        "id": id_obs,
+        "status": "final",
+        "code": {
+            "coding": [
+                {
+                    "system": "http://loinc.org",
+                    "code": kode_loinc,
+                    "display": display
+                }
+            ]
+        },
+        "subject": {
+            "reference": "Patient/" + id_pasien
+        },
+        "valueQuantity": {
+            "value": nilai_angka,
+            "unit": unit,
+            "system": "http://unitsofmeasure.org"
+        }
+    };
+}
+
+fungsi buat_fhir_bundle(bundle_id, list_resources) {
+    var entries = [];
+    untuk res dalam list_resources {
+        entries = tambah(entries, {
+            "fullUrl": "urn:uuid:" + res["id"],
+            "resource": res
+        });
+    }
+    
+    kembalikan {
+        "resourceType": "Bundle",
+        "id": bundle_id,
+        "type": "transaction",
+        "total": panjang(entries),
+        "entry": entries
+    };
+}
+
+fungsi fhir_validasi_rekam_medis(bundle_obj) {
+    jika (bundle_obj["resourceType"] != "Bundle") {
+        kembalikan { "valid": salah, "pesan": "Format bukan FHIR Bundle" };
+    }
+    jika (panjang(bundle_obj["entry"]) == 0) {
+        kembalikan { "valid": salah, "pesan": "Bundle rekam medis kosong" };
+    }
+    kembalikan {
+        "valid": benar,
+        "total_entri": bundle_obj["total"],
+        "pesan": "Rekam medis tervalidasi memenuhi standar HL7 FHIR R4"
+    };
+}

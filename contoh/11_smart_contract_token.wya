@@ -1,0 +1,44 @@
+// =================================================================
+// Contoh 11: Smart Contract Token Digital (Standar Widya-20)
+// =================================================================
+
+impor "modul/blockchain.wya";
+
+cetak("==================================================");
+cetak("📜 Penerbitan Smart Contract Token Digital (WIDYA-20)");
+cetak("==================================================\n");
+
+misal pemilik_kontrak = "0xCreator987654321";
+misal alamat_alice = "0xAlice111111111";
+misal alamat_bob = "0xBob222222222";
+
+// 1. Deploy Smart Contract dengan Total Supply 1,000,000 Token WDY
+cetak("1️⃣  Mendeploy Smart Contract Token 'Widya Nusantara' (WDY)...");
+misal token_wdy = KontrakTokenWidya20("Widya Nusantara", "WDY", 1000000, pemilik_kontrak);
+
+cetak("   Nama Token    :", token_wdy.nama);
+cetak("   Simbol        :", token_wdy.simbol);
+cetak("   Total Pasokan :", token_wdy.total_pasokan, token_wdy.simbol);
+cetak("   Saldo Creator :", token_wdy.dapatkan_saldo(pemilik_kontrak), token_wdy.simbol, "\n");
+
+// 2. Transfer Token dari Creator ke Alice
+cetak("2️⃣  Eksekusi Smart Contract: Transfer 5,000 WDY ke Alice...");
+token_wdy.transfer(pemilik_kontrak, alamat_alice, 5000);
+
+// 3. Alice mentransfer sebagian ke Bob
+cetak("\n3️⃣  Eksekusi Smart Contract: Alice transfer 1,500 WDY ke Bob...");
+token_wdy.transfer(alamat_alice, alamat_bob, 1500);
+
+// 4. Saldo Setelah Transaksi
+cetak("\n4️⃣  Status Saldo Smart Contract Terkini:");
+cetak("   Saldo Creator :", token_wdy.dapatkan_saldo(pemilik_kontrak), token_wdy.simbol);
+cetak("   Saldo Alice   :", token_wdy.dapatkan_saldo(alamat_alice), token_wdy.simbol);
+cetak("   Saldo Bob     :", token_wdy.dapatkan_saldo(alamat_bob), token_wdy.simbol);
+
+// 5. Uji Coba Error Handling Smart Contract jika saldo tidak cukup
+cetak("\n5️⃣  Uji Proteksi Smart Contract (Bob mencoba kirim 9,999 WDY):");
+coba {
+    token_wdy.transfer(alamat_bob, alamat_alice, 9999);
+} tangkap galat_kontrak {
+    cetak("   🛡️  Transaksi ditolak:", galat_kontrak);
+}

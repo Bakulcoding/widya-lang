@@ -1,0 +1,58 @@
+// contoh/46_otp_dan_fuzzy.wya
+// Demonstrasi Pilar Mutakhir: WidyaOTP & WidyaLevenshtein
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaOTP (2FA Auth) & WidyaLevenshtein (Fuzzy Match)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaOTP (2FA TOTP & HOTP Authenticator Engine)
+cetak("🔑 [1] Otentikasi Dua Faktor 2FA RFC 6238 / 4226 (WidyaOTP)...");
+misal kunci_rahasia_user = "JBSWY3DPEHPK3PXP"; // Base32/Plain key
+misal kode_totp = buat_totp(kunci_rahasia_user);
+
+cetak("  * Kode TOTP Google Authenticator Aktif: " + kode_totp);
+
+misal verifikasi_ok = verifikasi_totp(kode_totp, kunci_rahasia_user);
+misal verifikasi_salah = verifikasi_totp("000000", kunci_rahasia_user);
+
+cetak("  * Verifikasi Kode Asli -> " + teks(verifikasi_ok));
+cetak("  * Verifikasi Kode Palsu ('000000') -> " + teks(verifikasi_salah));
+
+misal kode_hotp_1 = buat_hotp(kunci_rahasia_user, 1, 6);
+misal kode_hotp_2 = buat_hotp(kunci_rahasia_user, 2, 6);
+cetak("  * Kode HOTP Counter #1: " + kode_hotp_1);
+cetak("  * Kode HOTP Counter #2: " + kode_hotp_2);
+cetak("");
+
+// 2. WidyaLevenshtein (Fuzzy String Matching & Similarity Engine)
+cetak("🔍 [2] Pencarian Teks Kabur & Koreksi Typo (WidyaLevenshtein)...");
+misal input_typo = "algortima";
+misal kata_benar = "algoritma";
+
+misal jarak = jarak_levenshtein(input_typo, kata_benar);
+misal skor_kemiripan = kemiripan_teks(input_typo, kata_benar);
+
+cetak("  * Jarak Edit Levenshtein antara '" + input_typo + "' & '" + kata_benar + "': " + teks(jarak));
+cetak("  * Skor Kemiripan: " + teks(skor_kemiripan * 100) + "%");
+
+misal kamus_kata = [
+    "algoritma",
+    "aljabar",
+    "aritmatika",
+    "kompilasi",
+    "variabel",
+    "fungsi"
+];
+
+cetak("  * Mencari saran kata mirip untuk 'algortma' di kamus:");
+misal saran = cari_kata_mirip("algortma", kamus_kata, 0.4);
+
+untuk entri dalam saran {
+    cetak("    -> Kata: " + entri.kata + " | Kecocokan: " + teks(entri.skor * 100) + "%");
+}
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaOTP & WidyaLevenshtein!");
+cetak("========================================================================");

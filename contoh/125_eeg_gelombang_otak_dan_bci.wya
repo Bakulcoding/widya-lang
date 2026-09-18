@@ -1,0 +1,40 @@
+// =========================================================================
+// Contoh 125: Pilar BCI & Neuro-Teknologi (Gelombang Otak EEG & Dekoder BCI)
+// WidyaEEGSignalProcessing & WidyaBCIDecoder
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR BCI: DEKOMPOSISI GELOMBANG EEG & DEKODER NIAT ===");
+
+    // 1. Pemrosesan Sinyal Elektrofisiologi Gelombang Otak EEG (256 Hz)
+    var prosesor_eeg = ProsesorSinyalEEG(256.0);
+    cetak("Prosesor EEG Diinisialisasi (Sampling Rate: " + ke_teks(prosesor_eeg.frekuensi_sampling) + " Hz)");
+
+    // Sinyal bio-elektrik mentah dari elektroda kulit kepala
+    var sinyal_mentah_eeg = [
+        12.5, 15.2, -8.4, -14.1, 20.3, 18.0, -10.2, -15.5,
+        14.0, 16.5, -9.0, -13.8, 22.1, 19.4, -11.0, -16.0
+    ];
+
+    // Ekstraksi Pita Frekuensi Ritmik Otak (Delta, Theta, Alpha, Beta, Gamma)
+    var spektrum_eeg = eeg_ekstrak_gelombang(prosesor_eeg, sinyal_mentah_eeg);
+    cetak("\nDekomposisi Pita Frekuensi Otak:");
+    cetak("  * Daya Alpha (8-13 Hz / Tenang & Rileks): " + ke_teks(spektrum_eeg.daya_alpha) + " µV²");
+    cetak("  * Daya Beta (13-30 Hz / Fokus Kognitif): " + ke_teks(spektrum_eeg.daya_beta) + " µV²");
+    cetak("  * Daya Theta (4-8 Hz / Meditatif): " + ke_teks(spektrum_eeg.daya_theta) + " µV²");
+
+    // Hitung Indeks Fokus Mental (Beta / (Theta + Alpha))
+    var metrik_fokus = eeg_hitung_indeks_fokus(prosesor_eeg, spektrum_eeg);
+    cetak("Indeks Konsentrasi / Fokus: " + ke_teks(metrik_fokus.indeks_fokus) + " [Status Mental: " + metrik_fokus.status_mental + "]");
+
+    // 2. Dekoder Antarmuka Otak-Komputer (BCI Motor Imagery)
+    var dekoder = DekoderBCI("MOTOR_IMAGERY");
+    var hasil_klasifikasi = bci_klasifikasi_niat(dekoder, spektrum_eeg);
+
+    cetak("\nKlasifikasi Niat Motorik BCI: " + hasil_klasifikasi.perintah_motorik);
+    cetak("Tingkat Keyakinan Prediksi Sinyal Otak: " + ke_teks(hasil_klasifikasi.probabilitas_keyakinan * 100.0) + "%");
+
+    cetak("=== UJI EEG GELOMBANG OTAK & DEKODER BCI SUKSES ===");
+}
+
+utama();

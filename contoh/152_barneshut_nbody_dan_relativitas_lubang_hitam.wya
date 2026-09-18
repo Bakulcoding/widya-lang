@@ -1,0 +1,47 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 67 - Simulasi N-Body Barnes-Hut & Relativitas Lubang Hitam
+// Demonstrasi integrasi gravitasi galaksi Barnes-Hut Octree dan solusi horizon peristiwa metrik Schwarzschild Relativitas Umum.
+
+tulis("=== [WIDYA ASTROPHYSICS] BARNES-HUT N-BODY & LUBANG HITAM ===");
+
+// 1. Cosmological Galactic N-Body (Barnes-Hut Hierarchical Octree O(N log N))
+tulis("--- SIMULATOR GRAVITASI GALAKSI BARNES-HUT 3D ---");
+var sim_bh = SimulasiGravitasiBarnesHut(0.5, 6.6743e-11);
+
+// Daftarkan Objek Bintang dan Lubang Hitam Supermasif Pusat Galaksi
+barneshut_tambah_massa_partikel(sim_bh, "Pusat_SgrA*", 8.15e36, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+barneshut_tambah_massa_partikel(sim_bh, "Bintang_S2", 2.0e31, 1.4e13, 0.0, 0.0, 0.0, 5.0e6, 0.0);
+barneshut_tambah_massa_partikel(sim_bh, "Bintang_S01", 3.5e31, 0.0, 2.5e13, 0.0, -3.5e6, 0.0, 0.0);
+
+// Bangun Struktur Ruang 3D Octree
+var octree = barneshut_bangun_octree(sim_bh);
+tulis("Total Benda Langit  : " + octree["total_benda_langit"]);
+tulis("Kompleksitas Hitung : " + octree["kompleksitas_komputasi"]);
+tulis("Status Struktur     : " + octree["status_octree"]);
+
+// Langkah Integrasi Orbit Symplectic Verlet (dt = 1 hari / 86400 detik)
+var langkah = barneshut_langkah_integrasi_waktu(sim_bh, 86400.0);
+tulis("Langkah Waktu (dt)  : " + langkah["dt_detik"] + " detik");
+tulis("Energi Kinetik Sis. : " + langkah["energi_kinetik_joule"] + " Joule");
+tulis("Metode Integrator   : " + langkah["integrator"]);
+
+// 2. General Relativity (Schwarzschild Black Hole Metrics & Lensing)
+tulis("\n--- RELATIVITAS UMUM: METRIK LUBANG HITAM SCHWARZSCHILD ---");
+var bh_relatif = MetrikLubangHitam(4.1e6); // Lubang hitam 4.1 juta massa matahari (Sgr A*)
+
+// Radius Schwarzschild & ISCO
+var horizon = schwarzschild_hitung_radius_horizon(bh_relatif);
+tulis("Radius Schwarzschild: " + horizon["radius_schwarzschild_meter"] + " meter");
+tulis("Radius ISCO (Orbit) : " + horizon["radius_isco_meter"] + " meter");
+tulis("Photon Sphere Radius: " + horizon["radius_foton_sphere_meter"] + " meter");
+
+// Lensa Gravitasi Einstein Ring (Pembelokan Foton Cahaya)
+var lensa = relativitas_lensa_gravitasi_foton(bh_relatif, 5.0e10);
+tulis("\nSudut Defleksi Foton: " + lensa["sudut_defleksi_arcsec"] + " arcsecond");
+tulis("Fenomena Optik      : " + lensa["fenomena"]);
+
+// Presesi Perihelion Geodesik Orbit Relativistik
+var presesi = relativitas_geodesik_orbit_partikel(bh_relatif, 1.0e11, 1.0e5);
+tulis("Presesi Relativistik: " + presesi["presesi_perihelion_rad"] + " rad/orbit");
+tulis("Status Geodesik     : " + presesi["status_orbit"]);
+
+tulis("\n[WIDYA ASTROPHYSICS] Barnes-Hut & Relativitas Berhasil Diverifikasi!");

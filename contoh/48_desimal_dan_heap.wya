@@ -1,0 +1,52 @@
+// contoh/48_desimal_dan_heap.wya
+// Demonstrasi Pilar Mutakhir: WidyaDecimal & WidyaPriorityQueue
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaDecimal (Financial Math) & WidyaPriorityQueue");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaDecimal (Arbitrary-Precision Fixed-Point Financial Math)
+cetak("💰 [1] Kalkulasi Keuangan Presisi Tinggi Tanpa Galat Floating-Point (WidyaDecimal)...");
+misal saldo_awal = Desimal("1500000.50", 2);
+misal bunga = Desimal("0.05", 2);
+misal setoran = Desimal("250000.75", 2);
+misal biaya_admin = Desimal("12500.00", 2);
+
+misal total_tambah = desimal_tambah(saldo_awal, setoran);
+misal total_akhir = desimal_kurang(total_tambah, biaya_admin);
+misal nilai_pajak = desimal_kali(total_akhir, bunga);
+
+cetak("  * Saldo Awal: " + desimal_format_rupiah(saldo_awal) + " (" + desimal_ke_string(saldo_awal) + ")");
+cetak("  * Tambah Setoran: " + desimal_format_rupiah(setoran));
+cetak("  * Kurang Biaya Admin: " + desimal_format_rupiah(biaya_admin));
+cetak("  * Subtotal Saldo: " + desimal_format_rupiah(total_akhir));
+cetak("  * Nilai Bunga/Pajak 5%: " + desimal_format_rupiah(nilai_pajak));
+
+misal pembagian_waris = desimal_bagi(total_akhir, Desimal("3", 2), 2);
+cetak("  * Pembagian Rata untuk 3 Ahli Waris: " + desimal_format_rupiah(pembagian_waris));
+cetak("");
+
+// 2. WidyaPriorityQueue (Binary Min/Max Priority Heap)
+cetak("🏔️ [2] Antrean Prioritas Berbobot (WidyaPriorityQueue)...");
+// Membuat Max-Heap (Prioritas angka terbesar diproses pertama)
+misal antrean_darurat = AntreanPrioritas(benar);
+
+antrean_dorong(antrean_darurat, "Pasien Flu Ringan", 1);
+antrean_dorong(antrean_darurat, "Korban Serangan Jantung", 10);
+antrean_dorong(antrean_darurat, "Pasien Patah Tulang", 5);
+antrean_dorong(antrean_darurat, "Kecelakaan Kritis", 9);
+
+cetak("  * Total Pasien dalam Antrean: " + teks(antrean_panjang(antrean_darurat)));
+cetak("  * Pasien Paling Mendesak (Intip): " + teks(antrean_intip(antrean_darurat)));
+
+cetak("  * Memproses Pasien Berdasarkan Prioritas Tertinggi:");
+selama !antrean_kosong(antrean_darurat) {
+    misal pasien = antrean_tarik(antrean_darurat);
+    cetak("    -> Melayani: " + pasien);
+}
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaDecimal & WidyaPriorityQueue!");
+cetak("========================================================================");

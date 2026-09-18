@@ -1,0 +1,14 @@
+// ==========================================
+// Contoh 05: Pola Karakter & Perulangan Bersarang
+// ==========================================
+
+fungsi cetak_segitiga(tinggi) {
+    cetak("Piramida Bintang (Tinggi " + ke_teks(tinggi) + "):");
+    untuk i dalam 1..tinggi {
+        misal spasi = " " * (tinggi - i);
+        misal bintang = "*" * (2 * i - 1);
+        cetak(spasi + bintang);
+    }
+}
+
+cetak_segitiga(5);

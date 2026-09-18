@@ -1,0 +1,36 @@
+// Modul Avionika ARINC 429 & MIL-STD-1553 (Avionics Data Bus Flight Instruments)
+
+fungsi arinc429_encode_word(label_oktal, ssm, data_nilai, sdi) {
+    // Format ARINC 429 32-bit:
+    // Bit 1-8: Label (Oktal)
+    // Bit 9-10: SDI (Source/Destination Identifier)
+    // Bit 11-29: Data Payload (19 bits BCD / BNR)
+    // Bit 30-31: SSM (Sign/Status Matrix: 00=Failure, 11=Normal)
+    // Bit 32: Parity (Odd Parity)
+    
+    kembalikan {
+        "label": label_oktal,
+        "sdi": sdi,
+        "payload": data_nilai,
+        "ssm": ssm,
+        "paritas_ganjil": benar,
+        "raw_word": "[" + ke_teks(label_oktal) + "|" + ke_teks(ssm) + "|" + ke_teks(data_nilai) + "]"
+    };
+}
+
+fungsi arinc429_decode_altimeter(word_obj) {
+    // Label 204: Altitude Barometric Pressure
+    jika (word_obj["label"] != 204) {
+        kembalikan { "valid": salah, "alasan": "Bukan label instrumen altimeter" };
+    }
+    
+    var alt_feet = word_obj["payload"];
+    var alt_meter = alt_feet * 0.3048;
+    
+    kembalikan {
+        "valid": word_obj["ssm"] == "NORMAL",
+        "ketinggian_kaki": alt_feet,
+        "ketinggian_meter": alt_meter,
+        "status": "INSTRUMEN_KOKPIT_NORMAL"
+    };
+}

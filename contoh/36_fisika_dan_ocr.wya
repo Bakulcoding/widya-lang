@@ -1,0 +1,70 @@
+// ========================================================================
+// ⚛️ & 👁️ CONTOH 36: WIDYAPHYSICS2D & WIDYAOCR
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaPhysics2D (Rigid Body) & WidyaOCR (Pattern Vision)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYAPHYSICS2D: SIMULASI DINAMIKA BENDA TEGAR & PANTULAN
+// ------------------------------------------------------------------------
+cetak("");
+cetak("⚛️ [1] Simulasi Fisika 2D Gravitasi & Pantulan Lantai (WidyaPhysics2D)...");
+
+// Buat dunia fisika dengan gravitasi bumi (gx=0, gy=9.8)
+tetap dunia = DuniaFisika(0.0, 9.8);
+
+// Tambah benda lingkaran (id, x, y, radius, massa, elastisitas)
+fisika_tambah_lingkaran(dunia, "bola_1", 0.0, 10.0, 5.0, 1.0, 0.75);
+
+cetak("  * Posisi Awal bola_1:", fisika_posisi_benda(dunia, "bola_1"));
+
+// Jalankan 10 langkah simulasi waktu (dt = 0.5s)
+untuk langkah dalam 1..10 {
+    fisika_langkah(dunia, 0.5);
+}
+
+tetap pos_akhir = fisika_posisi_benda(dunia, "bola_1");
+cetak("  * Posisi Setelah 10 Langkah Waktu (dt=0.5s):");
+cetak("    - Posisi X :", pos_akhir["x"]);
+cetak("    - Posisi Y :", pos_akhir["y"]);
+cetak("    - Kecepatan VY:", pos_akhir["vy"]);
+
+// ------------------------------------------------------------------------
+// [2] WIDYAOCR: PENGENALAN POLA MATRIKS KARAKTER & ANGKA
+// ------------------------------------------------------------------------
+cetak("");
+cetak("👁️ [2] Pengenalan Karakter Matriks Piksel Biner (WidyaOCR)...");
+
+tetap model_ocr = buat_model_ocr();
+
+// Uji sampel piksel 3x3 huruf 'T'
+tetap piksel_t = [
+    1.0, 1.0, 1.0,
+    0.0, 1.0, 0.0,
+    0.0, 1.0, 0.0
+];
+
+tetap hasil_t = ocr_kenali_karakter(model_ocr, piksel_t);
+cetak("  * Deteksi Matriks Piksel T:");
+cetak("    - Karakter Dikenali :", hasil_t["karakter"]);
+cetak("    - Skor Keyakinan    :", hasil_t["keyakinan"] * 100.0, "%");
+
+// Latih karakter kustom '+' (plus)
+tetap piksel_plus = [
+    0.0, 1.0, 0.0,
+    1.0, 1.0, 1.0,
+    0.0, 1.0, 0.0
+];
+ocr_latih_karakter(model_ocr, "+", piksel_plus);
+
+tetap hasil_plus = ocr_kenali_karakter(model_ocr, piksel_plus);
+cetak("  * Deteksi Matriks Karakter Kustom Baru (+):");
+cetak("    - Karakter Dikenali :", hasil_plus["karakter"]);
+cetak("    - Skor Keyakinan    :", hasil_plus["keyakinan"] * 100.0, "%");
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaPhysics2D & WidyaOCR!");
+cetak("========================================================================");

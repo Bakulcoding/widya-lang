@@ -1,0 +1,94 @@
+// =========================================================================
+// CONTOH 92: WidyaDataFrame & WidyaDataVisualizer
+// Pilar Aplikasi Berbasis Data & Kecerdasan Buatan Terpadu (Gelombang 37)
+// =========================================================================
+
+cetak("=================================================================")
+cetak("📊 CONTOH 92: DATAFRAME & DATA VISUALIZER (WAVE 37)")
+cetak("=================================================================")
+
+// -------------------------------------------------------------------------
+// 1. WidyaDataFrame (Tabular Operations, Filtering, GroupBy, & Joins)
+// -------------------------------------------------------------------------
+cetak("\n--- 1. WidyaDataFrame (Operasi Data Tabular & Agregasi) ---")
+
+var kolom_produk = ["id", "nama", "kategori", "harga", "stok"]
+var baris_produk = [
+    ["p1", "Laptop AI Pro", "Elektronik", 15000000, 12],
+    ["p2", "Monitor 4K OLED", "Elektronik", 8500000, 8],
+    ["p3", "Kursi Ergonomis", "Furnitur", 2500000, 25],
+    ["p4", "Meja Kerja Elektrik", "Furnitur", 4500000, 15],
+    ["p5", "Keyboard Mekanikal", "Elektronik", 1200000, 40]
+]
+
+var df_produk = DataFrame(kolom_produk, baris_produk)
+cetak(">> Total produk terdaftar: " + df_jumlah_baris(df_produk) + " baris")
+
+// Saring (Filter) produk dengan harga di atas 3.000.000
+var df_premium = df_saring(df_produk, "harga", ">", 3000000)
+cetak(">> Produk kategori premium (Harga > 3 Juta): " + df_jumlah_baris(df_premium) + " baris")
+
+// Pilih kolom tertentu (Proyeksi)
+var df_ringkas = df_pilih_kolom(df_premium, ["nama", "harga", "kategori"])
+var array_ringkas = df_ke_array(df_ringkas)
+var idx = 0
+selama idx < panjang(array_ringkas) {
+    var item = array_ringkas[idx]
+    cetak("   - " + item["nama"] + " [" + item["kategori"] + "]: Rp " + item["harga"])
+    idx = idx + 1
+}
+
+// GroupBy dan Agregasi Total Stok per Kategori
+cetak("\n>> Total Stok per Kategori (GroupBy & Sum):")
+var df_stok_kategori = df_kelompokkan_dan_agregasi(df_produk, "kategori", "stok", "sum")
+var arr_stok = df_ke_array(df_stok_kategori)
+var i = 0
+selama i < panjang(arr_stok) {
+    var kat = arr_stok[i]
+    cetak("   Kategori " + kat["kategori"] + " -> Total Stok: " + kat["sum_stok"])
+    i = i + 1
+}
+
+// Relasi / Penggabungan Tabel (Join / Merge)
+var kolom_diskon = ["kategori", "diskon_persen"]
+var baris_diskon = [
+    ["Elektronik", 10],
+    ["Furnitur", 15]
+]
+var df_diskon = DataFrame(kolom_diskon, baris_diskon)
+var df_gabungan = df_gabung(df_produk, df_diskon, "kategori")
+cetak("\n>> Hasil Join Tabel Produk & Tabel Diskon:")
+var arr_gabungan = df_ke_array(df_gabungan)
+var j = 0
+selama j < panjang(arr_gabungan) {
+    var g = arr_gabungan[j]
+    cetak("   " + g["nama"] + " | Diskon: " + g["diskon_persen"] + "%")
+    j = j + 1
+}
+
+// -------------------------------------------------------------------------
+// 2. WidyaDataVisualizer (Pembangkit Grafik Statistik SVG)
+// -------------------------------------------------------------------------
+cetak("\n--- 2. WidyaDataVisualizer (Pembangkit Grafik Analitik SVG) ---")
+
+var vis = VisualisasiData("Dashboard Penjualan Widya")
+
+// Generate Bar Chart SVG
+var label_kat = ["Elektronik", "Furnitur", "Aksesoris"]
+var nilai_omset = [45.5, 28.0, 15.2] // Juta Rupiah
+var svg_batang = chart_batang_svg(vis, label_kat, nilai_omset, 500, 220)
+cetak(">> Bar Chart SVG terbuat (Panjang teks SVG: " + panjang(svg_batang) + " karakter)")
+
+// Generate Line Chart SVG
+var bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"]
+var tren_user = [120, 180, 260, 420, 680, 1050]
+var svg_garis = chart_garis_svg(vis, bulan, tren_user, 500, 220)
+cetak(">> Line Chart SVG terbuat (Panjang teks SVG: " + panjang(svg_garis) + " karakter)")
+
+// Render Web Dashboard HTML
+var dashboard_html = render_dashboard_html(vis, [svg_batang, svg_garis])
+cetak(">> Dashboard HTML Analitik lengkap terbuat (" + panjang(dashboard_html) + " bytes)")
+
+cetak("\n=================================================================")
+cetak("✅ SUKSES: WidyaDataFrame & DataVisualizer Beroperasi 100%!")
+cetak("=================================================================")

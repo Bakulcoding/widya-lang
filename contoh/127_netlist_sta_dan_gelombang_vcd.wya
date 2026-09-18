@@ -1,0 +1,60 @@
+// Contoh Program Widya-Lang: Pilar Gelombang 54 - Gate Netlist, Static Timing Analysis (STA), & VCD Waveform
+// Demonstrasi simulasi rangkaian gerbang logika, kalkulasi lintasan kritis keterlambatan gerbang, dan generasi berkas VCD.
+
+tulis("=== [WIDYA EDA] GATE NETLIST, STA & VCD WAVEFORM ===");
+
+// 1. Desain Gate-Level Netlist (Full Adder 1-Bit)
+var netlist = NetlistGerbang("FullAdder1Bit");
+netlist_sisip_gerbang(netlist, "G_XOR1", "XOR", ["a", "b"], "s_int");
+netlist_sisip_gerbang(netlist, "G_XOR2", "XOR", ["s_int", "cin"], "sum");
+netlist_sisip_gerbang(netlist, "G_AND1", "AND", ["a", "b"], "c1");
+netlist_sisip_gerbang(netlist, "G_AND2", "AND", ["s_int", "cin"], "c2");
+netlist_sisip_gerbang(netlist, "G_OR1", "OR", ["c1", "c2"], "cout");
+
+// Simulasi siklus masukan logika: a=1, b=1, cin=1 -> sum=1, cout=1
+var input_stimulus = {
+    "a": 1,
+    "b": 1,
+    "cin": 1
+};
+var hasil_simulasi = netlist_simulasi_siklus(netlist, input_stimulus);
+tulis("Hasil Simulasi Full Adder (a=1, b=1, cin=1):");
+tulis("  Output SUM  : " + hasil_simulasi["sum"]);
+tulis("  Output COUT : " + hasil_simulasi["cout"]);
+
+// 2. Static Timing Analysis (STA) pada Target Frekuensi 250 MHz (Periode = 4000 ps)
+var sta = MesinSTA(250.0);
+sta_tambah_lintasan(sta, "Path_A_to_Sum", "pin_a", "pin_sum", 450.0);
+sta_tambah_lintasan(sta, "Path_A_to_Cout", "pin_a", "pin_cout", 680.0);
+sta_tambah_lintasan(sta, "Path_Cin_to_Cout_Critical", "pin_cin", "pin_cout", 820.0);
+
+var laporan_sta = sta_hitung_lintasan_kritis(sta);
+tulis("\n--- LAPORAN STATIC TIMING ANALYSIS (STA) ---");
+tulis("Lintasan Kritis   : " + laporan_sta["lintasan_terpanjang"]);
+tulis("Tunda Kritis (ps) : " + laporan_sta["tunda_kritis_ps"]);
+tulis("Worst Slack (ps)  : " + laporan_sta["worst_slack_ps"]);
+tulis("Timing Met (OK)?  : " + laporan_sta["timing_terpenuhi"]);
+tulis("Frekuensi Max MHz : " + laporan_sta["frekuensi_maksimum_mhz"]);
+
+// 3. Perekam Gelombang VCD (Value Change Dump IEEE 1364)
+var perekam_vcd = PerekamGelombangVCD("tb_fulladder", "1ns");
+
+// Catat stimulus transisi jam & data
+vcd_catat_transisi(perekam_vcd, 0, "clk", 0);
+vcd_catat_transisi(perekam_vcd, 0, "a", 0);
+vcd_catat_transisi(perekam_vcd, 0, "b", 0);
+
+vcd_catat_transisi(perekam_vcd, 5, "clk", 1);
+vcd_catat_transisi(perekam_vcd, 5, "a", 1);
+vcd_catat_transisi(perekam_vcd, 5, "b", 1);
+
+vcd_catat_transisi(perekam_vcd, 10, "clk", 0);
+vcd_catat_transisi(perekam_vcd, 15, "clk", 1);
+vcd_catat_transisi(perekam_vcd, 15, "sum", 1);
+vcd_catat_transisi(perekam_vcd, 15, "cout", 1);
+
+var vcd_text = vcd_hasilkan_dokumen(perekam_vcd);
+tulis("\n--- DOKUMEN VCD WAVEFORM DUMP ---");
+tulis(vcd_text);
+
+tulis("[WIDYA EDA] Gate Netlist, STA & VCD Terverifikasi Berhasil!");

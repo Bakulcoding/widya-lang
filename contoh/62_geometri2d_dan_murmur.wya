@@ -1,0 +1,64 @@
+// ==========================================
+// 📐 Widya-Lang: Geometri 2D & MurmurHash3
+// ==========================================
+
+cetak("================================================")
+cetak("📐 WIDYA GEOMETRY 2D & MURMURHASH ENGINE")
+cetak("================================================")
+
+// 1. Uji Coba WidyaGeometry2D
+cetak("\n--- 1. Komputasi Geometri 2D ---")
+
+var p1 = Titik2D(0, 0)
+var p2 = Titik2D(3, 4)
+var jarak = geo2d_jarak_titik(p1, p2)
+cetak("Jarak titik (0,0) ke (3,4): " + teks(jarak))
+
+var garisA = Garis2D(0, 0, 4, 4)
+var garisB = Garis2D(0, 4, 4, 0)
+var berpotongan = geo2d_apakah_berpotongan(garisA, garisB)
+cetak("Apakah garisA dan garisB berpotongan? " + teks(berpotongan))
+
+var titikPotong = geo2d_titik_potong(garisA, garisB)
+cetak("Titik potong garisA dan garisB: (" + teks(titikPotong.x) + ", " + teks(titikPotong.y) + ")")
+
+// Luas Poligon (Segitiga alas=4, tinggi=3 -> luas=6)
+var poligonSegitiga = [
+    Titik2D(0, 0),
+    Titik2D(4, 0),
+    Titik2D(0, 3)
+]
+var luas = geo2d_luas_poligon(poligonSegitiga)
+cetak("Luas Poligon Segitiga Siku-siku: " + teks(luas))
+
+// Convex Hull
+var kumpulanTitik = [
+    Titik2D(0, 0),
+    Titik2D(1, 1),
+    Titik2D(2, 2),
+    Titik2D(4, 0),
+    Titik2D(4, 4),
+    Titik2D(0, 4),
+    Titik2D(2, 3)
+]
+var hull = geo2d_convex_hull(kumpulanTitik)
+cetak("Jumlah titik Convex Hull dari 7 titik acak: " + teks(panjang(hull)))
+var batasHull = panjang(hull) - 1
+untuk i dalam 0..batasHull {
+    cetak("  Titik Hull #" + teks(i + 1) + ": (" + teks(hull[i].x) + ", " + teks(hull[i].y) + ")")
+}
+
+// 2. Uji Coba WidyaMurmurHash
+cetak("\n--- 2. High-Speed MurmurHash3 ---")
+
+var dataTeks = "Nusantara-Widya-Lang-2026"
+var h32 = murmur3_32(dataTeks, 42)
+cetak("MurmurHash3 32-bit ('" + dataTeks + "', seed=42): " + h32)
+
+var angka32 = murmur3_ke_angka(h32)
+cetak("Representasi Angka (u32): " + teks(angka32))
+
+var h128 = murmur3_128(dataTeks, 42)
+cetak("MurmurHash3 128-bit ('" + dataTeks + "', seed=42): " + h128)
+
+cetak("\n✅ DEMO GEOMETRI 2D & MURMURHASH BERHASIL!")

@@ -1,0 +1,48 @@
+// Modul Otomasi SCADA Industri OPC-UA Binary & Modbus TCP Frame
+
+fungsi buat_modbus_tcp_request(transaction_id, unit_id, function_code, starting_address, quantity) {
+    // MBAP Header (7 bytes): Transaction ID (2B), Protocol ID 0x0000 (2B), Length 0x0006 (2B), Unit ID (1B)
+    // PDU: Function Code (1B), Starting Address (2B), Quantity (2B)
+    kembalikan {
+        "transaksi_id": transaction_id,
+        "protokol_id": 0,
+        "unit_id": unit_id,
+        "function_code": function_code, // 0x03 = Read Holding Registers, 0x04 = Read Input Registers
+        "start_addr": starting_address,
+        "qty": quantity,
+        "panjang_pdu": 6
+    };
+}
+
+fungsi parse_modbus_tcp_response(response_frame, raw_register_values) {
+    kembalikan {
+        "transaksi_id": response_frame["transaksi_id"],
+        "unit_id": response_frame["unit_id"],
+        "function_code": response_frame["function_code"],
+        "jumlah_byte": panjang(raw_register_values) * 2,
+        "nilai_register": raw_register_values,
+        "status": "SUKSES_OK"
+    };
+}
+
+fungsi buat_opcua_node_read_request(node_namespace, node_identifier) {
+    kembalikan {
+        "tipe_pesan": "MSG",
+        "service": "ReadRequest",
+        "node_id": {
+            "ns": node_namespace,
+            "id": node_identifier
+        },
+        "attribute_id": 13 // AttributeId.Value
+    };
+}
+
+fungsi parse_opcua_data_value(node_id, nilai, status_code) {
+    kembalikan {
+        "node": node_id,
+        "value": nilai,
+        "status_code": status_code, // 0x00000000 = Good
+        "kualitas": "GOOD",
+        "waktu_server": waktu()
+    };
+}

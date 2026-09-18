@@ -1,0 +1,84 @@
+// ========================================================================
+// 🔍 & 🧬 CONTOH 34: WIDYADIFF & WIDYAGENETIC ENGINE
+// ========================================================================
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 1 & 2: WidyaDiff (Myers Diff) & WidyaGenetic (GA Optimization)");
+cetak("========================================================================");
+
+// ------------------------------------------------------------------------
+// [1] WIDYADIFF: PEMBANDING TEKS & GENERATOR UNIFIED PATCH
+// ------------------------------------------------------------------------
+cetak("");
+cetak("🔍 [1] Membandingkan Perubahan Kode & Patching (WidyaDiff)...");
+
+tetap teks_lama = "fungsi utama() {
+    cetak(\"Halo Dunia\");
+    kembalikan 0;
+}";
+
+tetap teks_baru = "fungsi utama() {
+    tetap nama = \"Widya\";
+    cetak(\"Halo \" + nama);
+    kembalikan 1;
+}";
+
+// Hitung Myers Diff
+tetap hasil_diff = hitung_diff(teks_lama, teks_baru);
+cetak("  * Total Perubahan Terdeteksi:", hasil_diff["total_perubahan"]);
+
+// Format Unified Patch
+tetap patch_git = format_patch_terpadu(hasil_diff, "program_contoh.wya");
+cetak("  * Unified Patch Output:");
+cetak(patch_git);
+
+// Terapkan Patch ke teks lama
+tetap teks_dipatch = terapkan_patch(teks_lama, hasil_diff);
+cetak("  * Hasil Terapkan Patch sama persis dengan teks baru?");
+jika teks_dipatch == teks_baru {
+    cetak("    -> SUKSES! Teks berhasil direkonstruksi 100%.");
+} lainnya {
+    cetak("    -> Gagal merekonstruksi teks.");
+}
+
+// ------------------------------------------------------------------------
+// [2] WIDYAGENETIC: ALGORITMA GENETIKA & OPTIMASI EVOLUSIONER
+// ------------------------------------------------------------------------
+cetak("");
+cetak("🧬 [2] Optimasi Kombinatorial Masalah Knapsack (WidyaGenetic)...");
+
+// Target: Maksimalkan nilai barang dengan bobot <= 15
+// Barang: [nilai, berat]
+tetap item_daftar = [
+    [10, 2], [5, 3], [15, 5], [7, 7], [6, 1], [18, 4], [3, 1], [8, 3]
+];
+
+fungsi hitung_fitness(individu) {
+    misal total_nilai = 0;
+    misal total_berat = 0;
+    
+    untuk i dalam 0..panjang(individu) - 1 {
+        jika individu[i] == 1 {
+            total_nilai = total_nilai + item_daftar[i][0];
+            total_berat = total_berat + item_daftar[i][1];
+        }
+    }
+    
+    // Penalti jika melebihi kapasitas knapsack (15)
+    jika total_berat > 15 {
+        kembalikan 1;
+    }
+    kembalikan total_nilai;
+}
+
+// Jalankan optimasi GA: Populasi 20, Panjang Kromosom 8, 30 Generasi
+tetap hasil_ga = optimasi_ga(20, 8, 30, hitung_fitness, 50);
+
+cetak("  * Generasi Berjalan       :", hasil_ga["generasi"]);
+cetak("  * Nilai Fitness Terbaik   :", hasil_ga["fitness_terbaik"]);
+cetak("  * Solusi Kromosom Terbaik :", hasil_ga["kromosom_terbaik"]);
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaDiff & WidyaGenetic!");
+cetak("========================================================================");

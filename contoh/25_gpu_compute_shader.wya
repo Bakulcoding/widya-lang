@@ -1,0 +1,20 @@
+// Contoh 25: WebGPU Compute Shaders & Hardware Acceleration (Widya-Lang)
+
+cetak("=== 🎮 1. WebGPU / Vulkan Compute Shader Pipeline ===");
+
+// Mendefinisikan shader komputasi perkalian matriks/vektor di GPU
+misal kode_shader_wgsl = "@compute @workgroup_size(64) fn main() { ... }";
+misal pipa = PipaGPU(kode_shader_wgsl, 64);
+
+cetak("Pipeline GPU berhasil dibuat dengan backend: " + pipa.backend + " (Workgroup: " + string(pipa.workgroup) + ")");
+
+// Menyiapkan buffer data vektor besar
+misal buffer_a = [1.0, 2.0, 3.0, 4.0, 5.0];
+misal buffer_b = [10.0, 20.0, 30.0, 40.0, 50.0];
+
+// Eksekusi komputasi paralel langsung di GPU
+misal hasil_gpu = eksekusi_gpu(pipa, buffer_a, buffer_b);
+
+cetak("Hasil Komputasi Paralel GPU: " + string(hasil_gpu));
+
+cetak("=== 🚀 Selesai Menjalankan WebGPU Compute Demo ===");

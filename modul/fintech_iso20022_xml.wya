@@ -1,0 +1,73 @@
+// Modul Finansial Global ISO 20022 (SWIFT MX / BI-FAST / PACS XML Message Formatter)
+
+fungsi buat_iso20022_pacs008_transfer(msg_id, instruksi_id, nominal_idr, debitur_rek, debitur_nama, kreditur_rek, kreditur_nama) {
+    var waktu_str = ke_teks(waktu());
+    kembalikan {
+        "Document": {
+            "FIToFICstmrCdtTrf": {
+                "GrpHdr": {
+                    "MsgId": msg_id,
+                    "CreDtTm": waktu_str,
+                    "NbOfTxs": 1,
+                    "SttlmInf": {
+                        "SttlmMtd": "CLRG",
+                        "ClrSys": {
+                            "Prtry": "BI-FAST"
+                        }
+                    }
+                },
+                "CdtTrfTxInf": {
+                    "PmtId": {
+                        "EndToEndId": instruksi_id,
+                        "TxId": "TX_" + msg_id
+                    },
+                    "IntrBkSttlmAmt": {
+                        "currency": "IDR",
+                        "value": nominal_idr
+                    },
+                    "Dbtr": {
+                        "Nm": debitur_nama
+                    },
+                    "DbtrAcct": {
+                        "Id": {
+                            "Othr": {
+                                "Id": debitur_rek
+                            }
+                        }
+                    },
+                    "Cdtr": {
+                        "Nm": kreditur_nama
+                    },
+                    "CdtrAcct": {
+                        "Id": {
+                            "Othr": {
+                                "Id": kreditur_rek
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+}
+
+fungsi iso20022_validasi_pacs008(pacs008_obj) {
+    jika (!ada_kunci(pacs008_obj, "Document")) {
+        kembalikan { "valid": salah, "alasan": "Payload bukan dokumen ISO 20022" };
+    }
+    var doc = pacs008_obj["Document"];
+    jika (!ada_kunci(doc, "FIToFICstmrCdtTrf")) {
+        kembalikan { "valid": salah, "alasan": "Tipe pesan bukan pacs.008 Customer Credit Transfer" };
+    }
+    
+    var tx = doc["FIToFICstmrCdtTrf"]["CdtTrfTxInf"];
+    var amount = tx["IntrBkSttlmAmt"]["value"];
+    
+    kembalikan {
+        "valid": benar,
+        "nominal": amount,
+        "mata_uang": tx["IntrBkSttlmAmt"]["currency"],
+        "end_to_end_id": tx["PmtId"]["EndToEndId"],
+        "status": "VALID_ISO20022_PACS008"
+    };
+}

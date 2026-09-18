@@ -1,0 +1,37 @@
+// ==========================================
+// Contoh 02: Deret Fibonacci (Rekursif & Iteratif)
+// ==========================================
+
+fungsi fibonacci_rekursif(n) {
+    jika n <= 0 {
+        kembalikan 0;
+    } kalau n == 1 {
+        kembalikan 1;
+    }
+    kembalikan fibonacci_rekursif(n - 1) + fibonacci_rekursif(n - 2);
+}
+
+fungsi fibonacci_iteratif(n) {
+    jika n <= 0 { kembalikan 0; }
+    jika n == 1 { kembalikan 1; }
+
+    misal a = 0;
+    misal b = 1;
+    untuk _ dalam 2..n {
+        misal c = a + b;
+        a = b;
+        b = c;
+    }
+    kembalikan b;
+}
+
+cetak("--- Deret Fibonacci dari 0 sampai 12 ---");
+misal deret = [];
+untuk i dalam 0..12 {
+    tambah(deret, fibonacci_iteratif(i));
+}
+cetak("Deret Fibonacci:", deret);
+
+cetak("\nUji Rekursif vs Iteratif (n=10):");
+cetak("Rekursif:", fibonacci_rekursif(10));
+cetak("Iteratif:", fibonacci_iteratif(10));

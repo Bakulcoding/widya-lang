@@ -1,0 +1,70 @@
+// ==============================================================================
+// CONTOH 87: WIDYA-LANG - BROTLI PRE-TRAINED DICTIONARY & KADEMLIA P2P RPC
+// Gelombang 34: Microservice Context Compression & Decentralized Messaging
+// ==============================================================================
+
+cetak("================================================================")
+cetak("🗜️ CONTOH 87: BROTLI DICTIONARY CODEC & KADEMLIA P2P RPC")
+cetak("================================================================")
+
+// ------------------------------------------------------------------------------
+// BAGIAN 1: BROTLI PRE-TRAINED SHARED DICTIONARY COMPRESSION
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 1: KOMPRESI BROTLI DENGAN KAMUS STATIS (SHARED DICT) ---")
+
+// Kamus statis berisi template/skema JSON yang sering muncul di microservice API
+var kamus_api = "{\"status\":\"ok\",\"timestamp\":1773000000,\"layanan\":\"widya-microservice\",\"tipe_pesan\":\"telemetri_iot\",\"data\":{\"sensor_id\":\"node_sensor_01\",\"suhu\":0.0,\"kelembaban\":0.0}}"
+
+// Payload API kecil yang biasanya boros jika dikompres tanpa kamus bersama
+var payload_transaksi = "{\"status\":\"ok\",\"timestamp\":1773000000,\"layanan\":\"widya-microservice\",\"tipe_pesan\":\"telemetri_iot\",\"data\":{\"sensor_id\":\"node_sensor_01\",\"suhu\":36.8,\"kelembaban\":65.2}}"
+
+var hasil_kompresi_kamus = brotli_kamus_kompres(payload_transaksi, kamus_api)
+
+cetak("1. Kompresi Payload Microservice:")
+cetak("   Data Asli          : " + payload_transaksi)
+cetak("   Panjang Asli       : " + teks(hasil_kompresi_kamus["panjang_asli"]) + " byte")
+cetak("   Panjang Kompresi   : " + teks(hasil_kompresi_kamus["panjang_terkompresi"]) + " byte")
+cetak("   Data Hex Terkompres: " + hasil_kompresi_kamus["data_hex"])
+
+var dekompres_kamus = brotli_kamus_dekompres(hasil_kompresi_kamus, kamus_api)
+cetak("\n2. Dekompresi dengan Kamus Bersama:")
+cetak("   Hasil Dekompresi   : " + teks(dekompres_kamus["teks"]))
+cetak("   Integritas Data    : " + teks(dekompres_kamus["teks"] == payload_transaksi))
+pastikan(dekompres_kamus["teks"] == payload_transaksi, "Data hasil dekompresi kamus Brotli harus sama persis dengan asli")
+
+
+// ------------------------------------------------------------------------------
+// BAGIAN 2: KADEMLIA DECENTRALIZED P2P RPC MESSAGE LAYER
+// ------------------------------------------------------------------------------
+cetak("\n--- BAGIAN 2: KADEMLIA P2P RPC PROTOCOL LAYER ---")
+
+var node_pengirim = "node_jakarta_001"
+var node_penerima = "node_surabaya_002"
+
+// 1. Pesan PING RPC
+var pesan_ping = kademlia_rpc_buat_pesan("PING", node_pengirim, node_penerima, {"echo": "Widya-Node-Live-Check"})
+cetak("1. Pembuatan Pesan PING RPC:")
+cetak("   Tipe RPC  : " + pesan_ping["tipe_rpc"])
+cetak("   Tx ID     : " + pesan_ping["tx_id"])
+cetak("   Pengirim  : " + pesan_ping["pengirim_id"])
+cetak("   Penerima  : " + pesan_ping["target_id"])
+
+// 2. Pesan Balasan PING_RESPONSE
+var respons_ping = kademlia_rpc_buat_respons(pesan_ping, {"pong": "Node-Surabaya-Active", "latensi_ms": 12.5})
+cetak("\n2. Pembuatan Respons PING_RESPONSE:")
+cetak("   Tipe RPC  : " + respons_ping["tipe_rpc"])
+cetak("   Tx ID     : " + respons_ping["tx_id"])
+cetak("   Pengirim  : " + respons_ping["pengirim_id"])
+cetak("   Penerima  : " + respons_ping["target_id"])
+cetak("   Payload   : " + teks(respons_ping["payload"]))
+
+// 3. Pesan FIND_NODE RPC
+var pesan_find = kademlia_rpc_buat_pesan("FIND_NODE", node_pengirim, node_penerima, {"target_dht_key": "dht_block_hash_999"})
+var parsed_find = kademlia_rpc_uraikan_pesan(pesan_find)
+cetak("\n3. Uraikan Pesan FIND_NODE RPC:")
+cetak("   Tipe Valid: " + teks(parsed_find["tipe_rpc"] == "FIND_NODE"))
+cetak("   Payload   : " + teks(parsed_find["payload"]))
+
+cetak("\n================================================================")
+cetak("✅ SIMULASI BROTLI DICTIONARY & KADEMLIA RPC BERHASIL 100%!")
+cetak("================================================================")

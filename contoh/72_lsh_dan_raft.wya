@@ -1,0 +1,67 @@
+// Contoh 72: WidyaLSH & WidyaRaftLite
+// MinHash Locality-Sensitive Hashing Deduplication & Distributed Raft Consensus
+
+cetak("==================================================")
+cetak("   Evolusi Gelombang 27: MinHash LSH & Raft Lite")
+cetak("==================================================")
+
+// ----------------------------------------------------
+// 1. WidyaLSH: MinHash Deduplikasi Dokumen
+// ----------------------------------------------------
+cetak("\n--- [1] Demonstrasi WidyaLSH: MinHash Deduplikasi Dokumen ---")
+
+let lsh = MinHashLSH(32, 0.6) // 32 permutasi, ambang batas kemiripan Jaccard 60%
+
+let doc1_tokens = ["widya", "bahasa", "pemrograman", "masa", "depan", "indonesia", "kinerja", "tinggi"]
+let doc2_tokens = ["widya", "bahasa", "pemrograman", "masa", "depan", "nusantara", "kinerja", "tinggi"] // Sangat mirip
+let doc3_tokens = ["resep", "masakan", "rendang", "daging", "sapi", "padang", "lezat", "gurih"]       // Berbeda
+
+lsh_sisip(lsh, "doc:artikel_widya_1", doc1_tokens)
+lsh_sisip(lsh, "doc:artikel_widya_2", doc2_tokens)
+lsh_sisip(lsh, "doc:kuliner_padang", doc3_tokens)
+
+cetak("Menghitung estimasi Jaccard eksak antara doc1 & doc2:")
+let jaccard_asli = lsh_estimasi_jaccard(lsh, doc1_tokens, doc2_tokens)
+cetak("  Jaccard Index Sebenarnya:", jaccard_asli * 100, "%")
+
+// Menjalankan kueri pencarian dokumen mirip / duplikat
+let kueri_tokens = ["widya", "bahasa", "pemrograman", "kinerja", "tinggi"]
+cetak("\nPencarian LSH untuk token kueri:", kueri_tokens)
+let hasil_lsh = lsh_kueri(lsh, kueri_tokens)
+
+untuk_setiap(hasil_lsh, fungsi(match_doc) {
+    cetak("  -> Ditemukan Dokumen Mirip:", match_doc.id, "| Estimasi Jaccard:", match_doc.estimasi_jaccard)
+})
+
+// ----------------------------------------------------
+// 2. WidyaRaftLite: Distributed Raft Consensus Engine
+// ----------------------------------------------------
+cetak("\n--- [2] Demonstrasi WidyaRaftLite: Konsensus Terdistribusi ---")
+
+let nodes = ["node_jakarta", "node_bandung", "node_surabaya"]
+let klaster = KlasterRaft(nodes)
+
+cetak("Inisialisasi Klaster Raft dengan 3 Node:", nodes)
+cetak("Leader Terpilih Saat Ini:", raft_dapatkan_leader(klaster))
+
+// Mengusulkan perintah transaksi terdistribusi ke Leader
+let res1 = raft_usulkan_perintah(klaster, { "op": "SET", "kunci": "kurs_usd", "nilai": 15800 })
+let res2 = raft_usulkan_perintah(klaster, { "op": "SET", "kunci": "kurs_eur", "nilai": 17200 })
+
+cetak("\nStatus Proposal Perintah 1:")
+cetak("  Sukses Direplikasi :", res1.sukses)
+cetak("  Leader Pemroses    :", res1.leader)
+cetak("  Index Log Komitmen :", res1.index_komitmen)
+
+// Simulasi pemilihan pemimpin baru (Election Tick / Timeout)
+cetak("\nMenjalankan Detak Pemilihan Pemimpin Baru (Leader Election):")
+let leader_baru = raft_detak_pemilihan(klaster)
+cetak("Pemimpin Baru Setelah Pemilihan:", leader_baru)
+
+let status_klaster = raft_klaster_status(klaster)
+cetak("Status Klaster:")
+cetak("  Istilah (Term)  :", status_klaster.term)
+cetak("  Leader Aktif    :", status_klaster.leader)
+cetak("  Total Komitmen  :", status_klaster.total_komitmen)
+
+cetak("\n[SUKSES] Seluruh fitur MinHash LSH & Raft Consensus berjalan sempurna!")

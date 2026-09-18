@@ -1,0 +1,54 @@
+// ==========================================
+// ⚡ Widya-Lang: Skip List & Kompresi Huffman
+// ==========================================
+
+cetak("================================================")
+cetak("⚡ WIDYA SKIPLIST & HUFFMAN COMPRESSION ENGINE")
+cetak("================================================")
+
+// 1. Uji Coba WidyaSkipList
+cetak("\n--- 1. Probabilistic Skip List Index ---")
+
+var list = DaftarLompat(16)
+
+cetak("Menyisipkan data: 'antrian_1', 'antrian_3', 'antrian_2', 'antrian_5', 'antrian_4'...")
+skiplist_sisip(list, "antrian_1", "Proses-1")
+skiplist_sisip(list, "antrian_3", "Proses-3")
+skiplist_sisip(list, "antrian_2", "Proses-2")
+skiplist_sisip(list, "antrian_5", "Proses-5")
+skiplist_sisip(list, "antrian_4", "Proses-4")
+
+cetak("Cari 'antrian_3': " + teks(skiplist_cari(list, "antrian_3")))
+cetak("Cari 'antrian_99' (tidak ada): " + teks(skiplist_cari(list, "antrian_99")))
+
+// Range scan
+var rentang = skiplist_rentang(list, "antrian_2", "antrian_4")
+cetak("Hasil Range Scan ('antrian_2' s.d. 'antrian_4'):")
+var batasRentang = panjang(rentang) - 1
+untuk i dalam 0..batasRentang {
+    cetak("  - " + rentang[i].kunci + " -> " + teks(rentang[i].nilai))
+}
+
+// 2. Uji Coba WidyaHuffman
+cetak("\n--- 2. Canonical Huffman Codec & Entropy Coding ---")
+
+var teksSumber = "ABRACADABRA_NUSANTARA_WIDYA_2026"
+cetak("Teks Asli: " + teksSumber + " (" + teks(panjang(teksSumber)) + " karakter / " + teks(panjang(teksSumber) * 8) + " bits)")
+
+var tabelKode = huffman_tabel_kode(teksSumber)
+cetak("Tabel Kode Huffman:")
+cetak("  'A' -> " + teks(tabelKode.A))
+cetak("  'B' -> " + teks(tabelKode.B))
+cetak("  'R' -> " + teks(tabelKode.R))
+
+var paket = huffman_kompres(teksSumber)
+cetak("Panjang Bitstream Hasil Kompresi: " + teks(paket.panjang_bit) + " bits")
+
+var rasioHemat = huffman_rasio_hemat(teksSumber)
+cetak("Persentase Ruang Dihemat: " + teks(rasioHemat) + "%")
+
+var hasilDekompresi = huffman_dekompres(paket)
+cetak("Hasil Dekompresi: " + hasilDekompresi)
+cetak("Apakah identik dengan teks asli? " + teks(hasilDekompresi == teksSumber))
+
+cetak("\n✅ DEMO SKIPLIST & HUFFMAN BERHASIL!")

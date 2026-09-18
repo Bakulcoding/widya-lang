@@ -1,0 +1,41 @@
+// =========================================================================
+// Contoh 122: Pilar Extended Reality (OpenXR Session & Hand Tracking 26-Joint)
+// WidyaOpenXR & WidyaHandTracking
+// =========================================================================
+
+fungsi utama() {
+    cetak("=== DEMO PILAR XR: OPENXR IMMERSIVE VR & HAND TRACKING ===");
+
+    // 1. Inisialisasi Sesi Immersive VR Headset (Meta Quest / Apple Vision Pro)
+    var sesi_vr = SesiXR("IMMERSIVE_VR", "LOCAL_FLOOR");
+    cetak("Sesi XR Dibuat: Mode = " + sesi_vr.mode_sesi + ", Ruang Referensi = " + sesi_vr.ruang_referensi);
+
+    // Mulai Sesi VR
+    xr_mulai_sesi(sesi_vr);
+    cetak("Status Sesi VR Aktif: " + ke_teks(sesi_vr.status_aktif));
+
+    // Ambil Metadata Tampilan Stereoskopik Dua Mata (Left & Right Eye)
+    var mata = xr_dapatkan_tampilan_mata(sesi_vr);
+    cetak("Stereoscopic Eye Views: Mata Kiri IPD = " + ke_teks(mata.mata_kiri.ipd_offset) + "m (FOV: " + ke_teks(mata.mata_kiri.fov_deg) + "°)");
+    cetak("Stereoscopic Eye Views: Mata Kanan IPD = " + ke_teks(mata.mata_kanan.ipd_offset) + "m (FOV: " + ke_teks(mata.mata_kanan.fov_deg) + "°)");
+
+    // 2. Pelacakan Kerangka 26 Sendi Tulang Tangan (Hand Tracking)
+    var tangan_kanan = PelacakTanganXR("KANAN");
+
+    // Simulasi Pose Jari: Ujung Ibu Jari & Telunjuk Berdekatan (Gestur Pinch / Cubit)
+    xr_set_sendi_tangan(tangan_kanan, "WRIST", 0.1, 1.0, -0.4);
+    xr_set_sendi_tangan(tangan_kanan, "THUMB_TIP", 0.12, 1.08, -0.35);
+    xr_set_sendi_tangan(tangan_kanan, "INDEX_TIP", 0.13, 1.09, -0.35);
+
+    // Evaluasi Gestur Spasial
+    var hasil_gestur = xr_hitung_pose_gestur(tangan_kanan);
+    cetak("Pengenalan Gestur Tangan Kanan: " + hasil_gestur.gestur_terdeteksi + " (Pinch Active = " + ke_teks(hasil_gestur.cubit) + ")");
+
+    // Akhiri Sesi
+    xr_akhiri_sesi(sesi_vr);
+    cetak("Sesi VR Selesai Ditutup.");
+
+    cetak("=== UJI OPENXR & PELACAKAN TANGAN SUKSES ===");
+}
+
+utama();

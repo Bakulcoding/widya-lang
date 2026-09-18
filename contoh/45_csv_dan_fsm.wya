@@ -1,0 +1,62 @@
+// contoh/45_csv_dan_fsm.wya
+// Demonstrasi Pilar Mutakhir: WidyaCSV & WidyaStateMachine
+
+cetak("========================================================================");
+cetak("✨ DEMO PILAR 3 & 4: WidyaCSV (RFC 4180) & WidyaStateMachine (FSM Engine)");
+cetak("========================================================================");
+cetak("");
+
+// 1. WidyaCSV (RFC 4180 CSV & TSV Parser and Serializer)
+cetak("📊 [1] Pemrosesan Dokumen Tabular CSV & TSV (WidyaCSV)...");
+misal data_csv = "id,nama,posisi,gaji\n1,\"Santoso, Budi\",Tech Lead,35000000\n2,Dewi Lestari,UI Designer,22000000\n3,Ahmad Fauzi,\"Senior Engineer \"\"Core\"\"\",28000000";
+
+cetak("  * Mengurai CSV Mentah menjadi Array of Maps (Header otomatis):");
+misal tabel = urai_csv(data_csv);
+
+untuk baris dalam tabel {
+    cetak("    -> ID: " + baris.id + " | Nama: " + baris.nama + " | Posisi: " + baris.posisi + " | Gaji: Rp" + baris.gaji);
+}
+
+misal data_ekspor = [
+    ["kode", "kota", "populasi"],
+    ["JKT", "Jakarta", "10500000"],
+    ["BDG", "Bandung", "2500000"],
+    ["SBY", "Surabaya", "2900000"]
+];
+misal csv_hasil = buat_csv(data_ekspor);
+cetak("  * Dokumen CSV Baru Terbuat:\n" + csv_hasil);
+cetak("");
+
+// 2. WidyaStateMachine (Finite State Machine Workflow Engine)
+cetak("⚙️ [2] Mesin Status Alur Pembayaran Transaksi (WidyaStateMachine)...");
+// Status: "MENUNGGU_BAYAR" -> "DIPROSES" -> "BERHASIL" (atau "GAGAL")
+misal fsm = MesinStatus("MENUNGGU_BAYAR");
+
+fsm_tambah_transisi(fsm, "MENUNGGU_BAYAR", "KIRIM_PEMBAYARAN", "DIPROSES");
+fsm_tambah_transisi(fsm, "DIPROSES", "KONFIRMASI_BANK", "BERHASIL");
+fsm_tambah_transisi(fsm, "DIPROSES", "WAKTU_HABIS", "GAGAL");
+fsm_tambah_transisi(fsm, "MENUNGGU_BAYAR", "BATALKAN", "DIBATALKAN");
+
+cetak("  * Status Awal: " + fsm_status_saat_ini(fsm));
+cetak("  * Apakah bisa 'KONFIRMASI_BANK' sekarang? -> " + teks(fsm_dapat_picu(fsm, "KONFIRMASI_BANK")));
+cetak("  * Apakah bisa 'KIRIM_PEMBAYARAN' sekarang? -> " + teks(fsm_dapat_picu(fsm, "KIRIM_PEMBAYARAN")));
+
+cetak("  * Memicu event 'KIRIM_PEMBAYARAN'...");
+misal step1 = fsm_picu(fsm, "KIRIM_PEMBAYARAN");
+cetak("    - Berhasil transisi? -> " + teks(step1));
+cetak("    - Status Baru: " + fsm_status_saat_ini(fsm));
+
+cetak("  * Memicu event 'KONFIRMASI_BANK'...");
+misal step2 = fsm_picu(fsm, "KONFIRMASI_BANK");
+cetak("    - Berhasil transisi? -> " + teks(step2));
+cetak("    - Status Akhir: " + fsm_status_saat_ini(fsm));
+
+cetak("  * Mencoba memicu 'BATALKAN' dari status 'BERHASIL' (Ilegal)...");
+misal step_ilegal = fsm_picu(fsm, "BATALKAN");
+cetak("    - Apakah diizinkan? -> " + teks(step_ilegal) + " (Ditolak oleh FSM)");
+cetak("    - Status Tetap: " + fsm_status_saat_ini(fsm));
+
+cetak("");
+cetak("========================================================================");
+cetak("✅ Selesai mengeksekusi WidyaCSV & WidyaStateMachine!");
+cetak("========================================================================");

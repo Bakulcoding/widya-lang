@@ -1,0 +1,46 @@
+// ===================================================================
+// CONTOH 81: GORILLA TIME-SERIES COMPRESSION & BARYCENTRIC POLYNOMIALS
+// Widya-Lang High-Speed Stream Compression & Scientific Interpolation
+// ===================================================================
+
+cetak("=== DEMO WIDYA GORILLA TIME-SERIES FLOAT COMPRESSOR ===")
+var metrik_suhu = [
+    24.5, 24.5, 24.5, 24.6, 24.6,
+    24.6, 25.0, 25.0, 25.2, 25.2,
+    25.2, 25.2, 25.5, 25.5, 25.8
+]
+cetak("Jumlah titik deret waktu : " + teks(panjang(metrik_suhu)))
+cetak("Ukuran raw memori 64-bit : " + teks(panjang(metrik_suhu) * 8) + " bytes")
+
+var payload_gorilla = gorilla_kompres_seri(metrik_suhu)
+cetak("Ukuran Gorilla stream    : " + teks(panjang(payload_gorilla.hex) / 2) + " bytes")
+
+var rasio_gorilla = gorilla_rasio_hemat(metrik_suhu)
+cetak("Efisiensi Penghematan    : " + teks(bulat(rasio_gorilla * 100)) + "%")
+
+var suhu_pulih = gorilla_dekompres_seri(payload_gorilla)
+var cocok_sempurna = suhu_pulih[0] == metrik_suhu[0] && suhu_pulih[14] == metrik_suhu[14]
+cetak("Integritas data lossless : " + teks(cocok_sempurna))
+pastikan(cocok_sempurna, "Hasil dekompresi Gorilla harus persis lossless")
+
+cetak("")
+cetak("=== DEMO WIDYA BARYCENTRIC RATIONAL INTERPOLATION ===")
+// Interpolasi fungsi kurva y = x^3 - 2x + 5 pada titik x = [0, 1, 2, 3, 4]
+// y = [5, 4, 9, 26, 61]
+var xs = [0.0, 1.0, 2.0, 3.0, 4.0]
+var ys = [5.0, 4.0, 9.0, 26.0, 61.0]
+
+var model_barycentric = BarycentricInterpolator(xs, ys)
+
+// Evaluasi pada x = 2.5 -> harus mendekati 2.5^3 - 2(2.5) + 5 = 15.625 - 5 + 5 = 15.625
+var pred_2_5 = barycentric_evaluasi(model_barycentric, 2.5)
+cetak("Prediksi nilai pada x = 2.5 : " + teks(pred_2_5) + " (Target eksak: 15.625)")
+pastikan(mutlak(pred_2_5 - 15.625) < 0.0001, "Akurasi interpolasi Barycentric harus presisi tinggi")
+
+// Evaluasi titik sampel tepat x = 3.0
+var pred_3_0 = barycentric_evaluasi(model_barycentric, 3.0)
+cetak("Evaluasi titik tepat x = 3.0: " + teks(pred_3_0) + " (Eksak: 26.0)")
+pastikan(pred_3_0 == 26.0, "Evaluasi pada titik node harus tepat identik")
+
+cetak("")
+cetak("✔ Seluruh pengujian Gorilla Compressor & Barycentric Interpolation sukses 100%!")

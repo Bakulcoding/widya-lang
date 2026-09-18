@@ -1,0 +1,49 @@
+// Contoh 164: Fisika Nuklir, Otomasi Kimia ISA-88, Protein PDB, Turbin Angin, GeoTIFF NDVI, dan Otomotif V2X
+impor "modul/nuklir_mcnp_neutronics.wya";
+impor "modul/otomasi_kimia_isa88_batch.wya";
+impor "modul/bioinformatika_pdb_protein.wya";
+impor "modul/energi_turbin_angin_iec61400.wya";
+impor "modul/geospasial_cog_geotiff.wya";
+impor "modul/otomotif_v2x_cits_cam.wya";
+
+cetak("==================================================================");
+cetak("⚛️ WIDYA APEX INDUSTRIAL: NUCLEAR, CHEMICAL, PROTEIN, WIND, V2X  ");
+cetak("==================================================================");
+
+// 1. Fisika Nuklir & Proteksi Radiasi
+cetak("\n[1] Fisika Nuklir & Perisai Radiasi (Beer-Lambert Law):");
+var rad = nuklir_hitung_atenuasi_perisai_radiasi(150.0, 10.0, 0.45);
+cetak("  - Dosis Awal:", rad["dosis_awal_msv"], "mSv | Tebal Perisai:", rad["tebal_perisai_cm"], "cm Timbal");
+cetak("  - Dosis Tereduksi:", rad["dosis_akhir_msv"], "mSv | Efisiensi Penyerapan:", rad["efisiensi_penyerapan_persen"], "% [" + rad["status_radiasi"] + "]");
+
+// 2. Otomasi Industri Kimia ISA-88 Batch
+cetak("\n[2] Otomasi Pabrik Kimia & Farmasi ISA-88 Batch Control:");
+var resep = isa88_buat_resep_batch("BATCH_VAKSIN_09", "Vaksin mRNA Ultra Murni", 500.0);
+isa88_tambah_tahap_prosedur(resep, "Pencampuran Lipida", "REAKTOR_A", 45.0, 25.0);
+isa88_tambah_tahap_prosedur(resep, "Homogenisasi Tekanan Tinggi", "REAKTOR_B", 30.0, 4.0);
+var batch_res = isa88_eksekusi_batch_pipeline(resep);
+cetak("  - Status Produksi:", batch_res["status"], "| Total Waktu:", batch_res["total_durasi_menit"], "Menit");
+
+// 3. Bioinformatika Struktur 3D Protein PDB
+cetak("\n[3] Bioinformatika Makromolekul 3D Protein PDB:");
+var atom_n = pdb_parse_atom_record(1, "N", "ALA", "A", 1, 20.15, 12.30, 8.50, 1.0, 15.2);
+var atom_o = pdb_parse_atom_record(2, "O", "GLY", "A", 2, 22.80, 12.10, 9.10, 1.0, 14.8);
+var ikatan = pdb_hitung_jarak_antar_atom(atom_n, atom_o);
+cetak("  - Jarak Atom N-O:", ikatan["jarak_angstrom"], "Angstrom | Ikatan Hidrogen:", ke_teks(ikatan["kemungkinan_ikatan_hidrogen"]));
+
+// 4. Pembangkit Listrik Tenaga Angin (PLTB) IEC 61400-25
+cetak("\n[4] Smart Energy Turbin Angin IEC 61400-25:");
+var turbin = turbin_hitung_daya_aerodinamis(12.5, 60.0, 1.225, 0.45);
+cetak("  - Kecepatan Angin:", turbin["kecepatan_angin_ms"], "m/s | Daya Terbangkit:", turbin["daya_listrik_mw"], "MW [" + turbin["status_turbin"] + "]");
+
+// 5. Citra Satelit GeoTIFF & Indeks Vegetasi NDVI
+cetak("\n[5] Penginderaan Jauh Satelit GeoTIFF (NDVI Vegetasi):");
+var ndvi_res = geotiff_hitung_ndvi_vegetasi(0.75, 0.12);
+cetak("  - Indeks NDVI:", ndvi_res["ndvi_index"], "| Klasifikasi Lahan:", ndvi_res["klasifikasi_tutupan_lahan"]);
+
+// 6. Otomotif Komunikasi Nirkabel V2X C-ITS CAM
+cetak("\n[6] Otomotif Nirkabel V2X & Keselamatan C-ITS CAM (ETSI):");
+var cam_msg = v2x_buat_cooperative_awareness_message(1001, -6.2088, 106.8456, 80.0, 180.0);
+cetak("  - V2X Station ID:", cam_msg["header"]["stationID"], "| Status:", cam_msg["status_v2x"], "| Kecepatan:", cam_msg["cam"]["camParameters"]["highFrequencyContainer"]["speed"], "km/jam");
+
+cetak("\n=== SELURUH 50 MODUL STANDAR INDUSTRI TERPENUHI LENGKAP & SEMPURNA ===");

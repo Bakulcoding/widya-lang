@@ -1,0 +1,42 @@
+// Contoh 158: Solusi Autentikasi RBAC Enterprise, Runtime Asinkron & Streaming I/O
+// Mengintegrasikan otorisasi matriks peran JWT, thread pool async, dan pemrosesan stream
+
+impor "modul/autentikasi_enterprise.wya";
+impor "modul/async_runtime.wya";
+impor "modul/streaming_io.wya";
+
+cetak("==================================================================");
+cetak("🔐 WIDYA ENTERPRISE RBAC AUTH, ASYNC RUNTIME & STREAMING I/O");
+cetak("==================================================================");
+
+// 1. Otorisasi Role-Based Access Control (RBAC)
+var rbac = buat_manajer_rbac();
+var token_admin = terbitkan_token_sesi(rbac, "usr_101", "Ahmad Farhan", "Admin", 3600);
+cetak("🔑 Token Sesi Terbit untuk Admin (Panjang: " + teks(panjang(token_admin)) + " karakter)");
+
+var izin_hapus = validasi_dan_periksa_izin(rbac, token_admin, "hapus");
+cetak("🛡️ Verifikasi Izin 'hapus' untuk Admin:", izin_hapus);
+
+var token_viewer = terbitkan_token_sesi(rbac, "usr_102", "Siti Aminah", "Viewer", 3600);
+var izin_hapus_viewer = validasi_dan_periksa_izin(rbac, token_viewer, "hapus");
+cetak("🚫 Verifikasi Izin 'hapus' untuk Viewer (Ditolak):", izin_hapus_viewer["diizinkan"]);
+
+// 2. Eksekusi Asinkron Berbasis Actor Messaging
+cetak("\n⚡ Menjalankan Tugas Komputasi Asinkron Aktor...");
+var pool_async = buat_kolam_tugas_asinkron("WorkerActorPool-1");
+var handle_aktor = jalankan_tugas_asinkron(pool_async, 75.0);
+
+var hasil_async = tunggu_hasil_tugas(pool_async, handle_aktor);
+cetak("🎯 Hasil Tugas Asinkron Terkumpul:", hasil_async);
+
+// 3. Streaming I/O Potongan Data Berukuran Besar
+cetak("\n🌊 Mengalirkan Potongan Berkas Besar melalui Streaming Pipeline...");
+var saluran_stream = buat_saluran_streaming_berkas("VideoBlobStream", 1024);
+streaming_alirkan_potongan(saluran_stream, "POTONGAN_BLOB_CHUNK_1");
+streaming_alirkan_potongan(saluran_stream, "POTONGAN_BLOB_CHUNK_2");
+streaming_alirkan_potongan(saluran_stream, "POTONGAN_BLOB_CHUNK_3");
+
+var semua_potongan = streaming_kumpulkan_seluruh_potongan(saluran_stream);
+cetak("📥 Seluruh Potongan Berkas Tertampung:", semua_potongan);
+
+cetak("\n✅ Seluruh Arsitektur Enterprise Berhasil Berjalan Sempurna!");

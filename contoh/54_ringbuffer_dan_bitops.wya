@@ -1,0 +1,54 @@
+// Contoh 54: WidyaRingBuffer & WidyaBitwiseOps
+// Pengujian Circular Streaming Queue dan Operasi Manipulasi Bit Tingkat Rendah
+
+fungsi utama() {
+    tulis("=== CONTOH 54: RING BUFFER & BITWISE OPS ===");
+
+    // 1. WidyaRingBuffer
+    tulis("\n--- 1. WidyaRingBuffer (Fixed FIFO Streaming Buffer) ---");
+    var rb = RingBuffer(3); // kapasitas 3 elemen
+
+    tulis("   Mendorong elemen 10, 20, 30 ke ring buffer...");
+    ring_dorong(rb, 10);
+    ring_dorong(rb, 20);
+    ring_dorong(rb, 30);
+
+    tulis("   Panjang buffer: " + teks(ring_panjang(rb)));
+    tulis("   Apakah penuh?   " + teks(ring_apakah_penuh(rb)));
+    tulis("   Isi buffer      : " + teks(ring_ke_array(rb)));
+    tulis("   Lihat elemen terdepan: " + teks(ring_lihat(rb)));
+
+    tulis("\n   Mendorong elemen ke-4 (40) -> elemen tertua (10) harus otomatis tergeser...");
+    ring_dorong(rb, 40);
+    tulis("   Isi buffer setelah overwrite: " + teks(ring_ke_array(rb))); // [20, 30, 40]
+
+    tulis("\n   Menarik (pop) elemen terdepan...");
+    var keluar1 = ring_tarik(rb);
+    tulis("   Elemen keluar : " + teks(keluar1));
+    tulis("   Isi buffer sisa: " + teks(ring_ke_array(rb))); // [30, 40]
+
+    // 2. WidyaBitwiseOps
+    tulis("\n--- 2. WidyaBitwiseOps (Low-Level Bit Manipulation) ---");
+
+    var angka = 42; // biner: 00101010
+    tulis("   Angka desimal : " + teks(angka));
+    tulis("   - Jumlah bit 1 aktif (popcount): " + teks(bit_hitung_satu(angka)));
+    tulis("   - Leading zeros count (32-bit): " + teks(bit_hitung_nol_depan(angka)));
+    tulis("   - Trailing zeros count       : " + teks(bit_hitung_nol_belakang(angka)));
+
+    // Bit Rotation
+    var rot_kiri = bit_rotasi_kiri(1, 4); // 1 << 4 = 16
+    var rot_kanan = bit_rotasi_kanan(16, 2); // 16 >> 2 = 4
+    tulis("   - Rotasi kiri 1 sejauh 4 bit  : " + teks(rot_kiri));
+    tulis("   - Rotasi kanan 16 sejauh 2 bit : " + teks(rot_kanan));
+
+    // Bit Extraction (bitfield packing)
+    // Angka 0b11010100 = 212. Ekstrak 4 bit dari offset 2 -> bits 2..5 (0101 = 5)
+    var nilai_packed = 212;
+    var sub_field = bit_ekstrak(nilai_packed, 2, 4);
+    tulis("   - Ekstrak 4 bit dari pos 2 pada 212: " + teks(sub_field));
+
+    tulis("\n=== SELESAI CONTOH 54 ===");
+}
+
+utama();

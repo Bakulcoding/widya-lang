@@ -1,0 +1,494 @@
+// =================================================================
+// Modul Blockchain & Smart Contract untuk Widya-Lang (WidyaChain)
+// =================================================================
+
+var TUGAS_WASM = "TUGAS_WASM";
+var TUGAS_GPU_WGSL = "TUGAS_GPU_WGSL";
+var TUGAS_MICROVM = "TUGAS_MICROVM";
+
+fungsi pembulatan_bawah(x) {
+    var p = atap(x);
+    jika p > x {
+        kembalikan p - 1;
+    }
+    kembalikan p;
+}
+
+fungsi pembulatan_atas(x) {
+    kembalikan atap(x);
+}
+
+fungsi bilangan_acak(min, maks) {
+    kembalikan min + pembulatan_bawah(acak() * (maks - min + 1));
+}
+
+struktur Transaksi {
+    pengirim,
+    penerima,
+    jumlah,
+    tanda_tangan,
+
+    fungsi hitung_hash() {
+        kembalikan sha256(ini.pengirim + ini.penerima + ke_teks(ini.jumlah));
+    }
+
+    fungsi tanda_tangani_tx(kunci_privat) {
+        misal tx_hash = ini.hitung_hash();
+        ini.tanda_tangan = tanda_tangani(tx_hash, kunci_privat);
+    }
+
+    fungsi apakah_valid() {
+        jika ini.pengirim == "SISTEM_HADIAH_MINING" {
+            kembalikan benar;
+        }
+        jika ini.tanda_tangan == nihil atau ini.tanda_tangan == "" {
+            kembalikan salah;
+        }
+        kembalikan verifikasi_ttd(ini.hitung_hash(), ini.tanda_tangan, ini.pengirim);
+    }
+}
+
+struktur Blok {
+    indeks,
+    stempel_waktu,
+    transaksi,
+    hash_sebelumnya,
+    nonce,
+    hash,
+
+    fungsi hitung_hash() {
+        misal tx_str = ke_json(ini.transaksi);
+        kembalikan sha256(
+            ke_teks(ini.indeks) +
+            ke_teks(ini.stempel_waktu) +
+            tx_str +
+            ini.hash_sebelumnya +
+            ke_teks(ini.nonce)
+        );
+    }
+
+    fungsi tambang_blok(kesulitan) {
+        cetak("⛏️  Menambang blok #" + ke_teks(ini.indeks) + " (Kesulitan: " + ke_teks(kesulitan) + ")...");
+        misal header = ke_teks(ini.indeks) + ke_teks(ini.stempel_waktu) + ke_json(ini.transaksi) + ini.hash_sebelumnya;
+        misal hasil_pow = tambang_pow(header, kesulitan);
+        ini.nonce = hasil_pow.nonce;
+        ini.hash = hasil_pow.hash;
+        cetak("🎉 Blok #" + ke_teks(ini.indeks) + " berhasil ditambang!");
+        cetak("   Nonce:", ini.nonce, "| Hash:", ini.hash, "| Waktu:", hasil_pow.waktu_ms, "ms\n");
+    }
+}
+
+struktur RantaiBlok {
+    rantai,
+    kesulitan,
+    transaksi_tertunda,
+    hadiah_penambang,
+
+    fungsi inisialisasi(kesulitan_awal) {
+        ini.rantai = [];
+        ini.kesulitan = kesulitan_awal;
+        ini.transaksi_tertunda = [];
+        ini.hadiah_penambang = 50;
+
+        // Buat Genesis Block
+        misal genesis = Blok(0, waktu(), ["Genesis Block - Awal Mula WidyaChain"], "0", 0, "");
+        genesis.hash = genesis.hitung_hash();
+        tambah(ini.rantai, genesis);
+    }
+
+    fungsi blok_terakhir() {
+        kembalikan ini.rantai[-1];
+    }
+
+    fungsi tambah_transaksi(tx) {
+        jika bukan tx.apakah_valid() {
+            lempar "Transaksi tidak valid atau tanda tangan palsu!";
+        }
+        tambah(ini.transaksi_tertunda, tx);
+        cetak("📥 Transaksi ditambahkan ke mempool: " + tx.pengirim + " -> " + tx.penerima + " (" + ke_teks(tx.jumlah) + " WIDYA)");
+    }
+
+    fungsi tambang_transaksi_tertunda(alamat_penambang) {
+        // Berikan hadiah transaksi untuk penambang
+        misal tx_hadiah = Transaksi("SISTEM_HADIAH_MINING", alamat_penambang, ini.hadiah_penambang, "VALID_REWARD");
+        tambah(ini.transaksi_tertunda, tx_hadiah);
+
+        misal blok_baru = Blok(
+            panjang(ini.rantai),
+            waktu(),
+            ini.transaksi_tertunda,
+            ini.blok_terakhir().hash,
+            0,
+            ""
+        );
+
+        blok_baru.tambang_blok(ini.kesulitan);
+        tambah(ini.rantai, blok_baru);
+        ini.transaksi_tertunda = [];
+    }
+
+    fungsi cek_saldo(alamat) {
+        misal saldo = 0;
+        untuk blok dalam ini.rantai {
+            untuk tx dalam blok.transaksi {
+                jika tipe(tx) == "kamus" atau tipe(tx) == "objek_struktur" {
+                    jika tx.penerima == alamat {
+                        saldo += tx.jumlah;
+                    }
+                    jika tx.pengirim == alamat {
+                        saldo -= tx.jumlah;
+                    }
+                }
+            }
+        }
+        kembalikan saldo;
+    }
+
+    fungsi validasi_integritas() {
+        untuk i dalam 1..(panjang(ini.rantai) - 1) {
+            misal blok_sekarang = ini.rantai[i];
+            misal blok_lalu = ini.rantai[i - 1];
+
+            jika blok_sekarang.hash_sebelumnya != blok_lalu.hash {
+                kembalikan salah;
+            }
+        }
+        kembalikan benar;
+    }
+}
+
+struktur DompetKripto {
+    kunci_privat,
+    kunci_publik,
+    alamat,
+
+    fungsi inisialisasi() {
+        misal kp = buat_kunci();
+        ini.kunci_privat = kp.kunci_privat;
+        ini.kunci_publik = kp.kunci_publik;
+        ini.alamat = kp.alamat;
+    }
+
+    fungsi buat_transfer(penerima, jumlah) {
+        misal tx = Transaksi(ini.alamat, penerima, jumlah, "");
+        tx.tanda_tangani_tx(ini.kunci_privat);
+        kembalikan tx;
+    }
+}
+
+// Smart Contract: Token Standar Widya-20
+struktur KontrakTokenWidya20 {
+    nama,
+    simbol,
+    total_pasokan,
+    pemilik,
+    saldo,
+
+    fungsi inisialisasi(nama, simbol, pasokan_awal, pemilik) {
+        ini.nama = nama;
+        ini.simbol = simbol;
+        ini.total_pasokan = pasokan_awal;
+        ini.pemilik = pemilik;
+        ini.saldo = {};
+        ini.saldo[pemilik] = pasokan_awal;
+    }
+
+    fungsi transfer(pengirim, penerima, jumlah) {
+        misal saldo_pengirim = ini.saldo[pengirim];
+        jika saldo_pengirim == nihil atau saldo_pengirim < jumlah {
+            lempar "Smart Contract Error: Saldo tidak mencukupi untuk transfer token!";
+        }
+        ini.saldo[pengirim] -= jumlah;
+        jika ini.saldo[penerima] == nihil {
+            ini.saldo[penerima] = 0;
+        }
+        ini.saldo[penerima] += jumlah;
+        cetak("🪙 [Smart Contract] " + ke_teks(jumlah) + " " + ini.simbol + " ditransfer dari " + pengirim + " ke " + penerima);
+        kembalikan benar;
+    }
+
+    fungsi dapatkan_saldo(alamat) {
+        jika ini.saldo[alamat] == nihil {
+            kembalikan 0;
+        }
+        kembalikan ini.saldo[alamat];
+    }
+}
+
+// =================================================================
+// Bagian Baru: Konsensus Proof of Authority (PoA), Lelang Komputasi,
+// dan Proof of Useful Work (PoUW)
+// =================================================================
+
+struktur PoAValidator {
+    alamat,
+    pubkey,
+    reputasi_skor,
+    status_aktif,
+    jumlah_blok_diproduksi,
+
+    fungsi inisialisasi(alamat_val, pubkey_val) {
+        ini.alamat = alamat_val;
+        ini.pubkey = pubkey_val;
+        ini.reputasi_skor = 100;
+        ini.status_aktif = benar;
+        ini.jumlah_blok_diproduksi = 0;
+    }
+}
+
+fungsi buat_validator_poa(alamat, pubkey) {
+    kembalikan PoAValidator(alamat, pubkey);
+}
+
+fungsi inisialisasi_konsensus_poa(rantai, daftar_validator) {
+    rantai.mode_konsensus = "PoA";
+    rantai.daftar_validator_poa = daftar_validator;
+    rantai.round_robin_idx = 0;
+    rantai.daftar_lelang = [];
+    rantai.escrow_saldo = {};
+}
+
+fungsi poa_tambah_validator(rantai, validator) {
+    tambah(rantai.daftar_validator_poa, validator);
+    cetak("✅ Validator ditambahkan: " + validator.alamat + " | Reputasi: " + ke_teks(validator.reputasi_skor));
+}
+
+fungsi poa_cari_validator(rantai, alamat) {
+    untuk v dalam rantai.daftar_validator_poa {
+        jika v.alamat == alamat {
+            kembalikan v;
+        }
+    }
+    kembalikan nihil;
+}
+
+fungsi poa_produksi_blok(rantai, alamat_pengusul, transaksi_daftar) {
+    misal pengusul = poa_cari_validator(rantai, alamat_pengusul);
+    jika pengusul == nihil {
+        kembalikan {"sukses": salah, "alasan": "PENGUSUL_TIDAK_TERDAFTAR"};
+    }
+    jika bukan pengusul.status_aktif {
+        kembalikan {"sukses": salah, "alasan": "PENGUSUL_TIDAK_AKTIF"};
+    }
+
+    misal jumlah_validator = panjang(rantai.daftar_validator_poa);
+    misal min_quorum = pembulatan_atas((2 * jumlah_validator) / 3);
+    misal signature_validator = [];
+
+    tambah(signature_validator, alamat_pengusul);
+    pengusul.jumlah_blok_diproduksi += 1;
+
+    misal tanda_tangan_dibutuhkan = min_quorum - 1;
+    jika tanda_tangan_dibutuhkan < 0 {
+        tanda_tangan_dibutuhkan = 0;
+    }
+
+    misal idx = rantai.round_robin_idx;
+    misal count = 0;
+    misal max_loop = jumlah_validator * 2;
+    misal iterasi = 0;
+
+    selama count < tanda_tangan_dibutuhkan dan iterasi < max_loop {
+        idx = (idx + 1) % jumlah_validator;
+        misal kandidat = rantai.daftar_validator_poa[idx];
+        jika kandidat.alamat != alamat_pengusul dan kandidat.status_aktif {
+            misal sudah_ada = salah;
+            untuk s dalam signature_validator {
+                jika s == kandidat.alamat {
+                    sudah_ada = benar;
+                    berhenti;
+                }
+            }
+            jika bukan sudah_ada {
+                tambah(signature_validator, kandidat.alamat);
+                count = count + 1;
+            }
+        }
+        iterasi = iterasi + 1;
+    }
+
+    rantai.round_robin_idx = (idx + 1) % jumlah_validator;
+
+    jika panjang(signature_validator) < min_quorum {
+        kembalikan {"sukses": salah, "alasan": "QUORUM_TIDAK_TERCAPAI_BUTUH_2_DARI_3"};
+    }
+
+    misal blok_baru = Blok(
+        panjang(rantai.rantai),
+        waktu(),
+        transaksi_daftar,
+        rantai.blok_terakhir().hash,
+        0,
+        ""
+    );
+    blok_baru.hash = blok_baru.hitung_hash();
+    blok_baru.signature_validator = signature_validator;
+    blok_baru.mode_konsensus = "PoA";
+    blok_baru.pengusul = alamat_pengusul;
+
+    tambah(rantai.rantai, blok_baru);
+    cetak("🏛️  Blok PoA #" + ke_teks(blok_baru.indeks) + " diproduksi oleh " + alamat_pengusul);
+    cetak("   Tanda tangan validator (" + ke_teks(panjang(signature_validator)) + "/" + ke_teks(jumlah_validator) + "): " + gabung(signature_validator, ", "));
+
+    kembalikan {"sukses": benar, "blok": blok_baru, "signature": signature_validator};
+}
+
+struktur ComputeLelang {
+    id,
+    penyewa_alamat,
+    tipe_tugas,
+    sla_waktu_detik,
+    harga_maks_widya_per_detik,
+    daftar_tawaran,
+    status,
+
+    fungsi inisialisasi(id_val, penyewa, tipe, sla, harga_maks) {
+        ini.id = id_val;
+        ini.penyewa_alamat = penyewa;
+        ini.tipe_tugas = tipe;
+        ini.sla_waktu_detik = sla;
+        ini.harga_maks_widya_per_detik = harga_maks;
+        ini.daftar_tawaran = [];
+        ini.status = "DIBUKA";
+    }
+}
+
+fungsi lelang_cari(rantai, id_lelang) {
+    untuk l dalam rantai.daftar_lelang {
+        jika l.id == id_lelang {
+            kembalikan l;
+        }
+    }
+    kembalikan nihil;
+}
+
+fungsi lelang_buat(rantai, id, penyewa, tipe, sla, harga_maks) {
+    misal lelang = ComputeLelang(id, penyewa, tipe, sla, harga_maks);
+    tambah(rantai.daftar_lelang, lelang);
+    jika rantai.escrow_saldo[penyewa] == nihil {
+        rantai.escrow_saldo[penyewa] = 0;
+    }
+    rantai.escrow_saldo[penyewa] += harga_maks * sla;
+    cetak("📋 Lelang " + id + " dibuat oleh " + penyewa);
+    cetak("   Tipe: " + tipe + " | SLA: " + ke_teks(sla) + " detik | Harga Maks: " + ke_teks(harga_maks) + " WIDYA/detik");
+    cetak("   Escrow terkunci: " + ke_teks(harga_maks * sla) + " WIDYA");
+    kembalikan lelang;
+}
+
+fungsi lelang_tawar(rantai, id_lelang, worker_alamat, harga_per_detik) {
+    misal lelang = lelang_cari(rantai, id_lelang);
+    jika lelang == nihil {
+        kembalikan {"sukses": salah, "alasan": "LELANG_TIDAK_DITEMUKAN"};
+    }
+    jika lelang.status != "DIBUKA" {
+        kembalikan {"sukses": salah, "alasan": "LELANG_TIDAK_DIBUKA"};
+    }
+    jika harga_per_detik > lelang.harga_maks_widya_per_detik {
+        kembalikan {"sukses": salah, "alasan": "HARGA_MELEBIHI_MAKSIMUM"};
+    }
+    misal tawaran = {"worker": worker_alamat, "harga_per_detik": harga_per_detik, "waktu_tawaran": waktu()};
+    tambah(lelang.daftar_tawaran, tawaran);
+    cetak("💰 Worker " + worker_alamat + " menawar " + ke_teks(harga_per_detik) + " WIDYA/detik untuk lelang " + id_lelang);
+    kembalikan {"sukses": benar, "tawaran": tawaran};
+}
+
+fungsi lelang_tutup_pilih_pemenang(rantai, id_lelang) {
+    misal lelang = lelang_cari(rantai, id_lelang);
+    jika lelang == nihil {
+        kembalikan {"sukses": salah, "alasan": "LELANG_TIDAK_DITEMUKAN"};
+    }
+    jika panjang(lelang.daftar_tawaran) == 0 {
+        lelang.status = "GAGAL";
+        kembalikan {"sukses": salah, "alasan": "TIDAK_ADA_TAWARAN"};
+    }
+    lelang.status = "DITUTUP";
+    misal pemenang = lelang.daftar_tawaran[0];
+    untuk t dalam lelang.daftar_tawaran {
+        jika t.harga_per_detik < pemenang.harga_per_detik {
+            pemenang = t;
+        }
+    }
+    lelang.pemenang = pemenang;
+    cetak("🏆 Lelang " + id_lelang + " dimenangkan oleh " + pemenang.worker);
+    cetak("   Harga terbaik: " + ke_teks(pemenang.harga_per_detik) + " WIDYA/detik (total SLA maks " + ke_teks(pemenang.harga_per_detik * lelang.sla_waktu_detik) + " WIDYA)");
+    kembalikan {"sukses": benar, "pemenang": pemenang, "lelang": lelang};
+}
+
+struktur BuktiPoUW {
+    id_tugas,
+    hasil_hash,
+    eksekusi_detak_waktu,
+    nonce,
+    komitmen,
+    worker_alamat,
+
+    fungsi inisialisasi(id_t, h_hash, detak, worker) {
+        ini.id_tugas = id_t;
+        ini.hasil_hash = h_hash;
+        ini.eksekusi_detak_waktu = detak;
+        ini.nonce = bilangan_acak(1, 1000000);
+        ini.komitmen = sha256(id_t + h_hash + ke_teks(detak) + ke_teks(bilangan_acak(1, 999999999)));
+        ini.worker_alamat = worker;
+    }
+}
+
+fungsi pouw_buat_bukti(id_tugas, hasil_hash, eksekusi_detak, worker_alamat) {
+    kembalikan BuktiPoUW(id_tugas, hasil_hash, eksekusi_detak, worker_alamat);
+}
+
+fungsi pouw_ambil_lelang_dari_tugas(rantai, id_tugas) {
+    untuk l dalam rantai.daftar_lelang {
+        jika l.id == id_tugas {
+            kembalikan l;
+        }
+    }
+    kembalikan nihil;
+}
+
+fungsi pouw_verifikasi_dan_bayar(rantai, bukti, validator_cek) {
+    misal prefix_bukti = potong(bukti.komitmen, 0, 8);
+    misal hash_verifikasi = sha256(bukti.id_tugas + bukti.hasil_hash + ke_teks(bukti.eksekusi_detak_waktu));
+    misal prefix_verifikasi = potong(hash_verifikasi, 0, 8);
+
+    jika prefix_bukti != prefix_verifikasi {
+        kembalikan {"sukses": salah, "alasan": "KOMITMEN_TIDAK_VALID"};
+    }
+
+    misal lelang = pouw_ambil_lelang_dari_tugas(rantai, bukti.id_tugas);
+    jika lelang == nihil {
+        kembalikan {"sukses": salah, "alasan": "LELANG_TIDAK_DITEMUKAN"};
+    }
+
+    misal pemenang = lelang.pemenang;
+    jika pemenang == nihil {
+        kembalikan {"sukses": salah, "alasan": "BELUM_ADA_PEMENANG_LELANG"};
+    }
+
+    misal harga_total = pemenang.harga_per_detik * bukti.eksekusi_detak_waktu;
+    misal penyewa = lelang.penyewa_alamat;
+    misal worker = bukti.worker_alamat;
+
+    jika rantai.escrow_saldo[penyewa] == nihil atau rantai.escrow_saldo[penyewa] < harga_total {
+        kembalikan {"sukses": salah, "alasan": "ESCROW_SALDO_TIDAK_MENCUKUPI"};
+    }
+
+    rantai.escrow_saldo[penyewa] -= harga_total;
+
+    misal tx_bayar = Transaksi("ESCROW_SISTEM", worker, harga_total, "VALID_POUW_REWARD");
+    tambah(rantai.transaksi_tertunda, tx_bayar);
+    cetak("💸 Pembayaran PoUW untuk tugas " + bukti.id_tugas + ": " + ke_teks(harga_total) + " WIDYA -> " + worker);
+
+    misal val_obj = poa_cari_validator(rantai, validator_cek);
+    jika val_obj != nihil {
+        val_obj.reputasi_skor += 5;
+        cetak("⭐ Reputasi validator " + validator_cek + " bertambah 5 -> " + ke_teks(val_obj.reputasi_skor));
+    }
+
+    misal worker_obj = poa_cari_validator(rantai, worker);
+    jika worker_obj != nihil {
+        worker_obj.reputasi_skor += 5;
+        cetak("⭐ Reputasi worker " + worker + " bertambah 5 -> " + ke_teks(worker_obj.reputasi_skor));
+    }
+
+    kembalikan {"sukses": benar, "jumlah_bayar": harga_total, "worker": bukti.worker_alamat};
+}
