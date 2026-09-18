@@ -51,3 +51,9 @@ Thumbs.db
 .vscode/*
 !.vscode/language-configuration.json
 !.vscode/widya.tmLanguage.json
+
+# ===== Internal Discussion & Process Archive =====
+/.internal_archive/
+/dokumen_widya/
+/dokumentasi_pendukung/
+/referensi_bundle/
