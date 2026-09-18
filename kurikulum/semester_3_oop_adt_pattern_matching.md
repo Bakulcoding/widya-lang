@@ -1,10 +1,11 @@
 # 📘 Silabus & Modul Detail Semester 3 (Kelas 11 Ganjil)
-## Tema: Pemodelan Berorientasi Objek & Aljabar Tipe Data (16 Pertemuan)
+## Tema: Pemodelan Berorientasi Objek & Aljabar Tipe Data (Pertemuan 33 - 48)
 
 ---
 
 ### 📅 Pertemuan 33: Paradigma Pemodelan Data & Konsep `struktur` (Structs)
-- **Tujuan:** Merepresentasikan entitas dunia nyata ke dalam tipe data bentukan.
+- **Tujuan Pembelajaran:** Siswa mampu merancang tipe data komposit bentukan sendiri (*user-defined types*) untuk merepresentasikan entitas nyata.
+- **Teori & Konsep:** Pengelompokan field/atribut, tipe data heterogen terstruktur, alokasi memori struct.
 - **Contoh Program (`p33_struktur_dasar.wya`):**
 ```widya
 struktur BukuPerpustakaan {
@@ -21,18 +22,35 @@ misal buku1 = BukuPerpustakaan {
     stok: 5
 };
 
-cetak("Buku:", buku1.judul, "oleh", buku1.penulis);
+cetak("Judul Buku :", buku1.judul);
+cetak("Penulis    :", buku1.penulis);
+cetak("Stok Ada   :", buku1.stok, "eksemplar");
+```
+- **Latihan Soal:** Buat struktur data `Siswa` dengan field `nis`, `nama`, dan `kelas`.
+
+---
+
+### 📅 Pertemuan 34: Enkapsulasi Data & Nilai Immutability pada Struct
+- **Tujuan Pembelajaran:** Memahami keamanan manipulasi atribut struct dan teknik pembentukan salinan data terbarui (*functional update*).
+- **Contoh Program (`p34_immutability.wya`):**
+```widya
+struktur AkunPengguna {
+    username: String,
+    poin: Int
+}
+
+fungsi tambah_poin(akun: AkunPengguna, bonus: Int) -> AkunPengguna {
+    kembalikan AkunPengguna {
+        username: akun.username,
+        poin: akun.poin + bonus
+    };
+}
 ```
 
 ---
 
-### 📅 Pertemuan 34: Enkapsulasi & Immutability pada Atribut Struct
-- **Tujuan:** Memahami proteksi nilai atribut dan pembuatan struct baru saat mutasi data.
-
----
-
-### 📅 Pertemuan 35: Metode Instance & Kata Kunci Referensi Diri (`&diri`)
-- **Tujuan:** Menambahkan fungsionalitas perilaku (*behavior*) langsung ke dalam struct.
+### 📅 Pertemuan 35: Metode Instance & Referensi Diri (`&diri`)
+- **Tujuan Pembelajaran:** Mengaitkan fungsi/metode langsung ke dalam struct dengan blok `implementasi`.
 - **Contoh Program (`p35_metode_struct.wya`):**
 ```widya
 struktur Tabungan {
@@ -41,56 +59,70 @@ struktur Tabungan {
 }
 
 implementasi Tabungan {
+    fungsi cek_saldo(&diri) -> Int {
+        kembalikan diri.saldo;
+    }
+    
     fungsi setor(&diri, jumlah: Int) -> Int {
         kembalikan diri.saldo + jumlah;
     }
 }
+
+misal tabunganku = Tabungan { nomor_rekening: "001-22-333", saldo: 500000 };
+cetak("Saldo Awal     : Rp", tabunganku.cek_saldo());
+cetak("Setelah Setor  : Rp", tabunganku.setor(150000));
 ```
 
 ---
 
 ### 📅 Pertemuan 36: Abstraksi Antarmuka dengan `sifat` (Traits / Interfaces)
-- **Tujuan:** Mendefinisikan kontrak fungsi yang dapat diimplementasikan oleh banyak struct.
+- **Tujuan Pembelajaran:** Mendefinisikan kontrak perilaku (*behavior contract*) yang wajib diwujudkan oleh struct.
 - **Contoh Program (`p36_sifat.wya`):**
 ```widya
 sifat DapatDihitungPajak {
     fungsi hitung_pajak(&diri) -> Int;
 }
 
-struktur ProdukElektronik {
-    nama: String,
+struktur Laptop {
+    merk: String,
     harga: Int
 }
 
-implementasi DapatDihitungPajak untuk ProdukElektronik {
+implementasi DapatDihitungPajak untuk Laptop {
     fungsi hitung_pajak(&diri) -> Int {
         kembalikan diri.harga * 11 / 100; // PPN 11%
     }
 }
+
+misal l = Laptop { merk: "WidyaBook Pro", harga: 15000000 };
+cetak("Pajak Barang:", l.hitung_pajak());
 ```
 
 ---
 
-### 📅 Pertemuan 37: Polimorfisme Statis & Dynamic Dispatch
-- **Tujuan:** Memahami bagaimana satu method antarmuka dapat merespons objek yang berbeda.
+### 📅 Pertemuan 37: Polimorfisme Statis & Trait Bounds
+- **Tujuan Pembelajaran:** Membuat fungsi generic yang dibatasi hanya untuk struct yang mengimplementasikan trait tertentu.
 
 ---
 
 ### 📅 Pertemuan 38: Algebraic Data Types (ADT) dengan `pilihan` (Enums)
-- **Tujuan:** Memodelkan data ber-varian (*Sum Types*) untuk mengatasi keterbatasan tipe primitif.
+- **Tujuan Pembelajaran:** Memodelkan data ber-varian (*Sum Types*) di mana setiap varian dapat membawa data payload sendiri.
 - **Contoh Program (`p38_enum_adt.wya`):**
 ```widya
-pilihan StatusPembayaran {
-    BelumBayar,
-    MenungguVerifikasi(String), // Bank pengirim
-    Lunas(Int)                  // Nominal lunas
+pilihan StatusPesanan {
+    Dipesan,
+    Dikirim(String), // Nomor Resi
+    Selesai,
+    Dibatalkan(String) // Alasan Batal
 }
+
+misal pesanan_budi = StatusPesanan::Dikirim("EXP-9928172");
 ```
 
 ---
 
-### 📅 Pertemuan 39: Menghilangkan Risiko Null Pointer dengan `pilihan Opsi<T>`
-- **Tujuan:** Memahami desain bebas crash: `Ada(T)` atau `Kosong`.
+### 📅 Pertemuan 39: Menghilangkan Risiko Null Pointer Crash dengan `pilihan Opsi<T>`
+- **Tujuan Pembelajaran:** Memahami arsitektur bebas *NullPointerException* menggunakan enum standar `Ada(T)` dan `Kosong`.
 - **Contoh Program (`p39_opsi.wya`):**
 ```widya
 pilihan Opsi<T> {
@@ -98,9 +130,9 @@ pilihan Opsi<T> {
     Kosong
 }
 
-fungsi cari_user_by_id(id: Int) -> Opsi<String> {
-    jika id == 1 {
-        kembalikan Opsi::Ada("Admin Sekolah");
+fungsi cari_siswa_by_nis(nis: String) -> Opsi<String> {
+    jika nis == "202601" {
+        kembalikan Opsi::Ada("Kusuma Wardani");
     }
     kembalikan Opsi::Kosong;
 }
@@ -109,32 +141,43 @@ fungsi cari_user_by_id(id: Int) -> Opsi<String> {
 ---
 
 ### 📅 Pertemuan 40: Pencocokan Pola Komprehensif (`cocokkan`)
-- **Tujuan:** Menggunakan pattern matching terstruktur dengan validasi kompiler wajib lengkap (*exhaustiveness check*).
+- **Tujuan Pembelajaran:** Mengevaluasi seluruh varian enum dengan verifikasi kompiler wajib lengkap (*exhaustiveness check*).
 - **Contoh Program (`p40_cocokkan.wya`):**
 ```widya
-misal status = StatusPembayaran::Lunas(150000);
+misal status = StatusPesanan::Dikirim("EXP-9928172");
 
 cocokkan status {
-    StatusPembayaran::BelumBayar => cetak("Tagihan belum dibayar!"),
-    StatusPembayaran::MenungguVerifikasi(bank) => cetak("Sedang diverifikasi di bank:", bank),
-    StatusPembayaran::Lunas(nominal) => cetak("Pembayaran LUNAS sebesar Rp", nominal)
+    StatusPesanan::Dipesan => cetak("Pesanan sedang disiapkan di gudang."),
+    StatusPesanan::Dikirim(resi) => cetak("Pesanan sedang dalam kurir dengan Resi:", resi),
+    StatusPesanan::Selesai => cetak("Pesanan telah diterima pelanggan."),
+    StatusPesanan::Dibatalkan(alasan) => cetak("Pesanan batal karena:", alasan)
 }
 ```
 
 ---
 
 ### 📅 Pertemuan 41: 🎯 Ujian Tengah Semester (UTS) — Desain State Mesin Transaksi
-- **Tugas Praktik:** Memodelkan siklus hidup transaksi tiket online (Dipesan, Dibayar, Dibatalkan, Digunakan) dengan ADT Enum & Pencocokan Pola.
+- **Tugas Praktik Mandiri:** Siswa merancang state machine alur pembayaran SPP sekolah (Tertunda, Terverifikasi, Lunas, Ditolak) menggunakan ADT `pilihan` dan pencocokan pola `cocokkan`.
 
 ---
 
-### 📅 Pertemuan 42: Pattern Matching dengan Pola Nilai & Guard Clause
-- **Tujuan:** Menambahkan kondisi ekspresi kondisional `jika` di dalam cabang `cocokkan`.
+### 📅 Pertemuan 42: Pattern Matching Tingkat Lanjut dengan Guard Clause (`jika`)
+- **Tujuan:** Menambahkan ekspresi filter tambahan langsung di dalam cabang kecocokan.
+- **Contoh Program (`p42_guard_clause.wya`):**
+```widya
+misal skor = 85;
+
+cocokkan skor {
+    n jika n >= 90 => cetak("Grade: Sangat Baik"),
+    n jika n >= 75 => cetak("Grade: Lulus KKM"),
+    _ => cetak("Grade: Belajar Lebih Giat")
+}
+```
 
 ---
 
 ### 📅 Pertemuan 43: Safe Error Handling dengan Tipe `pilihan Hasil<T, E>`
-- **Tujuan:** Penanganan galat tanpa panic runtime: `Sukses(T)` dan `Gagal(E)`.
+- **Tujuan Pembelajaran:** Menangani potensi kegagalan sistem tanpa mematikan program secara paksa (*panic*).
 - **Contoh Program (`p43_hasil_error.wya`):**
 ```widya
 pilihan Hasil<T, E> {
@@ -142,30 +185,33 @@ pilihan Hasil<T, E> {
     Gagal(E)
 }
 
-fungsi bagi_angka(a: Int, b: Int) -> Hasil<Int, String> {
-    jika b == 0 {
-        kembalikan Hasil::Gagal("Pembagian dengan angka nol tidak diizinkan!");
+fungsi kalkulasi_bagi(pembilang: Int, penyebut: Int) -> Hasil<Int, String> {
+    jika penyebut == 0 {
+        kembalikan Hasil::Gagal("Penyebut bernilai nol tidak terdefinisi!");
     }
-    kembalikan Hasil::Sukses(a / b);
+    kembalikan Hasil::Sukses(pembilang / penyebut);
 }
 ```
 
 ---
 
-### 📅 Pertemuan 44: Pengomposisian Struct & Hubungan Agregasi Objek
-- **Tujuan:** Menggabungkan struct di dalam struct (misal: `Siswa` memiliki struct `Alamat` dan struct `Wali`).
+### 📅 Pertemuan 44: Komposisi Objek & Relasi Entitas Majemuk
+- **Tujuan:** Memodelkan hubungan antar struct (misal struct `Sekolah` menaungi daftar struct `Siswa` dan struct `Guru`).
 
 ---
 
-### 📅 Pertemuan 45: Pembuatan Library Parser File Teks Sederhana
-- **Tujuan:** Membaca dan mem-parsing format CSV ke dalam struct Widya.
+### 📅 Pertemuan 45: Pembuatan Modul Parser Format Data Teks
+- **Tujuan:** Mengonversi baris string berpemisah koma (CSV) menjadi koleksi struct `[Siswa]` secara otomatis.
 
 ---
 
-### 📅 Pertemuan 46: Arsitektur Simulator Sistem Perbankan
-- **Tujuan:** Merancang modul nasabah, mutasi rekening, dan validasi transaksi transfer antar akun.
+### 📅 Pertemuan 46: Perancangan Arsitektur Simulator Sistem Perbankan
+- **Tujuan:** Merancang modul nasabah, mutasi rekening, verifikasi PIN, dan pelaporan buku tabungan.
 
 ---
 
 ### 📅 Pertemuan 47 - 48: 🏆 Ujian Akhir Semester (UAS) — Simulator Transaksi Bank Modern
-- **Tugas Akhir:** Aplikasi perbankan terminal dengan autentikasi PIN, mutasi saldo, pencatatan histori transaksi menggunakan Structs, Traits, dan penanganan galat Result Type.
+- **Tugas Proyek Akhir:** Membangun aplikasi perbankan terminal terpadu:
+  1. Manajemen akun nasabah (`struktur Nasabah`).
+  2. Trait `LayananTransaksi` untuk setor, tarik, dan transfer saldo.
+  3. Status hasil transaksi menggunakan `Hasil<String, String>` bebas runtime exception.
