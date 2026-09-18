@@ -123,21 +123,24 @@ Berikut adalah rancangan struktur folder pembelajaran dalam direktori `kurikulum
 kurikulum/
 ├── README.md                          # Dokumen Panduan & Silabus Resmi
 ├── 01_tingkat_sd/                     # Materi & Contoh Praktik Siswa SD
-│   ├── panduan_guru_sd.md             # Petunjuk Pedagogis Guru SD
+│   ├── panduan_guru_sd.md             # Petunjuk Pedagogis & RPP Guru SD
+│   ├── buku_teks_murid_sd.md          # 📖 Buku Teks Pelajaran Siswa SD
 │   ├── 01_halo_widya.wya              # Cetak teks & perkenalan
 │   ├── 02_variabel_dan_angka.wya      # Variabel nama, umur, operasi hitung
 │   ├── 03_percabangan_lampu_lalu_lintas.wya # Logika jika/lainnya
 │   ├── 04_pengulangan_hitung_maju.wya # Pengulangan untuk anak
 │   └── 05_proyek_cerita_petualangan.wya # Proyek Game Cerita Interaktif
 ├── 02_tingkat_smp/                    # Materi & Contoh Praktik Siswa SMP
-│   ├── panduan_guru_smp.md            # Petunjuk Pedagogis Guru SMP
+│   ├── panduan_guru_smp.md            # Petunjuk Pedagogis & RPP Guru SMP
+│   ├── buku_teks_murid_smp.md         # 📖 Buku Teks Pelajaran Siswa SMP
 │   ├── 01_fungsi_kalkulator.wya       # Modularitas fungsi & parameter
 │   ├── 02_larik_dan_nilai_siswa.wya   # Array & iterasi koleksi
 │   ├── 03_algoritma_sorting.wya       # Logika algoritma bubble sort
 │   ├── 04_game_tebak_angka.wya        # Game logika & interaksi input
 │   └── 05_proyek_kasir_kantin.wya     # Proyek mini kasir sekolah
 └── 03_tingkat_sma_smk/                # Materi & Contoh Praktik Siswa SMA/SMK
-    ├── panduan_guru_sma.md            # Petunjuk Pedagogis Guru SMA/SMK
+    ├── panduan_guru_sma.md            # Petunjuk Pedagogis & RPP Guru SMA/SMK
+    ├── buku_teks_murid_sma.md         # 📖 Buku Teks Pelajaran Siswa SMA/SMK
     ├── 01_generics_dan_tipe_data.wya  # Hindley-Milner & generic functions
     ├── 02_struktur_dan_sifat.wya      # Struct, traits, & methods
     ├── 03_pattern_matching_adt.wya    # Algebraic Data Types & match
