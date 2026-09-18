@@ -34,6 +34,16 @@
 
 ---
 
+## 📑 Akses Modul Detail per Semester:
+- 📘 **Semester 1:** [semester_1_dasar_algoritma.md](semester_1_dasar_algoritma.md) — *Fondasi Algoritma & Pemrograman Modular (Pertemuan 1 - 16)*
+- 📘 **Semester 2:** [semester_2_sistem_tipe_koleksi.md](semester_2_sistem_tipe_koleksi.md) — *Sistem Tipe Hindley-Milner & Struktur Data Koleksi (Pertemuan 17 - 32)*
+- 📘 **Semester 3:** [semester_3_oop_adt_pattern_matching.md](semester_3_oop_adt_pattern_matching.md) — *OOP, Traits, ADT Enum, & Pattern Matching (Pertemuan 33 - 48)*
+- 📘 **Semester 4:** [semester_4_ffi_database_web_wasm.md](semester_4_ffi_database_web_wasm.md) — *C FFI, SQLite3 Database, REST API, & WebAssembly (Pertemuan 49 - 64)*
+- 📘 **Semester 5:** [semester_5_mobile_keamanan_siber.md](semester_5_mobile_keamanan_siber.md) — *Mobile App Android/iOS & Audit Keamanan Siber Statis (Pertemuan 65 - 80)*
+- 📘 **Semester 6:** [semester_6_compiler_capstone_industri.md](semester_6_compiler_capstone_industri.md) — *Compiler Pipeline, Bootstrap, & Capstone Project (Pertemuan 81 - 96)*
+
+---
+
 ## 📚 Semester 1: Fondasi Berpikir Komputasional & Pemrograman Modular (Kelas 10 - Ganjil)
 *Fokus: Logika Terstruktur, Input-Output, Percabangan, Perulangan, & Fungsi Mandiri*
 
