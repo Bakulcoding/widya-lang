@@ -8,7 +8,7 @@
 [![Tests](https://img.shields.io/badge/tests-111%20passed%20(100%25)-success.svg)](#pengujian)
 [![Self-Hosting](https://img.shields.io/badge/self--hosting-100%25%20stage--2-purple.svg)](#full-self-hosting)
 
-[Buku Panduan Lengkap](DOKUMENTASI_KOMPREHENSIF.md) • [Web Playground](https://bakulcoding.github.io/widya-lang/www/) • [Ekstensi VS Code](editors/vscode/) • [Contoh Kode](contoh/)
+[Buku Panduan Lengkap](PANDUAN.md) • [Web Playground](https://bakulcoding.github.io/widya-lang/www/) • [Ekstensi VS Code](editors/vscode/) • [Contoh Kode](contoh/)
 
 </div>
 
@@ -188,7 +188,7 @@ widya-lang/
 ├── www/                    # Website resmi & Interactive WebAssembly Playground
 ├── tests/                  # 111 Unit & Integration Test Suites
 ├── contoh/                 # Kumpulan contoh aplikasi resmi
-└── DOKUMENTASI_KOMPREHENSIF.md # Buku panduan 18 bab lengkap
+└── PANDUAN.md              # Buku panduan 18 bab lengkap
 ```
 
 ---
@@ -206,8 +206,8 @@ cargo test
 
 ## 📖 Dokumentasi Lengkap
 
-Untuk panduan mendalam tentang arsitektur, sintaks, sistem operasi, basis data terdistribusi, dan tutorial bertahap, silakan baca:
-👉 **[DOKUMENTASI_KOMPREHENSIF.md](DOKUMENTASI_KOMPREHENSIF.md)**
+Untuk panduan lengkap sintaksis, seluruh fitur bahasa, referensi CLI, tutorial Web/Mobile, FFI, hingga bootstrap compiler:
+👉 **[PANDUAN.md](PANDUAN.md)**
 
 ---
 
