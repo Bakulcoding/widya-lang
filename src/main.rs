@@ -15,7 +15,7 @@ use widya::value::Value;
 #[derive(ClapParser)]
 #[command(name = "widya")]
 #[command(author = "Widya-Lang Team")]
-#[command(version = "0.1.0")]
+#[command(version = "1.0.0-beta.1")]
 #[command(about = "Interpreter dan Kompiler Bahasa Pemrograman Widya-Lang", long_about = None)]
 struct Cli {
     #[command(subcommand)]

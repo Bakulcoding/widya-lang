@@ -375,6 +375,6 @@ graph TB
 ---
 
 **Last Updated:** 2026-09-18  
-**Version:** v12.0.0-Enterprise-GA  
-**Status:** 🟢 Seluruh Pilar & Fitur Widya-Lang Selesai 100% (Production & Enterprise Ready)!
+**Version:** v1.0.0-beta.1 (Public Beta Preview)  
+**Status:** 🟢 Full Self-Hosting, Industrial Tooling, & Ecosystem 100% Ready!
 
